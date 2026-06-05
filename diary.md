@@ -9,3 +9,6 @@ git init && git add -A && git commit -m "chore: initial remix3-beta install"
 
 2026-06-05 Pin devDependency versions, tighten engines field
 (edit package.json: typescript ^6.0, @types/node ^25, node >=24)
+
+2026-06-05 Align tsconfig lib to match target
+(edit tsconfig.json: lib ES2024 → ESNext to match target ESNext)
