@@ -2,7 +2,7 @@ import { createController } from 'remix/router'
 
 import { assetServer } from '../assets.ts'
 import { routes } from '../routes.ts'
-import { HomePage } from '../ui/scaffold-home-page.tsx'
+import { Document } from '../ui/document.tsx'
 
 export default createController(routes, {
   actions: {
@@ -12,7 +12,11 @@ export default createController(routes, {
       )
     },
     home(context) {
-      return context.render(<HomePage />)
+      return context.render(
+        <Document>
+          <h1>Hello World</h1>
+        </Document>
+      )
     },
   },
 })
