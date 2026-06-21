@@ -24,3 +24,6 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 7. Add CLAUDE.md with diary workflow, fix AGENTS.md commands
    `(create CLAUDE.md, update AGENTS.md npm → pnpm)`
+
+8. Bring in legacy app assets; legacy-app source available locally (gitignored)
+   `(add public/icons, locales, styles, manifest; update .gitignore, tsconfig)`
