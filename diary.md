@@ -55,11 +55,5 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 17. Step 6: shopping list data — GET/PATCH (5 actions)/DELETE at /:listId
     `(edit routes.ts, router.ts; add utils/moveArticles.ts, actions/list/controller.tsx)`
 
-18. Step 7: shopping list UI — article list, debounced edit, delete, clear, share, rejig
+18. Step 7: shopping list UI — article list, add/edit/delete/clear/share/rejig, animations
     `(create assets/shopping-list.tsx; edit actions/list/controller.tsx, main.css)`
-
-19. Step 7 polish: CSS alignment, SVG icons, rejig panel fixes
-    `(edit assets/shopping-list.tsx, main.css)`
-
-20. Step 7 animations: rejig scale-in, delete bar slide-up/down
-    `(edit assets/shopping-list.tsx, main.css)`
