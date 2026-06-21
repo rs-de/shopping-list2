@@ -5,4 +5,7 @@ export const routes = route({
 	home: "/",
 	about: get("/about"),
 	changelog: get("/changelog"),
+	list: {
+		show: "/:listId",
+	},
 });

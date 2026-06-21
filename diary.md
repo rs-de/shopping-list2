@@ -51,3 +51,6 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 16. Landing page: home GET + POST (create list, rate limit), localStorage menu,
     `shared .content-box; (edit controller.tsx, main.css; add home-menu.tsx)`
+
+17. Step 6: shopping list data — GET/PATCH (5 actions)/DELETE at /:listId
+    `(edit routes.ts, router.ts; add utils/moveArticles.ts, actions/list/controller.tsx)`
