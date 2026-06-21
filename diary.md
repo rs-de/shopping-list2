@@ -27,3 +27,6 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 8. Prefer `git restore` over Edit to revert tracked file changes
    `(edit CLAUDE.md: add git restore preference under diary workflow)`
+
+9. Document Remix 3 identity to prevent React/Remix 2 pattern drift during migration
+   `(edit CLAUDE.md: add Framework Identity section; edit AGENTS.md: add warning)`

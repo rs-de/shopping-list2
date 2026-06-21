@@ -43,6 +43,23 @@ pnpm check          # Biome lint + format (auto-fix)
 - Biome — linting and formatting (see `biome.json`)
 - No build step yet — server uses JIT transpilation via `remix/node-tsx`
 
+## Framework Identity — Remix 3 ≠ React ≠ Remix 2
+
+The legacy app was Remix 2 (React Router). This app is Remix 3 — a different model.
+Never apply React or Remix 2 patterns here.
+
+| React / Remix 2                       | Remix 3 (this app)                         |
+|---------------------------------------|--------------------------------------------|
+| `import from 'react' / '@remix-run/*'`| `import from 'remix/routes', 'remix/ui'`   |
+| `useState / useEffect / hooks`        | closure state + `handle.update()`          |
+| `export default function Page() {}`  | `export function Page(handle: Handle<P>)`  |
+| `useLoaderData() / useActionData()`   | `handle.props` (typed, server-pushed)      |
+| File-based routing                    | `route()` builders in `app/routes.ts`      |
+| `action() / loader()` exports         | `createController()` with keyed actions    |
+| `<Form> / useNavigate()`              | `form()` route + controller action + render|
+
+See `.agents/skills/remix/SKILL.md` for the full Remix 3 pattern reference.
+
 ## Layout
 
 - `server.ts` — HTTP server entry point

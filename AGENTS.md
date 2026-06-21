@@ -13,6 +13,9 @@ pnpm typecheck
 
 ## Building Features
 
+**Important:** This is Remix 3 — NOT React, NOT Remix 2 / React Router. See the "Framework
+Identity" section in CLAUDE.md for a contrast table before writing any new code.
+
 Refer to ./.agents/skills/remix/SKILL.md
 
 ## Starter Layout
