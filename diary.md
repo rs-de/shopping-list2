@@ -36,3 +36,6 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 11. Pivot data layer to SQLite + Prisma; update migration.md accordingly
     `(edit migration.md: MongoDB → SQLite, Mongoose → Prisma, data model + step 1)`
+
+12. Setup Prisma with SQLite (replacing MongoDB/Mongoose dependency)
+    `(pnpm add @prisma/client dotenv, pnpm add -D prisma, prisma init, schema, migrate, app/db.ts)`

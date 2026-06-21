@@ -3,3 +3,8 @@ db/
 tmp/
 .DS_Store
 legacy-*/
+
+/app/generated/prisma
+
+.env
+*.db
