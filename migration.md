@@ -123,7 +123,7 @@ Work top-down; each step is independently shippable.
 
 | Step | Feature               | Status  |
 |------|-----------------------|---------|
-| 1    | Server foundation     | pending |
+| 1    | Server foundation     | done    |
 | 2    | Shell                 | pending |
 | 3    | About page            | pending |
 | 4    | Changelog page        | pending |
