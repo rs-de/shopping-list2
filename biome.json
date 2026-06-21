@@ -6,9 +6,6 @@
 		"useIgnoreFile": true
 	},
 	"files": {
-		"includes": [
-			"**",
-			"!dist"
-		]
+		"includes": ["**", "!dist"]
 	}
 }
