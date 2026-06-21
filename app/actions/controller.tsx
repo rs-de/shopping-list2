@@ -33,7 +33,13 @@ export default createController(routes, {
 			const html = await marked(markdown);
 			return render(
 				<Document title="About — Shopping List">
-					<article class="prose" innerHTML={html} />
+					<div class="about-page">
+						<div class="about-page__header">
+							<h1>Shopping List</h1>
+							<h2>Simple - Secure - Free - Shareable - No login</h2>
+						</div>
+						<article class="prose" innerHTML={html} />
+					</div>
 				</Document>,
 			);
 		},

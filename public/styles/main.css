@@ -205,6 +205,40 @@ a {
 	background-repeat: no-repeat;
 }
 
+/* ── About page ─────────────────────────────────────────── */
+
+.about-page {
+	width: 100%;
+	max-width: 48rem;
+}
+
+.about-page__header {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	text-align: center;
+	margin-bottom: 1rem;
+	text-shadow: 0 0 1em white, 0 0 1em white, 0 0 1em white;
+}
+
+.about-page__header h1 {
+	color: hsl(var(--primary-11));
+	margin: 0;
+}
+
+.about-page__header h2 {
+	color: hsl(var(--primary-11));
+	margin: 0.25rem 0 0;
+	font-size: 1rem;
+	font-weight: normal;
+}
+
+.prose {
+	background: hsl(var(--primary-2) / 0.8);
+	padding: 0.75rem;
+	border-radius: 0.5rem;
+}
+
 /* ── Footer ─────────────────────────────────────────────── */
 
 .app-footer {
