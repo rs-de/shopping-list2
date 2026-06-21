@@ -349,33 +349,31 @@ export const ShoppingListApp = clientEntry(
 						</button>
 					</div>
 
-					{clearOpen && (
-						<div class="sl-dialog-overlay" key="clear-dialog">
-							<div class="sl-dialog">
-								<h2 class="sl-dialog-title">Clear list</h2>
-								<p>This will remove all articles. Are you sure?</p>
-								<div class="sl-dialog-actions">
-									<button
-										class="btn btn-secondary"
-										type="button"
-										mix={on("click", () => {
-											clearOpen = false;
-											handle.update();
-										})}
-									>
-										Cancel
-									</button>
-									<button
-										class="btn btn-primary"
-										type="button"
-										mix={on("click", clearList)}
-									>
-										Clear
-									</button>
-								</div>
+					<div class={`sl-dialog-overlay${clearOpen ? " sl-dialog-overlay--visible" : ""}`}>
+						<div class="sl-dialog">
+							<h2 class="sl-dialog-title">Clear list</h2>
+							<p>This will remove all articles. Are you sure?</p>
+							<div class="sl-dialog-actions">
+								<button
+									class="btn btn-secondary"
+									type="button"
+									mix={on("click", () => {
+										clearOpen = false;
+										handle.update();
+									})}
+								>
+									Cancel
+								</button>
+								<button
+									class="btn btn-primary"
+									type="button"
+									mix={on("click", clearList)}
+								>
+									Clear
+								</button>
 							</div>
 						</div>
-					)}
+					</div>
 				</div>
 			);
 		};

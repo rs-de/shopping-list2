@@ -816,6 +816,15 @@ a {
 	justify-content: center;
 	padding: 1rem;
 	z-index: 50;
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity 200ms ease-in;
+}
+
+.sl-dialog-overlay--visible {
+	opacity: 1;
+	pointer-events: auto;
+	transition: opacity 300ms ease-out;
 }
 
 .sl-dialog {
@@ -825,6 +834,15 @@ a {
 	width: 100%;
 	max-width: 24rem;
 	box-shadow: 0 20px 40px hsl(0 0% 0% / 0.25);
+	scale: 0.95;
+	opacity: 0;
+	transition: scale 200ms ease-in, opacity 200ms ease-in;
+}
+
+.sl-dialog-overlay--visible .sl-dialog {
+	scale: 1;
+	opacity: 1;
+	transition: scale 300ms ease-out, opacity 300ms ease-out;
 }
 
 .sl-dialog-title {
