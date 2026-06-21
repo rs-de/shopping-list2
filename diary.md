@@ -16,14 +16,11 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 4. Strip scaffold demo, reduce to hello world page
    `(delete scaffold-home-page.tsx, prompt-button.tsx; simplify controller.tsx)`
 
-5. Add Biome as linter and formatter
-   `(add @biomejs/biome, biome.json with vcs/gitignore integration, lint/format/check scripts)`
+5. Add Biome as linter/formatter with VSCode integration
+   `(add @biomejs/biome, biome.json, .vscode/settings.json, lint/format/check scripts)`
 
-6. Add VSCode settings for Biome, fix tsdk path
-   `(add .vscode/settings.json, biome.json vcs section, js/ts.tsdk.path)`
-
-7. Add CLAUDE.md with diary workflow, fix AGENTS.md commands
+6. Add CLAUDE.md with diary workflow, fix AGENTS.md commands
    `(create CLAUDE.md, update AGENTS.md npm → pnpm)`
 
-8. Bring in legacy app assets; legacy-app source available locally (gitignored)
+7. Bring in legacy app assets; legacy-app source available locally (gitignored)
    `(add public/icons, locales, styles, manifest; update .gitignore, tsconfig)`
