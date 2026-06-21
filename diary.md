@@ -60,3 +60,6 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 19. Step 7 polish: CSS alignment, SVG icons, rejig panel fixes
     `(edit assets/shopping-list.tsx, main.css)`
+
+20. Step 7 animations: rejig scale-in, delete bar slide-up/down
+    `(edit assets/shopping-list.tsx, main.css)`
