@@ -21,6 +21,10 @@ N. <short description or motivation, max 80 chars>
 
 Multi-command steps: join with `&&` into a single line. File-edit-only steps: use `(edit <file>: what changed)`.
 
+### Reverting files
+
+Prefer `git restore <file>` over the Edit tool when reverting a tracked file to its last committed state.
+
 ## Project Commands
 
 ```sh

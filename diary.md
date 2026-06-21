@@ -24,3 +24,6 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 7. Bring in legacy app assets; legacy-app source available locally (gitignored)
    `(add public/icons, locales, styles, manifest; update .gitignore, tsconfig)`
+
+8. Prefer `git restore` over Edit to revert tracked file changes
+   `(edit CLAUDE.md: add git restore preference under diary workflow)`
