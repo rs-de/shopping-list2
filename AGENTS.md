@@ -5,10 +5,10 @@ This app was scaffolded with `remix new`. Use these conventions when continuing 
 ## Commands
 
 ```sh
-npm i
-npm run start
-npm test
-npm run typecheck
+pnpm install
+pnpm start
+pnpm test
+pnpm typecheck
 ```
 
 ## Building Features
