@@ -72,3 +72,35 @@ See `.agents/skills/remix/SKILL.md` for the full Remix 3 pattern reference.
 - `public/` — static files
 
 Refer to `.agents/skills/remix/SKILL.md` for Remix 3 patterns.
+
+## Design Decisions
+
+- **CSS** — plain `public/styles/main.css`; Radix UI blue/slate colors as CSS custom properties; no Tailwind, no CSS-in-JS
+- **No extra UI deps** — no component libraries; web standards only
+- **Live reference** — `https://shopping-list-eta.vercel.app` is the legacy Remix 2 app; use it as the visual reference during migration
+
+## Remix 3 Routing Rules (learned)
+
+- `createController` requires a **RouteMap**, not a leaf `Route`
+- Top-level leaf routes (e.g. `about: get('/about')`) must be handled in the **root controller's actions**, not in a separate controller file
+- Separate `app/actions/<key>/` directories are only warranted for **nested route maps**
+
+## Verifying Migrated Pages
+
+Use Playwright (devDependency) to compare DOM and computed styles between local and live after each migration step:
+
+```js
+// run from project root so Playwright resolves from node_modules
+import { chromium } from 'playwright'
+const browser = await chromium.launch()
+async function inspect(url) {
+  const page = await browser.newPage()
+  await page.goto(url, { waitUntil: 'networkidle' })
+  return page.evaluate(() => ({
+    h1: getComputedStyle(document.querySelector('h1')),
+    // add other elements / properties as needed
+  }))
+}
+```
+
+Always capture **computed styles** (fontSize, fontWeight, textShadow, …) alongside DOM structure — class names alone miss visual differences (e.g. text-shadow repetition counts).
