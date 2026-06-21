@@ -30,3 +30,6 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 9. Document Remix 3 identity to prevent React/Remix 2 pattern drift during migration
    `(edit CLAUDE.md: add Framework Identity section; edit AGENTS.md: add warning)`
+
+10. Create migration reference from legacy-app interview + code analysis
+    `(create migration.md: routes, data model, actions, arch decisions, order)`
