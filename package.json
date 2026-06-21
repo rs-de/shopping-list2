@@ -1,21 +1,25 @@
 {
-  "name": "shopping-list2",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "dev": "node --watch --import remix/node-tsx server.ts",
-    "start": "node --import remix/node-tsx server.ts",
-    "test": "node --import remix/node-tsx --test",
-    "typecheck": "tsc --noEmit"
-  },
-  "engines": {
-    "node": ">=24"
-  },
-  "dependencies": {
-    "remix": "3.0.0-beta.3"
-  },
-  "devDependencies": {
-    "@types/node": "^25",
-    "typescript": "^6.0"
-  }
+	"name": "shopping-list2",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev": "node --watch --import remix/node-tsx server.ts",
+		"start": "node --import remix/node-tsx server.ts",
+		"test": "node --import remix/node-tsx --test",
+		"typecheck": "tsc --noEmit",
+		"format": "biome format --write .",
+		"lint": "biome lint --write .",
+		"check": "biome check --write ."
+	},
+	"engines": {
+		"node": ">=24"
+	},
+	"dependencies": {
+		"remix": "3.0.0-beta.3"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.5.0",
+		"@types/node": "^25",
+		"typescript": "^6.0"
+	}
 }

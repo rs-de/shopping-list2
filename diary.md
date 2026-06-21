@@ -13,5 +13,8 @@ git init && git add -A && git commit -m "chore: initial remix3-beta install"
 2026-06-05 Align tsconfig lib to match target
 (edit tsconfig.json: lib ES2024 → ESNext to match target ESNext)
 
+2026-06-20 Add Biome as linter and formatter
+(add @biomejs/biome, biome.json with vcs/gitignore integration, lint/format/check scripts)
+
 2026-06-05 Strip scaffold demo, reduce to hello world page
 (delete scaffold-home-page.tsx, prompt-button.tsx; simplify controller.tsx)
