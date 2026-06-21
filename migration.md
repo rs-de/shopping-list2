@@ -127,7 +127,7 @@ Work top-down; each step is independently shippable.
 | 2    | Page layout           | done    |
 | 3    | About page            | done    |
 | 4    | Changelog page        | done    |
-| 5    | Landing page          | pending |
+| 5    | Landing page          | done    |
 | 6    | Shopping list — data  | pending |
 | 7    | Shopping list — UI    | pending |
 | 8    | i18n                  | pending |

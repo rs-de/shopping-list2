@@ -3,9 +3,11 @@ import * as path from "node:path";
 import * as url from "node:url";
 
 import { marked } from "marked";
+import { redirect } from "remix/response/redirect";
 import { createController } from "remix/router";
-
+import { HomeMenu } from "../assets/home-menu.tsx";
 import { assetServer } from "../assets.ts";
+import { db } from "../db.ts";
 import { routes } from "../routes.ts";
 import { Document } from "../ui/document.tsx";
 
@@ -20,10 +22,26 @@ export default createController(routes, {
 				new Response("Not Found", { status: 404 })
 			);
 		},
-		home(context) {
-			return context.render(
-				<Document>
-					<h1>Hello World</h1>
+		async home({ request, render }) {
+			if (request.method === "POST") {
+				if (isRateLimited()) {
+					return new Response("Too Many Requests", { status: 429 });
+				}
+				const list = await db.shoppingList.create({ data: {} });
+				return redirect(`/${list.id}`, 303);
+			}
+			return render(
+				<Document title="Free shopping list web app">
+					<div class="content-box home-page">
+						<div class="home-page__header">
+							<h1>Shopping List</h1>
+							<h2>Simple - Secure - Free - Shareable - No login</h2>
+						</div>
+						<div class="home-menu">
+							<HomeMenu />
+						</div>
+						<span aria-hidden="true" />
+					</div>
 				</Document>,
 			);
 		},
@@ -33,7 +51,7 @@ export default createController(routes, {
 			const html = await marked(markdown);
 			return render(
 				<Document title="Changelog — Shopping List">
-					<article class="prose changelog-page" innerHTML={html} />
+					<article class="content-box prose changelog-page" innerHTML={html} />
 				</Document>,
 			);
 		},
@@ -56,6 +74,15 @@ export default createController(routes, {
 		},
 	},
 });
+
+let rateLimitUntil = 0;
+
+function isRateLimited(): boolean {
+	const now = Date.now();
+	if (now < rateLimitUntil) return true;
+	rateLimitUntil = now + 5_000;
+	return false;
+}
 
 function preferredLang(header: string | null): "de" | "en" {
 	if (!header) return "en";

@@ -48,3 +48,9 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 15. Step 4: Changelog page — /changelog route renders CHANGELOG.md via marked
     `(copy CHANGELOG.md; add route; add changelog action; add prose typography CSS)`
+
+16. Landing page: home GET renders menu; POST creates list + in-memory rate limit
+    `(edit controller.tsx, main.css; add app/assets/home-menu.tsx)`
+
+17. Add shared .content-box CSS class; apply to home, changelog pages
+    `(edit main.css, controller.tsx)`
