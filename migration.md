@@ -72,7 +72,7 @@ from `legacy-app/app/utils/moveArticles.ts`.
 
 ---
 
-## Shell (Navbar + Footer)
+## Page Layout (Navbar + Footer)
 
 **Navbar** (sticky, scroll-aware shadow, backdrop blur):
 - Left: logo (`/logo.svg`) + author name → links to `/`
@@ -99,7 +99,7 @@ from `legacy-app/app/utils/moveArticles.ts`.
 Work top-down; each step is independently shippable.
 
 1. **Server foundation** — Prisma setup: install, define schema, `prisma migrate dev`, generate client
-2. **Shell** — Navbar + Footer components wired into Document
+2. **Page layout** — Navbar + Footer components wired into Document
 3. **About page** — markdown render (de/en), basic i18n middleware
 4. **Changelog page** — single markdown render
 5. **Landing page** — create-list action (POST, rate limit), show-my-list (localStorage)
@@ -124,7 +124,7 @@ Work top-down; each step is independently shippable.
 | Step | Feature               | Status  |
 |------|-----------------------|---------|
 | 1    | Server foundation     | done    |
-| 2    | Shell                 | pending |
+| 2    | Page layout           | pending |
 | 3    | About page            | pending |
 | 4    | Changelog page        | pending |
 | 5    | Landing page          | pending |
