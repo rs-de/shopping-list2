@@ -12,9 +12,11 @@ Every change to this project follows a discuss-then-commit loop:
 
 ### diary.md format
 
+Entries are numbered. Each step is two lines, indented command in a code span:
+
 ```
-<short description or motivation, max 80 chars>
-<command or (edit <file>: description), max 80 chars>
+N. <short description or motivation, max 80 chars>
+   `<command or (edit <file>: description), max 80 chars>`
 ```
 
 Multi-command steps: join with `&&` into a single line. File-edit-only steps: use `(edit <file>: what changed)`.
