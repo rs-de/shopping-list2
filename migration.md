@@ -124,7 +124,7 @@ Work top-down; each step is independently shippable.
 | Step | Feature               | Status  |
 |------|-----------------------|---------|
 | 1    | Server foundation     | done    |
-| 2    | Page layout           | pending |
+| 2    | Page layout           | done    |
 | 3    | About page            | pending |
 | 4    | Changelog page        | pending |
 | 5    | Landing page          | pending |
