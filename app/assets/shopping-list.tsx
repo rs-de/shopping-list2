@@ -1,0 +1,385 @@
+import { clientEntry, type Handle, on, ref } from "remix/ui";
+
+type Article = { id: string; text: string };
+
+export const ShoppingListApp = clientEntry(
+	import.meta.url,
+	function ShoppingListApp(
+		handle: Handle<{ listId: string; articles: Article[] }>,
+	) {
+		let articles: Article[] = [...handle.props.articles];
+		let selected = new Set<string>();
+		let syncStatus: "idle" | "syncing" | "synced" | "offline" = "idle";
+		let clearOpen = false;
+		let helpOpen = false;
+		const debounceTimers = new Map<string, ReturnType<typeof setTimeout>>();
+		let addInputEl: HTMLInputElement | null = null;
+		let rejigN = 3;
+		let rejigAnchorEl: HTMLElement | null = null;
+
+		handle.signal.addEventListener("abort", () => {
+			for (const t of debounceTimers.values()) clearTimeout(t);
+		});
+
+		handle.queueTask(() => {
+			localStorage.setItem("shoppingListId", handle.props.listId);
+		});
+
+		async function patch(body: FormData): Promise<void> {
+			syncStatus = "syncing";
+			handle.update();
+			try {
+				const res = await fetch(`/${handle.props.listId}`, {
+					method: "PATCH",
+					body,
+					signal: handle.signal,
+				});
+				if (!res.ok) throw new Error("Server error");
+				const updated = (await res.json()) as { articles: Article[] };
+				articles = updated.articles;
+				syncStatus = "synced";
+			} catch {
+				if (!handle.signal.aborted) syncStatus = "offline";
+			}
+			handle.update();
+		}
+
+		function scheduleChange(articleId: string, text: string) {
+			clearTimeout(debounceTimers.get(articleId));
+			debounceTimers.set(
+				articleId,
+				setTimeout(() => {
+					const fd = new FormData();
+					fd.set("_action", "changeArticle");
+					fd.set("id", articleId);
+					fd.set("text", text);
+					patch(fd);
+				}, 750),
+			);
+		}
+
+		async function addArticle() {
+			const text = addInputEl?.value.trim() ?? "";
+			if (!text) return;
+			const id = crypto.randomUUID().slice(0, 8);
+			const fd = new FormData();
+			fd.set("_action", "addArticle");
+			fd.set("id", id);
+			fd.set("new", text);
+			articles = [...articles, { id, text }];
+			if (addInputEl) addInputEl.value = "";
+			await handle.update();
+			addInputEl?.focus();
+			await patch(fd);
+		}
+
+		async function deleteSelected() {
+			const ids = [...selected];
+			if (!ids.length) return;
+			const fd = new FormData();
+			fd.set("_action", "deleteArticles");
+			for (const id of ids) fd.append("selected", id);
+			articles = articles.filter((a) => !selected.has(a.id));
+			selected = new Set();
+			handle.update();
+			await patch(fd);
+		}
+
+		async function clearList() {
+			const fd = new FormData();
+			fd.set("_action", "clearList");
+			articles = [];
+			selected = new Set();
+			clearOpen = false;
+			handle.update();
+			await patch(fd);
+		}
+
+		async function rejig(partitionNumber: number) {
+			const ids = [...selected];
+			if (!ids.length) return;
+			const fd = new FormData();
+			fd.set("_action", "rejig");
+			for (const id of ids) fd.append("selected", id);
+			fd.set("partitionNumber", String(partitionNumber));
+			fd.set("partitionCount", String(rejigN));
+			selected = new Set();
+			handle.update();
+			await patch(fd);
+		}
+
+		async function share() {
+			const url = location.href;
+			try {
+				if (navigator.share) {
+					await navigator.share({ url, title: "Shopping List" });
+				} else {
+					await navigator.clipboard.writeText(url);
+				}
+			} catch {
+				// user cancelled or API unavailable
+			}
+		}
+
+		return () => {
+			const showDelete = selected.size > 0;
+			const showRejig = selected.size > 0 && articles.length > 5;
+			const rejigMid = Math.ceil(rejigN / 2);
+			const rejigButtons = Array.from({ length: rejigN }, (_, i) => {
+				const partition = i + 1;
+				const label =
+					partition === 1
+						? "early"
+						: partition === rejigMid
+							? "medium"
+							: partition === rejigN
+								? "late"
+								: "";
+				return (
+					<button
+						key={String(partition)}
+						class={`btn btn-secondary sl-rejig-btn${label ? "" : " sl-rejig-btn--dot"}`}
+						type="button"
+						mix={on("click", () => rejig(partition))}
+					>
+						{label}
+					</button>
+				);
+			});
+
+			return (
+				<div class="sl-app">
+					<h1 class="sl-heading">Shopping List</h1>
+
+					<div class="sl-card">
+						{articles.length > 0 && (
+							<ul
+								class="sl-list"
+								mix={ref((node) => {
+									rejigAnchorEl = (node as HTMLElement).querySelector("li");
+								})}
+							>
+								{articles.map((article) => (
+									<li
+										key={article.id}
+										class={`sl-item${selected.has(article.id) ? " sl-item--checked" : ""}`}
+									>
+										<input
+											type="text"
+											class="sl-item-input"
+											maxLength={75}
+											autoComplete="off"
+											enterKeyHint="done"
+											aria-label="Article text"
+											mix={[
+												ref((node) => {
+													(node as HTMLInputElement).value = article.text;
+												}),
+												on("input", (e) => {
+													scheduleChange(
+														article.id,
+														(e.currentTarget as HTMLInputElement).value,
+													);
+												}),
+											]}
+										/>
+										<input
+											type="checkbox"
+											aria-label="Select article"
+											checked={selected.has(article.id)}
+											mix={on("change", (e) => {
+												const checked = (e.currentTarget as HTMLInputElement)
+													.checked;
+												if (checked) {
+													selected = new Set([...selected, article.id]);
+												} else {
+													selected = new Set(
+														[...selected].filter((id) => id !== article.id),
+													);
+												}
+												handle.update();
+											})}
+										/>
+									</li>
+								))}
+							</ul>
+						)}
+
+						<div class="sl-add-form">
+							<span class="sl-add-icon" aria-hidden="true">
+								<svg viewBox="0 0 20 20" fill="currentColor" width="24" height="24" aria-hidden="true">
+									<path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
+								</svg>
+							</span>
+							<input
+								type="text"
+								class="sl-add-input"
+								placeholder="Add an article…"
+								maxLength={75}
+								autoComplete="off"
+								enterKeyHint="go"
+								aria-label="New article"
+								mix={[
+									ref((node) => {
+										addInputEl = node as HTMLInputElement;
+									}),
+									on("keydown", async (e) => {
+										if (e.key === "Enter") {
+											e.preventDefault();
+											await addArticle();
+										}
+									}),
+								]}
+							/>
+						</div>
+
+						<div class="sl-actions">
+							<button
+								class="btn btn-primary"
+								style={{ flex: "1" }}
+								type="button"
+								mix={on("click", addArticle)}
+							>
+								Add
+							</button>
+							{articles.length > 0 && (
+								<button
+									class="btn btn-secondary"
+									type="button"
+									mix={on("click", () => {
+										clearOpen = true;
+										handle.update();
+									})}
+								>
+									Clear
+								</button>
+							)}
+							<button
+								class="btn btn-secondary"
+								type="button"
+								mix={on("click", share)}
+							>
+								<svg width="20" height="20" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg" fill="currentColor" aria-hidden="true">
+									<path d="M30.3 13.7L25 8.4l-5.3 5.3-1.4-1.4L25 5.6l6.7 6.7z" />
+									<path d="M24 7h2v21h-2z" />
+									<path d="M35 40H15c-1.7 0-3-1.3-3-3V19c0-1.7 1.3-3 3-3h7v2h-7c-.6 0-1 .4-1 1v18c0 .6.4 1 1 1h20c.6 0 1-.4 1-1V19c0-.6-.4-1-1-1h-7v-2h7c1.7 0 3 1.3 3 3v18c0 1.7-1.3 3-3 3z" />
+								</svg>
+								Copy Link to share
+							</button>
+						</div>
+
+						{syncStatus !== "idle" && (
+							<div class="sl-sync-row">
+								<span class={`sync-status sync-status--${syncStatus}`}>
+									{syncStatus === "syncing"
+										? "Saving…"
+										: syncStatus === "synced"
+											? "Saved"
+											: "Offline — changes may be lost"}
+								</span>
+							</div>
+						)}
+					</div>
+
+					{showRejig && (
+						<div
+							class="sl-rejig"
+							key="rejig"
+							style={(() => {
+								const r = rejigAnchorEl?.getBoundingClientRect();
+								return r
+									? { left: `${r.right - 170}px`, top: `${r.top - 35}px`, transform: "none" }
+									: { transform: "none" };
+							})()}
+						>
+							<button
+								class="sl-rejig-help"
+								type="button"
+								aria-label="What is rejig?"
+								mix={on("click", () => {
+									helpOpen = !helpOpen;
+									handle.update();
+								})}
+							>
+								?
+							</button>
+							{helpOpen && (
+								<div class="sl-rejig-help-panel" key="help-panel">
+									The list is unsorted and each supermarket is divided differently.
+									While shopping you can change the order of your list and move items
+									accordingly — depending on where they can be found in the
+									supermarket: next, a little later or at the very end on your way
+									through the shelves 🛒😀
+								</div>
+							)}
+							<select
+								class="sl-rejig-select"
+								mix={ref((node) => {
+									(node as HTMLSelectElement).addEventListener(
+										"change",
+										(e) => {
+											rejigN = Number(
+												(e.currentTarget as HTMLSelectElement).value,
+											);
+											handle.update();
+										},
+										{ signal: handle.signal },
+									);
+								})}
+							>
+								<option value="3" selected={rejigN === 3}>3</option>
+								<option value="5" selected={rejigN === 5}>5</option>
+								<option value="7" selected={rejigN === 7}>7</option>
+							</select>
+							{rejigButtons}
+						</div>
+					)}
+
+					{showDelete && (
+						<div class="sl-delete-bar" key="delete-bar">
+							<button
+								class="btn btn-primary"
+								style={{ width: "100%" }}
+								type="button"
+								mix={on("click", deleteSelected)}
+							>
+								<svg viewBox="0 0 20 20" fill="currentColor" width="20" height="20" aria-hidden="true">
+									<path fill-rule="evenodd" d="M6.707 4.879A3 3 0 018.828 4H15a3 3 0 013 3v6a3 3 0 01-3 3H8.828a3 3 0 01-2.12-.879l-4.415-4.414a1 1 0 010-1.414l4.414-4.414zm4 2.414a1 1 0 00-1.414 1.414L10.586 10l-1.293 1.293a1 1 0 101.414 1.414L12 11.414l1.293 1.293a1 1 0 001.414-1.414L13.414 10l1.293-1.293a1 1 0 00-1.414-1.414L12 8.586l-1.293-1.293z" clip-rule="evenodd" />
+								</svg>
+								Delete selected ({selected.size})
+							</button>
+						</div>
+					)}
+
+					{clearOpen && (
+						<div class="sl-dialog-overlay" key="clear-dialog">
+							<div class="sl-dialog">
+								<h2 class="sl-dialog-title">Clear list</h2>
+								<p>This will remove all articles. Are you sure?</p>
+								<div class="sl-dialog-actions">
+									<button
+										class="btn btn-secondary"
+										type="button"
+										mix={on("click", () => {
+											clearOpen = false;
+											handle.update();
+										})}
+									>
+										Cancel
+									</button>
+									<button
+										class="btn btn-primary"
+										type="button"
+										mix={on("click", clearList)}
+									>
+										Clear
+									</button>
+								</div>
+							</div>
+						</div>
+					)}
+				</div>
+			);
+		};
+	},
+);

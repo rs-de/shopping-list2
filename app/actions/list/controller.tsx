@@ -1,13 +1,15 @@
 import { redirect } from "remix/response/redirect";
 import { createController } from "remix/router";
 
+import { ShoppingListApp } from "../../assets/shopping-list.tsx";
 import { db } from "../../db.ts";
 import { routes } from "../../routes.ts";
+import { Document } from "../../ui/document.tsx";
 import { type Article, moveArticles } from "../../utils/moveArticles.ts";
 
 export default createController(routes.list, {
 	actions: {
-		async show({ request, params }) {
+		async show({ request, params, render }) {
 			const { listId } = params;
 
 			if (request.method === "DELETE") {
@@ -17,10 +19,10 @@ export default createController(routes.list, {
 
 			const list = await db.shoppingList.findUnique({ where: { id: listId } });
 			if (!list) return new Response("Not Found", { status: 404 });
+			const articles = list.articles as Article[];
 
 			if (request.method === "PATCH") {
 				const form = await request.formData();
-				const articles = list.articles as Article[];
 
 				switch (form.get("_action")) {
 					case "addArticle": {
@@ -87,7 +89,11 @@ export default createController(routes.list, {
 				}
 			}
 
-			return Response.json(list);
+			return render(
+				<Document title="Shopping List">
+					<ShoppingListApp listId={listId} articles={articles} />
+				</Document>,
+			);
 		},
 	},
 });

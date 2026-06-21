@@ -129,7 +129,7 @@ Work top-down; each step is independently shippable.
 | 4    | Changelog page        | done    |
 | 5    | Landing page          | done    |
 | 6    | Shopping list — data  | done    |
-| 7    | Shopping list — UI    | pending |
+| 7    | Shopping list — UI    | done    |
 | 8    | i18n                  | pending |
 | 9    | PWA / offline-first   | pending |
 | 10   | Polish                | pending |
