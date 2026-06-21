@@ -223,14 +223,16 @@ a {
 
 .about-page__header h1 {
 	color: hsl(var(--primary-11));
+	font-size: 3rem;
+	font-weight: 800;
 	margin: 0;
 }
 
 .about-page__header h2 {
 	color: hsl(var(--primary-11));
+	font-size: 1.875rem;
+	font-weight: 700;
 	margin: 0.25rem 0 0;
-	font-size: 1rem;
-	font-weight: normal;
 }
 
 .prose {
