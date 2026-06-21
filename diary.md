@@ -45,3 +45,6 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 14. About page: /about route, md render (de/en), Accept-Language detection
     `(pnpm add marked; add route, about action in controller, copy .md files)`
+
+15. Step 4: Changelog page — /changelog route renders CHANGELOG.md via marked
+    `(copy CHANGELOG.md; add route; add changelog action; add prose typography CSS)`

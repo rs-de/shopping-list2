@@ -10,6 +10,7 @@ import { routes } from "../routes.ts";
 import { Document } from "../ui/document.tsx";
 
 const DIR = path.dirname(url.fileURLToPath(import.meta.url));
+const ROOT = path.resolve(DIR, "../..");
 
 export default createController(routes, {
 	actions: {
@@ -23,6 +24,16 @@ export default createController(routes, {
 			return context.render(
 				<Document>
 					<h1>Hello World</h1>
+				</Document>,
+			);
+		},
+		async changelog({ render }) {
+			const file = path.join(ROOT, "CHANGELOG.md");
+			const markdown = await fs.readFile(file, "utf-8");
+			const html = await marked(markdown);
+			return render(
+				<Document title="Changelog — Shopping List">
+					<article class="prose changelog-page" innerHTML={html} />
 				</Document>,
 			);
 		},
