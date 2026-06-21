@@ -125,7 +125,7 @@ Work top-down; each step is independently shippable.
 |------|-----------------------|---------|
 | 1    | Server foundation     | done    |
 | 2    | Page layout           | done    |
-| 3    | About page            | pending |
+| 3    | About page            | done    |
 | 4    | Changelog page        | pending |
 | 5    | Landing page          | pending |
 | 6    | Shopping list — data  | pending |

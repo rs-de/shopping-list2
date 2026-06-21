@@ -42,3 +42,6 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 13. Step 2: Page layout — Navbar + Footer; CSS synced to live app colors
     `(create navbar.tsx, footer.tsx; edit document.tsx, main.css)`
+
+14. About page: /about route, md render (de/en), Accept-Language detection
+    `(pnpm add marked; add route, about action in controller, copy .md files)`
