@@ -40,8 +40,5 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 12. Setup Prisma with SQLite (replacing MongoDB/Mongoose dependency)
     `(pnpm add @prisma/client dotenv, pnpm add -D prisma, prisma init, schema, migrate, app/db.ts)`
 
-13. Step 2: Page layout — Navbar + Footer wired into Document
-    `(create app/ui/navbar.tsx, app/ui/footer.tsx, edit document.tsx + main.css)`
-
-14. Fix navbar CSS: sync Radix color scale + layout discrepancies vs live app
-    `(edit public/styles/main.css: colors, display, white-space, line-height, small)`
+13. Step 2: Page layout — Navbar + Footer; CSS synced to live app colors
+    `(create navbar.tsx, footer.tsx; edit document.tsx, main.css)`
