@@ -20,13 +20,14 @@ Read this at the start of every migration session instead of re-reading legacy c
 
 ## Data Model
 
-MongoDB + Mongoose. Connection string from `MONGO_URI` env var.
+SQLite + Prisma.
 
-```ts
-ShoppingList {
-  _id: ObjectId   // 24-char hex, used as the URL param
-  articles: [{ id: string, text: string }]  // max 200; id = nanoid(6), client-generated
-  createdAt, updatedAt  // auto timestamps
+```prisma
+model ShoppingList {
+  id        String   @id @default(cuid())  // 25-char, used as the URL param
+  articles  Json     @default("[]")        // [{ id: string, text: string }]; max 200
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 ```
 
@@ -57,6 +58,7 @@ from `legacy-app/app/utils/moveArticles.ts`.
 
 | Concern         | Legacy                                       | New app                                                 |
 |-----------------|----------------------------------------------|---------------------------------------------------------|
+| Database        | MongoDB (Atlas) + Mongoose                   | SQLite + Prisma                                         |
 | State           | Redux + RTKQ                                 | Remix 3 Handle + closure state                          |
 | API layer       | RTKQ → separate /api routes                  | controller actions on route handlers                    |
 | Styling         | Tailwind CSS + Radix colors                  | plain CSS + Radix colors CSS vars (`var(--blue-9)` ,,.) |
@@ -96,7 +98,7 @@ from `legacy-app/app/utils/moveArticles.ts`.
 
 Work top-down; each step is independently shippable.
 
-1. **Server foundation** — MongoDB connection middleware, `MONGO_URI` env, service module
+1. **Server foundation** — Prisma setup: install, define schema, `prisma migrate dev`, generate client
 2. **Shell** — Navbar + Footer components wired into Document
 3. **About page** — markdown render (de/en), basic i18n middleware
 4. **Changelog page** — single markdown render
@@ -112,7 +114,6 @@ Work top-down; each step is independently shippable.
 ## Files to Reuse from Legacy
 
 - `app/utils/moveArticles.ts` — pure function, copy as-is
-- `app/services/shoppinglist.ts` — Mongoose model, adapt imports
 - `public/locales/` — already copied to new repo
 - `public/styles/main.css` — already copied
 - `public/icons/`, `public/manifest.webmanifest` — already copied

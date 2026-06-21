@@ -33,3 +33,6 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 10. Create migration reference from legacy-app interview + code analysis
     `(create migration.md: routes, data model, actions, arch decisions, order)`
+
+11. Pivot data layer to SQLite + Prisma; update migration.md accordingly
+    `(edit migration.md: MongoDB → SQLite, Mongoose → Prisma, data model + step 1)`
