@@ -97,3 +97,6 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 29. Fix SW: use networkFirst for /assets/ JS so code updates are served fresh
     `(edit app/assets/sw.ts: remove /assets/ from isStaticAsset)`
+
+30. Abort superseded patch requests — no point letting stale ones finish
+    `(edit app/assets/shopping-list.tsx: patchAbort controller)`

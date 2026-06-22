@@ -72,6 +72,7 @@ export const ShoppingListApp = clientEntry(
 		let dirty = false;
 		let dirtyGen = 0;
 		let inFlight = 0;
+		let patchAbort: AbortController | null = null;
 		let retryDelay = 3_000;
 		let retryTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -168,6 +169,9 @@ export const ShoppingListApp = clientEntry(
 		}
 
 		async function patch(body: FormData): Promise<void> {
+			patchAbort?.abort();
+			patchAbort = new AbortController();
+			const ownSignal = patchAbort.signal;
 			inFlight++;
 			// Two requests in flight means responses may arrive out of order.
 			// Mark dirty immediately so all responses are discarded and drainDirty
@@ -179,7 +183,7 @@ export const ShoppingListApp = clientEntry(
 				const res = await fetch(`/${listId}`, {
 					method: "PATCH",
 					body,
-					signal: handle.signal,
+					signal: AbortSignal.any([handle.signal, ownSignal]),
 				});
 				if (!res.ok) throw new Error("Server error");
 				const updated = (await res.json()) as { articles: Article[] };
@@ -196,6 +200,11 @@ export const ShoppingListApp = clientEntry(
 				}
 			} catch {
 				inFlight--;
+				if (ownSignal.aborted) {
+					// Superseded — dirty already set above, newer patch handles retry
+					handle.update();
+					return;
+				}
 				if (!handle.signal.aborted) {
 					markDirty();
 					void writeRecord(listId, articles, true).catch(() => {});
