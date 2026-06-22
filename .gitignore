@@ -5,6 +5,7 @@ tmp/
 legacy-*/
 test-results/
 playwright-report/
+.claude/settings.local.json
 
 /app/generated/prisma
 

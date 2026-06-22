@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -m json.tool)",
+      "Bash(node -e \"const p=require\\('./node_modules/playwright/package.json'\\);console.log\\(p.dependencies['@playwright/test']||'no test dep'\\)\")",
+      "Bash(pnpm add *)",
+      "Bash(pnpm test:e2e)",
+      "Bash(xxd)",
+      "Bash(curl -s http://localhost:44100/sw.js)",
+      "Bash(curl -sI -X GET http://localhost:44100/sw.js)",
+      "Bash(pnpm lighthouse *)"
+    ]
+  }
+}
