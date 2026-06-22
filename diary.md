@@ -91,6 +91,3 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 27. Step 10c: Playwright e2e tests — home, create list, add article, 404, version
     `(add playwright.config.ts, tests/e2e.spec.ts; edit package.json)`
-
-30. Remove "Offline — changes may be lost" sync status (IDB preserves changes; false UX)
-    `(edit shopping-list.tsx, main.css, en/common.json, de/common.json)`
