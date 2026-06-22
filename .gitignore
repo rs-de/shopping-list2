@@ -3,6 +3,8 @@ db/
 tmp/
 .DS_Store
 legacy-*/
+test-results/
+playwright-report/
 
 /app/generated/prisma
 
