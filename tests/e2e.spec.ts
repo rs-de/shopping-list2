@@ -7,37 +7,38 @@ test("home page loads", async ({ page }) => {
 });
 
 // Serial block so tests 2-3 share one list and avoid the 5s rate limiter
-test.describe.serial("list workflow", () => {
-	let listUrl = "";
+test.describe
+	.serial("list workflow", () => {
+		let listUrl = "";
 
-	test("create list → navigate to list page", async ({ page }) => {
-		await page.goto("/");
-		await page.click("button.home-menu__create-btn");
-		await page.waitForURL(/\/\w+$/);
-		listUrl = page.url();
-		await expect(page.locator("h1.sl-heading")).toBeVisible();
+		test("create list → navigate to list page", async ({ page }) => {
+			await page.goto("/");
+			await page.click("button.home-menu__create-btn");
+			await page.waitForURL(/\/\w+$/);
+			listUrl = page.url();
+			await expect(page.locator("h1.sl-heading")).toBeVisible();
+		});
+
+		test("add article → persists after reload", async ({ page }) => {
+			await page.goto(listUrl);
+
+			await page.fill("input.sl-add-input", "Milk");
+			const patchDone = page.waitForResponse(
+				(r) => r.request().method() === "PATCH",
+			);
+			await page.keyboard.press("Enter");
+			await patchDone;
+
+			await expect(page.locator("input.sl-item-input").first()).toHaveValue(
+				"Milk",
+			);
+
+			await page.reload();
+			await expect(page.locator("input.sl-item-input").first()).toHaveValue(
+				"Milk",
+			);
+		});
 	});
-
-	test("add article → persists after reload", async ({ page }) => {
-		await page.goto(listUrl);
-
-		await page.fill("input.sl-add-input", "Milk");
-		const patchDone = page.waitForResponse(
-			(r) => r.request().method() === "PATCH",
-		);
-		await page.keyboard.press("Enter");
-		await patchDone;
-
-		await expect(page.locator("input.sl-item-input").first()).toHaveValue(
-			"Milk",
-		);
-
-		await page.reload();
-		await expect(page.locator("input.sl-item-input").first()).toHaveValue(
-			"Milk",
-		);
-	});
-});
 
 test("404 for unknown multi-segment path", async ({ page }) => {
 	const res = await page.goto("/foo/bar/baz");
