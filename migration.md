@@ -132,4 +132,4 @@ Work top-down; each step is independently shippable.
 | 7    | Shopping list — UI    | done    |
 | 8    | i18n                  | done    |
 | 9    | PWA / offline-first   | done    |
-| 10   | Polish                | pending |
+| 10   | Polish                | done    |

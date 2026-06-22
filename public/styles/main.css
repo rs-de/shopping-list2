@@ -897,3 +897,57 @@ a {
 		transform: rotate(360deg);
 	}
 }
+
+/* ── Error pages ─────────────────────────────────────────── */
+
+.error-page {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 1rem;
+	padding: 4rem 1rem;
+	text-align: center;
+}
+
+.error-page__code {
+	font-size: 5rem;
+	font-weight: 700;
+	color: hsl(var(--primary-9));
+	margin: 0;
+}
+
+.error-page__msg {
+	font-size: 1.25rem;
+	color: hsl(var(--slate-11));
+	margin: 0;
+}
+
+/* ── Update banner ───────────────────────────────────────── */
+
+.sl-update-banner {
+	position: fixed;
+	bottom: 1.5rem;
+	right: 1.5rem;
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	padding: 0.75rem 1.25rem;
+	background: hsl(var(--primary-9));
+	color: white;
+	border-radius: 0.5rem;
+	box-shadow: 0 4px 16px rgb(0 0 0 / 0.25);
+	z-index: 1000;
+	font-size: 0.875rem;
+}
+
+.sl-update-banner button {
+	background: white;
+	color: hsl(var(--primary-9));
+	border: none;
+	padding: 0.25rem 0.75rem;
+	border-radius: 0.25rem;
+	font-size: 0.875rem;
+	font-weight: 600;
+	cursor: pointer;
+}

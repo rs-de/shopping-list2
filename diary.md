@@ -75,3 +75,12 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 24. Step 9c: IndexedDB dirty-flag + replaceArticles sync, backoff retry, concurrent-safe
     `(edit list/controller.tsx + app/assets/shopping-list.tsx)`
+
+25. Step 10a: 404 catch-all + 500 fallback + HTML error pages
+    `(edit routes.ts, controller.tsx, list/controller.tsx; edit public/styles/main.css)`
+
+26. Step 10b: /api/version endpoint + client reload banner on version change
+    `(edit routes.ts, controller.tsx, entry.ts, public/styles/main.css)`
+
+27. Step 10c: Playwright e2e tests — home, create list, add article, 404, version
+    `(add playwright.config.ts, tests/e2e.spec.ts; edit package.json)`

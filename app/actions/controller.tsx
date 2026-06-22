@@ -24,6 +24,12 @@ export default createController(routes, {
 				new Response("Not Found", { status: 404 })
 			);
 		},
+		async version() {
+			const pkg = JSON.parse(
+				await fs.readFile(path.join(ROOT, "package.json"), "utf-8"),
+			) as { version: string };
+			return Response.json({ version: pkg.version });
+		},
 		async sw({ request }) {
 			const url = new URL("/assets/app/assets/sw.ts", request.url);
 			return (
@@ -84,6 +90,22 @@ export default createController(routes, {
 						<article class="prose" innerHTML={html} />
 					</div>
 				</Document>,
+			);
+		},
+		async notFound({ request, render }) {
+			const lang = preferredLang(request.headers.get("accept-language"));
+			const t = await loadTranslations(lang);
+			return render(
+				<Document title="404 — Shopping List" lang={lang} t={t}>
+					<div class="content-box error-page">
+						<h1 class="error-page__code">404</h1>
+						<p class="error-page__msg">Page not found.</p>
+						<a href="/" class="btn btn-primary">
+							Go home
+						</a>
+					</div>
+				</Document>,
+				{ status: 404 },
 			);
 		},
 	},

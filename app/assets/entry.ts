@@ -16,3 +16,37 @@ run({
 if ("serviceWorker" in navigator) {
 	navigator.serviceWorker.register("/sw.js");
 }
+
+// Version check: show reload banner when a new deployment is detected
+let _knownVersion: string | null = null;
+
+async function checkVersion(): Promise<void> {
+	try {
+		const res = await fetch("/api/version");
+		if (!res.ok) return;
+		const { version } = (await res.json()) as { version: string };
+		if (_knownVersion === null) {
+			_knownVersion = version;
+		} else if (_knownVersion !== version) {
+			showUpdateBanner();
+		}
+	} catch {
+		// network unavailable — ignore
+	}
+}
+
+function showUpdateBanner(): void {
+	if (document.getElementById("sl-update-banner")) return;
+	const el = document.createElement("div");
+	el.id = "sl-update-banner";
+	el.className = "sl-update-banner";
+	el.innerHTML =
+		"<span>A new version is available.</span>" +
+		'<button onclick="location.reload()">Reload</button>';
+	document.body.prepend(el);
+}
+
+void checkVersion();
+document.addEventListener("visibilitychange", () => {
+	if (document.visibilityState === "visible") void checkVersion();
+});

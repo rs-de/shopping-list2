@@ -29,7 +29,8 @@ async function readRecord(listId: string): Promise<ListRecord | null> {
 	const db = await openDb();
 	return new Promise((resolve, reject) => {
 		const req = db.transaction("lists").objectStore("lists").get(listId);
-		req.onsuccess = () => resolve((req.result as ListRecord | undefined) ?? null);
+		req.onsuccess = () =>
+			resolve((req.result as ListRecord | undefined) ?? null);
 		req.onerror = () => reject(req.error);
 	});
 }

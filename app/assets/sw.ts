@@ -1,6 +1,7 @@
 /// <reference lib="WebWorker" />
 
 export type {};
+
 declare let self: ServiceWorkerGlobalScope;
 
 const CACHE = "sl-v1";
@@ -76,8 +77,7 @@ async function networkFirst(request: Request): Promise<Response> {
 		return response;
 	} catch {
 		return (
-			(await cache.match(request)) ??
-			new Response("Offline", { status: 503 })
+			(await cache.match(request)) ?? new Response("Offline", { status: 503 })
 		);
 	}
 }
