@@ -55,7 +55,8 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 17. Step 6: shopping list data — GET/PATCH (5 actions)/DELETE at /:listId
     `(edit routes.ts, router.ts; add utils/moveArticles.ts, actions/list/controller.tsx)`
 
-18. Step 7: shopping list UI — article list, add/edit/delete/clear/share/rejig, animations
+18. Step 7: shopping list UI — article list, add/edit/delete/clear/share/rejig, animations;
+    bg blend-mode exclusion (light) / normal (dark) to match legacy visual
     `(create assets/shopping-list.tsx; edit actions/list/controller.tsx, main.css)`
 
 19. Step 7: clear dialog fade+scale animation (enter 300ms / exit 200ms)
