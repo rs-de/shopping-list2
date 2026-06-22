@@ -543,7 +543,7 @@ a {
 .sl-tagline {
 	margin: 0 0 0.75rem;
 	font-size: 0.875rem;
-	color: hsl(var(--slate-9));
+	color: hsl(var(--slate-11));
 	text-shadow: 0 1px 2px hsl(var(--primary-1));
 }
 
@@ -589,7 +589,7 @@ a {
 
 .sl-item--checked .sl-name {
 	text-decoration: line-through;
-	color: hsl(var(--slate-9));
+	color: hsl(var(--slate-11));
 }
 
 .sl-delete {
@@ -598,7 +598,7 @@ a {
 	min-width: unset;
 	min-height: unset;
 	border-radius: 0.375rem;
-	color: hsl(var(--slate-10));
+	color: hsl(var(--slate-11));
 	background: transparent;
 	border: 1px solid transparent;
 	cursor: pointer;
@@ -650,7 +650,7 @@ a {
 }
 
 .sl-add-input::placeholder {
-	color: hsl(var(--slate-9));
+	color: hsl(var(--slate-11));
 }
 
 /* Action row */
@@ -668,27 +668,27 @@ a {
 
 .sync-status {
 	font-size: 0.75rem;
-	color: hsl(var(--slate-10));
+	color: hsl(var(--slate-11));
 	padding: 0.125rem 0.5rem;
 	border-radius: 9999px;
 }
 
 .sync-status--syncing {
-	color: hsl(var(--primary-10));
+	color: hsl(var(--primary-11));
 }
 
 .sync-status--synced {
-	color: hsl(206 40% 60%);
+	color: hsl(206 60% 35%);
 }
 
 .sync-status--offline {
-	color: hsl(0 60% 55%);
+	color: hsl(0 70% 38%);
 }
 
 /* Empty state */
 .sl-empty {
 	text-align: center;
-	color: hsl(var(--slate-9));
+	color: hsl(var(--slate-11));
 	padding: 1.5rem 0;
 	font-size: 0.9375rem;
 }
