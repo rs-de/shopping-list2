@@ -24,6 +24,13 @@ export default createController(routes, {
 				new Response("Not Found", { status: 404 })
 			);
 		},
+		async sw({ request }) {
+			const url = new URL("/assets/app/assets/sw.ts", request.url);
+			return (
+				(await assetServer.fetch(new Request(url.toString()))) ??
+				new Response("Not Found", { status: 404 })
+			);
+		},
 		async home({ request, render }) {
 			if (request.method === "POST") {
 				if (isRateLimited()) {

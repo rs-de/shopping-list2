@@ -3,12 +3,57 @@ import { clientEntry, type Handle, on, ref } from "remix/ui";
 import type { Translations } from "../i18n.ts";
 
 type Article = { id: string; text: string };
+type ListRecord = { id: string; articles: Article[]; dirty: boolean };
+
+let _db: Promise<IDBDatabase> | null = null;
+
+function openDb(): Promise<IDBDatabase> {
+	if (_db) return _db;
+	_db = new Promise((resolve, reject) => {
+		const req = indexedDB.open("shopping-list", 2);
+		req.onupgradeneeded = () => {
+			const db = req.result;
+			for (const n of Array.from(db.objectStoreNames)) db.deleteObjectStore(n);
+			db.createObjectStore("lists", { keyPath: "id" });
+		};
+		req.onsuccess = () => resolve(req.result);
+		req.onerror = () => {
+			_db = null;
+			reject(req.error);
+		};
+	});
+	return _db;
+}
+
+async function readRecord(listId: string): Promise<ListRecord | null> {
+	const db = await openDb();
+	return new Promise((resolve, reject) => {
+		const req = db.transaction("lists").objectStore("lists").get(listId);
+		req.onsuccess = () => resolve((req.result as ListRecord | undefined) ?? null);
+		req.onerror = () => reject(req.error);
+	});
+}
+
+async function writeRecord(
+	listId: string,
+	articles: Article[],
+	dirty: boolean,
+): Promise<void> {
+	const db = await openDb();
+	return new Promise((resolve, reject) => {
+		const tx = db.transaction("lists", "readwrite");
+		tx.objectStore("lists").put({ id: listId, articles, dirty });
+		tx.oncomplete = () => resolve();
+		tx.onerror = () => reject(tx.error);
+	});
+}
 
 export const ShoppingListApp = clientEntry(
 	import.meta.url,
 	function ShoppingListApp(
 		handle: Handle<{ listId: string; articles: Article[]; t: Translations }>,
 	) {
+		const listId = handle.props.listId;
 		let articles: Article[] = [...handle.props.articles];
 		const { t } = handle.props;
 		let selected = new Set<string>();
@@ -20,29 +65,135 @@ export const ShoppingListApp = clientEntry(
 		let rejigN = 3;
 		let rejigAnchorEl: HTMLElement | null = null;
 
+		// dirty: true when local articles diverge from server state
+		// dirtyGen: incremented on every dirty write — lets drainDirty detect
+		//           if new changes arrived while its fetch was in flight
+		let dirty = false;
+		let dirtyGen = 0;
+		let retryDelay = 3_000;
+		let retryTimer: ReturnType<typeof setTimeout> | null = null;
+
 		handle.signal.addEventListener("abort", () => {
 			for (const t of debounceTimers.values()) clearTimeout(t);
+			clearRetry();
 		});
 
+		function markDirty() {
+			dirty = true;
+			dirtyGen++;
+		}
+
+		function scheduleRetry() {
+			if (retryTimer !== null || handle.signal.aborted) return;
+			retryTimer = setTimeout(() => {
+				retryTimer = null;
+				void drainDirty().catch(() => {});
+			}, retryDelay);
+			retryDelay = Math.min(retryDelay * 2, 30_000);
+		}
+
+		function clearRetry() {
+			if (retryTimer !== null) {
+				clearTimeout(retryTimer);
+				retryTimer = null;
+			}
+			retryDelay = 3_000;
+		}
+
 		handle.queueTask(() => {
-			localStorage.setItem("shoppingListId", handle.props.listId);
+			localStorage.setItem("shoppingListId", listId);
+
+			// IDB init: if dirty, restore local state and start retry; else seed IDB
+			void (async () => {
+				if (handle.signal.aborted) return;
+				try {
+					const saved = await readRecord(listId);
+					if (saved?.dirty && !handle.signal.aborted) {
+						markDirty();
+						articles = saved.articles;
+						handle.update();
+						scheduleRetry();
+					} else {
+						await writeRecord(listId, articles, false);
+					}
+				} catch {
+					// IDB unavailable — server state is fine
+				}
+			})();
+
+			window.addEventListener(
+				"online",
+				() => {
+					clearRetry(); // reset backoff on genuine reconnect
+					void drainDirty().catch(() => {});
+				},
+				{ signal: handle.signal },
+			);
 		});
+
+		async function drainDirty(): Promise<void> {
+			if (!dirty) return;
+			// Snapshot current state and generation before the async fetch
+			const gen = dirtyGen;
+			const snapshot = [...articles];
+			try {
+				const fd = new FormData();
+				fd.set("_action", "replaceArticles");
+				fd.set("articles", JSON.stringify(snapshot));
+				const res = await fetch(`/${listId}`, { method: "PATCH", body: fd });
+				if (!res.ok) {
+					scheduleRetry();
+					return;
+				}
+				await res.json(); // consume body
+				if (dirtyGen !== gen) {
+					// New changes arrived during the fetch — retry with latest state
+					scheduleRetry();
+					return;
+				}
+				dirty = false;
+				articles = snapshot;
+				clearRetry();
+				void writeRecord(listId, articles, false).catch(() => {});
+			} catch {
+				scheduleRetry();
+				return;
+			}
+			if (!handle.signal.aborted) {
+				syncStatus = "synced";
+				handle.update();
+			}
+		}
 
 		async function patch(body: FormData): Promise<void> {
 			syncStatus = "syncing";
 			handle.update();
 			try {
-				const res = await fetch(`/${handle.props.listId}`, {
+				const res = await fetch(`/${listId}`, {
 					method: "PATCH",
 					body,
 					signal: handle.signal,
 				});
 				if (!res.ok) throw new Error("Server error");
 				const updated = (await res.json()) as { articles: Article[] };
-				articles = updated.articles;
-				syncStatus = "synced";
+				if (!dirty) {
+					// Clean state — accept server response as truth
+					articles = updated.articles;
+					syncStatus = "synced";
+					void writeRecord(listId, articles, false).catch(() => {});
+				} else {
+					// Another request failed concurrently — keep optimistic state,
+					// signal drainDirty that a newer snapshot is available
+					markDirty();
+					void writeRecord(listId, articles, true).catch(() => {});
+				}
 			} catch {
-				if (!handle.signal.aborted) syncStatus = "offline";
+				if (!handle.signal.aborted) {
+					markDirty();
+					syncStatus = "offline";
+					void writeRecord(listId, articles, true).catch(() => {});
+					scheduleRetry();
+				}
 			}
 			handle.update();
 		}

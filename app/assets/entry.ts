@@ -12,3 +12,7 @@ run({
 		return response.body ?? (await response.text());
 	},
 });
+
+if ("serviceWorker" in navigator) {
+	navigator.serviceWorker.register("/sw.js");
+}

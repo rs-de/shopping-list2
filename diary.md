@@ -66,3 +66,12 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 21. Fix preferredLang: use remix/headers/accept-language for correct priority
     `(edit app/i18n.ts: AcceptLanguage.from(header).getPreferred(SUPPORTED))`
+
+22. Step 9a: per-list manifest route + PWA <head> tags (manifest, theme-color, apple-icon)
+    `(edit routes.ts, list/controller.tsx, ui/document.tsx)`
+
+23. Step 9b: TS service worker via asset-server proxy at /sw.js
+    `(add app/assets/sw.ts; edit routes.ts, controller.tsx, entry.ts)`
+
+24. Step 9c: IndexedDB dirty-flag + replaceArticles sync, backoff retry, concurrent-safe
+    `(edit list/controller.tsx + app/assets/shopping-list.tsx)`

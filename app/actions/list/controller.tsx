@@ -10,6 +10,32 @@ import { type Article, moveArticles } from "../../utils/moveArticles.ts";
 
 export default createController(routes.list, {
 	actions: {
+		async manifest({ params }) {
+			const { listId } = params;
+			return Response.json({
+				name: "Shopping List",
+				short_name: "List",
+				description: "An offline-first shopping list",
+				start_url: `/${listId}`,
+				display: "standalone",
+				background_color: "#eaf4ff",
+				theme_color: "hsl(206, 100%, 50%)",
+				icons: [
+					{
+						src: "/icons/manifest-icon-192.maskable.png",
+						sizes: "192x192",
+						type: "image/png",
+						purpose: "any maskable",
+					},
+					{
+						src: "/icons/manifest-icon-512.maskable.png",
+						sizes: "512x512",
+						type: "image/png",
+						purpose: "any maskable",
+					},
+				],
+			});
+		},
 		async show({ request, params, render }) {
 			const { listId } = params;
 
@@ -85,6 +111,16 @@ export default createController(routes.list, {
 						});
 						return Response.json(updated);
 					}
+					case "replaceArticles": {
+						const newArticles = JSON.parse(
+							String(form.get("articles") ?? "[]"),
+						) as Article[];
+						const updated = await db.shoppingList.update({
+							where: { id: listId },
+							data: { articles: newArticles },
+						});
+						return Response.json(updated);
+					}
 					default:
 						return new Response("Bad Request: unknown _action", {
 							status: 400,
@@ -96,7 +132,12 @@ export default createController(routes.list, {
 			const t = await loadTranslations(lang);
 
 			return render(
-				<Document title={t.ShoppingList} lang={lang} t={t}>
+				<Document
+					title={t.ShoppingList}
+					lang={lang}
+					t={t}
+					manifestHref={`/${listId}/manifest`}
+				>
 					<ShoppingListApp listId={listId} articles={articles} t={t} />
 				</Document>,
 			);

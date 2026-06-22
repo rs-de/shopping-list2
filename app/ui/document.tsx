@@ -11,6 +11,7 @@ export interface DocumentProps {
 	title?: string;
 	lang?: Lang;
 	t: Translations;
+	manifestHref?: string;
 }
 
 const DEFAULT_TITLE = readAppDisplayName("Shopping%20List2");
@@ -23,6 +24,7 @@ export function Document(handle: Handle<DocumentProps>) {
 			title = DEFAULT_TITLE,
 			lang = "en",
 			t,
+			manifestHref = "/manifest.webmanifest",
 		} = handle.props;
 
 		return (
@@ -30,6 +32,9 @@ export function Document(handle: Handle<DocumentProps>) {
 				<head>
 					<meta charSet="utf-8" />
 					<meta name="viewport" content="width=device-width, initial-scale=1" />
+					<meta name="theme-color" content="hsl(206, 100%, 50%)" />
+					<link rel="manifest" href={manifestHref} />
+					<link rel="apple-touch-icon" href="/icons/apple-icon-180.png" />
 					<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 					<link rel="stylesheet" href="/styles/main.css" />
 					<title>{title}</title>
