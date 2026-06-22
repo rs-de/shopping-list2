@@ -185,15 +185,6 @@ a {
 	color: #fff;
 }
 
-@media (prefers-color-scheme: dark) {
-	.btn-coffee {
-		background: hsl(var(--primary-9));
-	}
-	.btn-coffee:hover {
-		background: hsl(var(--primary-10));
-	}
-}
-
 /* group-hover:underline on the label span */
 .btn-coffee:hover .btn-coffee__label {
 	text-decoration: underline;
