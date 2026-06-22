@@ -3,6 +3,7 @@ import { createController } from "remix/router";
 
 import { ShoppingListApp } from "../../assets/shopping-list.tsx";
 import { db } from "../../db.ts";
+import { loadTranslations, preferredLang } from "../../i18n.ts";
 import { routes } from "../../routes.ts";
 import { Document } from "../../ui/document.tsx";
 import { type Article, moveArticles } from "../../utils/moveArticles.ts";
@@ -85,13 +86,18 @@ export default createController(routes.list, {
 						return Response.json(updated);
 					}
 					default:
-						return new Response("Bad Request: unknown _action", { status: 400 });
+						return new Response("Bad Request: unknown _action", {
+							status: 400,
+						});
 				}
 			}
 
+			const lang = preferredLang(request.headers.get("accept-language"));
+			const t = await loadTranslations(lang);
+
 			return render(
-				<Document title="Shopping List">
-					<ShoppingListApp listId={listId} articles={articles} />
+				<Document title={t.ShoppingList} lang={lang} t={t}>
+					<ShoppingListApp listId={listId} articles={articles} t={t} />
 				</Document>,
 			);
 		},

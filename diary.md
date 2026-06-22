@@ -60,3 +60,9 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 19. Step 7: clear dialog fade+scale animation (enter 300ms / exit 200ms)
     `(edit assets/shopping-list.tsx, main.css)`
+
+20. Step 8: i18n — thread Accept-Language translations across all routes
+    `(add app/i18n.ts; edit controllers, document, footer, home-menu, shopping-list)`
+
+21. Fix preferredLang: use remix/headers/accept-language for correct priority
+    `(edit app/i18n.ts: AcceptLanguage.from(header).getPreferred(SUPPORTED))`

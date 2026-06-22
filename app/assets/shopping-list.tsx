@@ -1,13 +1,16 @@
 import { clientEntry, type Handle, on, ref } from "remix/ui";
 
+import type { Translations } from "../i18n.ts";
+
 type Article = { id: string; text: string };
 
 export const ShoppingListApp = clientEntry(
 	import.meta.url,
 	function ShoppingListApp(
-		handle: Handle<{ listId: string; articles: Article[] }>,
+		handle: Handle<{ listId: string; articles: Article[]; t: Translations }>,
 	) {
 		let articles: Article[] = [...handle.props.articles];
+		const { t } = handle.props;
 		let selected = new Set<string>();
 		let syncStatus: "idle" | "syncing" | "synced" | "offline" = "idle";
 		let clearOpen = false;
@@ -112,7 +115,7 @@ export const ShoppingListApp = clientEntry(
 			const url = location.href;
 			try {
 				if (navigator.share) {
-					await navigator.share({ url, title: "Shopping List" });
+					await navigator.share({ url, title: t.ShoppingList });
 				} else {
 					await navigator.clipboard.writeText(url);
 				}
@@ -127,29 +130,29 @@ export const ShoppingListApp = clientEntry(
 			const rejigMid = Math.ceil(rejigN / 2);
 			const rejigButtons = Array.from({ length: rejigN }, (_, i) => {
 				const partition = i + 1;
-				const label =
+				const labelKey =
 					partition === 1
-						? "early"
+						? "pickupTime_early"
 						: partition === rejigMid
-							? "medium"
+							? "pickupTime_medium"
 							: partition === rejigN
-								? "late"
-								: "";
+								? "pickupTime_late"
+								: null;
 				return (
 					<button
 						key={String(partition)}
-						class={`btn btn-secondary sl-rejig-btn${label ? "" : " sl-rejig-btn--dot"}`}
+						class={`btn btn-secondary sl-rejig-btn${labelKey ? "" : " sl-rejig-btn--dot"}`}
 						type="button"
 						mix={on("click", () => rejig(partition))}
 					>
-						{label}
+						{labelKey ? t[labelKey] : ""}
 					</button>
 				);
 			});
 
 			return (
 				<div class="sl-app">
-					<h1 class="sl-heading">Shopping List</h1>
+					<h1 class="sl-heading">{t.ShoppingList}</h1>
 
 					<div class="sl-card">
 						{articles.length > 0 && (
@@ -207,14 +210,24 @@ export const ShoppingListApp = clientEntry(
 
 						<div class="sl-add-form">
 							<span class="sl-add-icon" aria-hidden="true">
-								<svg viewBox="0 0 20 20" fill="currentColor" width="24" height="24" aria-hidden="true">
-									<path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
+								<svg
+									viewBox="0 0 20 20"
+									fill="currentColor"
+									width="24"
+									height="24"
+									aria-hidden="true"
+								>
+									<path
+										fill-rule="evenodd"
+										d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
+										clip-rule="evenodd"
+									/>
 								</svg>
 							</span>
 							<input
 								type="text"
 								class="sl-add-input"
-								placeholder="Add an article…"
+								placeholder={t.input_article_to_add}
 								maxLength={75}
 								autoComplete="off"
 								enterKeyHint="go"
@@ -240,7 +253,7 @@ export const ShoppingListApp = clientEntry(
 								type="button"
 								mix={on("click", addArticle)}
 							>
-								Add
+								{t.Add}
 							</button>
 							{articles.length > 0 && (
 								<button
@@ -251,7 +264,7 @@ export const ShoppingListApp = clientEntry(
 										handle.update();
 									})}
 								>
-									Clear
+									{t.clearList}
 								</button>
 							)}
 							<button
@@ -259,12 +272,19 @@ export const ShoppingListApp = clientEntry(
 								type="button"
 								mix={on("click", share)}
 							>
-								<svg width="20" height="20" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg" fill="currentColor" aria-hidden="true">
+								<svg
+									width="20"
+									height="20"
+									viewBox="0 0 50 50"
+									xmlns="http://www.w3.org/2000/svg"
+									fill="currentColor"
+									aria-hidden="true"
+								>
 									<path d="M30.3 13.7L25 8.4l-5.3 5.3-1.4-1.4L25 5.6l6.7 6.7z" />
 									<path d="M24 7h2v21h-2z" />
 									<path d="M35 40H15c-1.7 0-3-1.3-3-3V19c0-1.7 1.3-3 3-3h7v2h-7c-.6 0-1 .4-1 1v18c0 .6.4 1 1 1h20c.6 0 1-.4 1-1V19c0-.6-.4-1-1-1h-7v-2h7c1.7 0 3 1.3 3 3v18c0 1.7-1.3 3-3 3z" />
 								</svg>
-								Copy Link to share
+								{t["copy-link"]}
 							</button>
 						</div>
 
@@ -272,10 +292,10 @@ export const ShoppingListApp = clientEntry(
 							<div class="sl-sync-row">
 								<span class={`sync-status sync-status--${syncStatus}`}>
 									{syncStatus === "syncing"
-										? "Saving…"
+										? t.saving
 										: syncStatus === "synced"
-											? "Saved"
-											: "Offline — changes may be lost"}
+											? t.saved
+											: t.offline}
 								</span>
 							</div>
 						)}
@@ -288,7 +308,11 @@ export const ShoppingListApp = clientEntry(
 							style={(() => {
 								const r = rejigAnchorEl?.getBoundingClientRect();
 								return r
-									? { left: `${r.right - 170}px`, top: `${r.top - 35}px`, transform: "none" }
+									? {
+											left: `${r.right - 170}px`,
+											top: `${r.top - 35}px`,
+											transform: "none",
+										}
 									: { transform: "none" };
 							})()}
 						>
@@ -305,11 +329,7 @@ export const ShoppingListApp = clientEntry(
 							</button>
 							{helpOpen && (
 								<div class="sl-rejig-help-panel" key="help-panel">
-									The list is unsorted and each supermarket is divided differently.
-									While shopping you can change the order of your list and move items
-									accordingly — depending on where they can be found in the
-									supermarket: next, a little later or at the very end on your way
-									through the shelves 🛒😀
+									{t.rejig_description}
 								</div>
 							)}
 							<select
@@ -327,32 +347,52 @@ export const ShoppingListApp = clientEntry(
 									);
 								})}
 							>
-								<option value="3" selected={rejigN === 3}>3</option>
-								<option value="5" selected={rejigN === 5}>5</option>
-								<option value="7" selected={rejigN === 7}>7</option>
+								<option value="3" selected={rejigN === 3}>
+									3
+								</option>
+								<option value="5" selected={rejigN === 5}>
+									5
+								</option>
+								<option value="7" selected={rejigN === 7}>
+									7
+								</option>
 							</select>
 							{rejigButtons}
 						</div>
 					)}
 
-					<div class={`sl-delete-bar${showDelete ? " sl-delete-bar--visible" : ""}`}>
+					<div
+						class={`sl-delete-bar${showDelete ? " sl-delete-bar--visible" : ""}`}
+					>
 						<button
 							class="btn btn-primary"
 							style={{ width: "100%" }}
 							type="button"
 							mix={on("click", deleteSelected)}
 						>
-							<svg viewBox="0 0 20 20" fill="currentColor" width="20" height="20" aria-hidden="true">
-								<path fill-rule="evenodd" d="M6.707 4.879A3 3 0 018.828 4H15a3 3 0 013 3v6a3 3 0 01-3 3H8.828a3 3 0 01-2.12-.879l-4.415-4.414a1 1 0 010-1.414l4.414-4.414zm4 2.414a1 1 0 00-1.414 1.414L10.586 10l-1.293 1.293a1 1 0 101.414 1.414L12 11.414l1.293 1.293a1 1 0 001.414-1.414L13.414 10l1.293-1.293a1 1 0 00-1.414-1.414L12 8.586l-1.293-1.293z" clip-rule="evenodd" />
+							<svg
+								viewBox="0 0 20 20"
+								fill="currentColor"
+								width="20"
+								height="20"
+								aria-hidden="true"
+							>
+								<path
+									fill-rule="evenodd"
+									d="M6.707 4.879A3 3 0 018.828 4H15a3 3 0 013 3v6a3 3 0 01-3 3H8.828a3 3 0 01-2.12-.879l-4.415-4.414a1 1 0 010-1.414l4.414-4.414zm4 2.414a1 1 0 00-1.414 1.414L10.586 10l-1.293 1.293a1 1 0 101.414 1.414L12 11.414l1.293 1.293a1 1 0 001.414-1.414L13.414 10l1.293-1.293a1 1 0 00-1.414-1.414L12 8.586l-1.293-1.293z"
+									clip-rule="evenodd"
+								/>
 							</svg>
-							Delete selected ({selected.size})
+							{t.delete_selected_articles} ({selected.size})
 						</button>
 					</div>
 
-					<div class={`sl-dialog-overlay${clearOpen ? " sl-dialog-overlay--visible" : ""}`}>
+					<div
+						class={`sl-dialog-overlay${clearOpen ? " sl-dialog-overlay--visible" : ""}`}
+					>
 						<div class="sl-dialog">
-							<h2 class="sl-dialog-title">Clear list</h2>
-							<p>This will remove all articles. Are you sure?</p>
+							<h2 class="sl-dialog-title">{t.clearList}</h2>
+							<p>{t["clearList-confirm"]}</p>
 							<div class="sl-dialog-actions">
 								<button
 									class="btn btn-secondary"
@@ -362,14 +402,14 @@ export const ShoppingListApp = clientEntry(
 										handle.update();
 									})}
 								>
-									Cancel
+									{t.cancel}
 								</button>
 								<button
 									class="btn btn-primary"
 									type="button"
 									mix={on("click", clearList)}
 								>
-									Clear
+									{t.clearList}
 								</button>
 							</div>
 						</div>

@@ -5,9 +5,11 @@ import * as url from "node:url";
 import { marked } from "marked";
 import { redirect } from "remix/response/redirect";
 import { createController } from "remix/router";
+
 import { HomeMenu } from "../assets/home-menu.tsx";
 import { assetServer } from "../assets.ts";
 import { db } from "../db.ts";
+import { loadTranslations, preferredLang } from "../i18n.ts";
 import { routes } from "../routes.ts";
 import { Document } from "../ui/document.tsx";
 
@@ -30,42 +32,47 @@ export default createController(routes, {
 				const list = await db.shoppingList.create({ data: {} });
 				return redirect(`/${list.id}`, 303);
 			}
+			const lang = preferredLang(request.headers.get("accept-language"));
+			const t = await loadTranslations(lang);
 			return render(
-				<Document title="Free shopping list web app">
+				<Document title={t["page-title"]} lang={lang} t={t}>
 					<div class="content-box home-page">
 						<div class="home-page__header">
-							<h1>Shopping List</h1>
-							<h2>Simple - Secure - Free - Shareable - No login</h2>
+							<h1>{t.ShoppingList}</h1>
+							<h2>{t["app-teaser-text"]}</h2>
 						</div>
 						<div class="home-menu">
-							<HomeMenu />
+							<HomeMenu t={t} />
 						</div>
 						<span aria-hidden="true" />
 					</div>
 				</Document>,
 			);
 		},
-		async changelog({ render }) {
+		async changelog({ request, render }) {
+			const lang = preferredLang(request.headers.get("accept-language"));
+			const t = await loadTranslations(lang);
 			const file = path.join(ROOT, "CHANGELOG.md");
 			const markdown = await fs.readFile(file, "utf-8");
 			const html = await marked(markdown);
 			return render(
-				<Document title="Changelog — Shopping List">
+				<Document title="Changelog — Shopping List" lang={lang} t={t}>
 					<article class="content-box prose changelog-page" innerHTML={html} />
 				</Document>,
 			);
 		},
 		async about({ request, render }) {
 			const lang = preferredLang(request.headers.get("accept-language"));
+			const t = await loadTranslations(lang);
 			const file = path.join(DIR, "about", `about.${lang}.md`);
 			const markdown = await fs.readFile(file, "utf-8");
 			const html = await marked(markdown);
 			return render(
-				<Document title="About — Shopping List">
+				<Document title="About — Shopping List" lang={lang} t={t}>
 					<div class="about-page">
 						<div class="about-page__header">
-							<h1>Shopping List</h1>
-							<h2>Simple - Secure - Free - Shareable - No login</h2>
+							<h1>{t.ShoppingList}</h1>
+							<h2>{t["app-teaser-text"]}</h2>
 						</div>
 						<article class="prose" innerHTML={html} />
 					</div>
@@ -82,15 +89,4 @@ function isRateLimited(): boolean {
 	if (now < rateLimitUntil) return true;
 	rateLimitUntil = now + 5_000;
 	return false;
-}
-
-function preferredLang(header: string | null): "de" | "en" {
-	if (!header) return "en";
-	const langs = header
-		.split(",")
-		.map((entry) =>
-			entry.trim().split(";")[0]?.trim().toLowerCase().slice(0, 2),
-		)
-		.filter((lang): lang is string => lang !== undefined);
-	return langs.includes("de") ? "de" : "en";
 }
