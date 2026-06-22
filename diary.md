@@ -100,3 +100,6 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 30. Abort superseded patch requests — no point letting stale ones finish
     `(edit app/assets/shopping-list.tsx: patchAbort controller)`
+
+31. Skip drainDirty when last response already matches client state
+    `(edit app/assets/shopping-list.tsx: compare articles in patch() dirty path)`

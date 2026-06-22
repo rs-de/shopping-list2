@@ -189,7 +189,9 @@ export const ShoppingListApp = clientEntry(
 				const updated = (await res.json()) as { articles: Article[] };
 				inFlight--;
 				if (inFlight === 0) {
-					if (!dirty) {
+					if (!dirty || JSON.stringify(updated.articles) === JSON.stringify(articles)) {
+						dirty = false;
+						clearRetry();
 						articles = updated.articles;
 						syncStatus = "synced";
 						void writeRecord(listId, articles, false).catch(() => {});
