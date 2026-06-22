@@ -1,9 +1,9 @@
 {
-  "permissions": {
-    "allow": [
-      "Bash(pnpm add *)",
-      "Bash(pnpm test:e2e)",
-      "Bash(pnpm lighthouse *)"
-    ]
-  }
+	"permissions": {
+		"allow": [
+			"Bash(pnpm add *)",
+			"Bash(pnpm test:e2e)",
+			"Bash(pnpm lighthouse *)"
+		]
+	}
 }

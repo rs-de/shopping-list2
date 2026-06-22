@@ -58,7 +58,7 @@ export const ShoppingListApp = clientEntry(
 		let articles: Article[] = [...handle.props.articles];
 		const { t } = handle.props;
 		let selected = new Set<string>();
-		let syncStatus: "idle" | "syncing" | "synced" | "offline" = "idle";
+		let syncStatus: "idle" | "syncing" | "synced" = "idle";
 		let clearOpen = false;
 		let helpOpen = false;
 		const debounceTimers = new Map<string, ReturnType<typeof setTimeout>>();
@@ -191,7 +191,6 @@ export const ShoppingListApp = clientEntry(
 			} catch {
 				if (!handle.signal.aborted) {
 					markDirty();
-					syncStatus = "offline";
 					void writeRecord(listId, articles, true).catch(() => {});
 					scheduleRetry();
 				}
@@ -440,14 +439,10 @@ export const ShoppingListApp = clientEntry(
 							</button>
 						</div>
 
-						{syncStatus !== "idle" && (
+						{(syncStatus === "syncing" || syncStatus === "synced") && (
 							<div class="sl-sync-row">
 								<span class={`sync-status sync-status--${syncStatus}`}>
-									{syncStatus === "syncing"
-										? t.saving
-										: syncStatus === "synced"
-											? t.saved
-											: t.offline}
+									{syncStatus === "syncing" ? t.saving : t.saved}
 								</span>
 							</div>
 						)}

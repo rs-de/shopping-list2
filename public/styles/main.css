@@ -672,10 +672,6 @@ a {
 	color: hsl(206 60% 35%);
 }
 
-.sync-status--offline {
-	color: hsl(0 70% 38%);
-}
-
 /* Empty state */
 .sl-empty {
 	text-align: center;
