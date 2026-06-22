@@ -80,6 +80,12 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 25. Step 10a: 404 catch-all + 500 fallback + HTML error pages
     `(edit routes.ts, controller.tsx, list/controller.tsx; edit public/styles/main.css)`
 
+28. Lighthouse audit script using Playwright Chromium + --headless=new (no localhost block)
+    `(pnpm add -D lighthouse; add scripts/lighthouse.ts; edit package.json)`
+
+29. Step 11: Lighthouse 100/100/100/100 — favicon, meta desc, contrast, cache, SW module
+    `(edit document.tsx, main.css, server.ts, entry.ts)`
+
 26. Step 10b: /api/version endpoint + client reload banner on version change
     `(edit routes.ts, controller.tsx, entry.ts, public/styles/main.css)`
 

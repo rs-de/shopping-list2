@@ -14,7 +14,7 @@ run({
 });
 
 if ("serviceWorker" in navigator) {
-	navigator.serviceWorker.register("/sw.js");
+	navigator.serviceWorker.register("/sw.js", { type: "module" });
 }
 
 // Version check: show reload banner when a new deployment is detected

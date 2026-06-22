@@ -164,7 +164,7 @@ a {
 	justify-content: center;
 	align-items: center;
 	gap: 0.5rem;
-	background: hsl(var(--primary-9));
+	background: hsl(206 100% 36%);
 	padding: 0.25rem;
 	font-size: 0.875rem;
 	line-height: 1.25rem;
@@ -181,8 +181,17 @@ a {
 
 /* hover:bg-primary-10 */
 .btn-coffee:hover {
-	background: hsl(var(--primary-10));
+	background: hsl(206 100% 31%);
 	color: #fff;
+}
+
+@media (prefers-color-scheme: dark) {
+	.btn-coffee {
+		background: hsl(var(--primary-9));
+	}
+	.btn-coffee:hover {
+		background: hsl(var(--primary-10));
+	}
 }
 
 /* group-hover:underline on the label span */
