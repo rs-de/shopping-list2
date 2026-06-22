@@ -46,7 +46,6 @@ self.addEventListener("fetch", (event) => {
 	const isStaticAsset =
 		url.pathname.startsWith("/styles/") ||
 		url.pathname.startsWith("/icons/") ||
-		url.pathname.startsWith("/assets/") ||
 		url.pathname === "/logo.svg" ||
 		url.pathname === "/favicon.ico" ||
 		url.pathname === "/favicon.svg" ||

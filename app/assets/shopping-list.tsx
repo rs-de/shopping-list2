@@ -71,6 +71,7 @@ export const ShoppingListApp = clientEntry(
 		//           if new changes arrived while its fetch was in flight
 		let dirty = false;
 		let dirtyGen = 0;
+		let inFlight = 0;
 		let retryDelay = 3_000;
 		let retryTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -167,6 +168,11 @@ export const ShoppingListApp = clientEntry(
 		}
 
 		async function patch(body: FormData): Promise<void> {
+			inFlight++;
+			// Two requests in flight means responses may arrive out of order.
+			// Mark dirty immediately so all responses are discarded and drainDirty
+			// reconciles the final state via replaceArticles.
+			if (inFlight > 1) markDirty();
 			syncStatus = "syncing";
 			handle.update();
 			try {
@@ -177,18 +183,19 @@ export const ShoppingListApp = clientEntry(
 				});
 				if (!res.ok) throw new Error("Server error");
 				const updated = (await res.json()) as { articles: Article[] };
-				if (!dirty) {
-					// Clean state — accept server response as truth
-					articles = updated.articles;
-					syncStatus = "synced";
-					void writeRecord(listId, articles, false).catch(() => {});
-				} else {
-					// Another request failed concurrently — keep optimistic state,
-					// signal drainDirty that a newer snapshot is available
-					markDirty();
-					void writeRecord(listId, articles, true).catch(() => {});
+				inFlight--;
+				if (inFlight === 0) {
+					if (!dirty) {
+						articles = updated.articles;
+						syncStatus = "synced";
+						void writeRecord(listId, articles, false).catch(() => {});
+					} else {
+						void writeRecord(listId, articles, true).catch(() => {});
+						scheduleRetry();
+					}
 				}
 			} catch {
+				inFlight--;
 				if (!handle.signal.aborted) {
 					markDirty();
 					void writeRecord(listId, articles, true).catch(() => {});

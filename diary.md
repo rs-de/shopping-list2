@@ -91,3 +91,9 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 27. Step 10c: Playwright e2e tests — home, create list, add article, 404, version
     `(add playwright.config.ts, tests/e2e.spec.ts; edit package.json)`
+
+28. Fix client race: mark dirty on concurrent patches, let drainDirty reconcile
+    `(edit app/assets/shopping-list.tsx: inFlight + markDirty on overlap)`
+
+29. Fix SW: use networkFirst for /assets/ JS so code updates are served fresh
+    `(edit app/assets/sw.ts: remove /assets/ from isStaticAsset)`
