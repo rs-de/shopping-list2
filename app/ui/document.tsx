@@ -1,20 +1,20 @@
-import type { Handle, RemixNode } from "remix/ui";
+import type { Handle, RemixNode } from "remix/ui"
 
-import type { Lang, Translations } from "../i18n.ts";
-import { routes } from "../routes.ts";
-import { Footer } from "./footer.tsx";
-import { Navbar } from "./navbar.tsx";
+import type { Lang, Translations } from "../i18n.ts"
+import { routes } from "../routes.ts"
+import { Footer } from "./footer.tsx"
+import { Navbar } from "./navbar.tsx"
 
 export interface DocumentProps {
-	children?: RemixNode;
-	head?: RemixNode;
-	title?: string;
-	lang?: Lang;
-	t: Translations;
-	manifestHref?: string;
+	children?: RemixNode
+	head?: RemixNode
+	title?: string
+	lang?: Lang
+	t: Translations
+	manifestHref?: string
 }
 
-const DEFAULT_TITLE = readAppDisplayName("Shopping%20List2");
+const DEFAULT_TITLE = readAppDisplayName("Shopping%20List2")
 
 export function Document(handle: Handle<DocumentProps>) {
 	return () => {
@@ -25,7 +25,7 @@ export function Document(handle: Handle<DocumentProps>) {
 			lang = "en",
 			t,
 			manifestHref = "/manifest.webmanifest",
-		} = handle.props;
+		} = handle.props
 
 		return (
 			<html lang={lang}>
@@ -57,10 +57,10 @@ export function Document(handle: Handle<DocumentProps>) {
 					></script>
 				</body>
 			</html>
-		);
-	};
+		)
+	}
 }
 
 function readAppDisplayName(value: string): string {
-	return value.startsWith("%%") ? "Remix App" : decodeURIComponent(value);
+	return value.startsWith("%%") ? "Remix App" : decodeURIComponent(value)
 }

@@ -1,19 +1,19 @@
-import { clientEntry, type Handle } from "remix/ui";
+import { clientEntry, type Handle } from "remix/ui"
 
-import type { Translations } from "../i18n.ts";
+import type { Translations } from "../i18n.ts"
 
-const LOCAL_STORAGE_KEY = "shoppingListId";
+const LOCAL_STORAGE_KEY = "shoppingListId"
 
 export const HomeMenu = clientEntry(
 	import.meta.url,
 	function HomeMenu(handle: Handle<{ t: Translations }>) {
-		let listId: string | null = null;
-		const { t } = handle.props;
+		let listId: string | null = null
+		const { t } = handle.props
 
 		handle.queueTask(() => {
-			listId = localStorage.getItem(LOCAL_STORAGE_KEY);
-			handle.update();
-		});
+			listId = localStorage.getItem(LOCAL_STORAGE_KEY)
+			handle.update()
+		})
 
 		return () =>
 			listId ? (
@@ -26,6 +26,6 @@ export const HomeMenu = clientEntry(
 						{t.create_shoppingList}
 					</button>
 				</form>
-			);
+			)
 	},
-);
+)

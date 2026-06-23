@@ -1,10 +1,10 @@
 /// <reference lib="WebWorker" />
 
-export type {};
+export type {}
 
-declare let self: ServiceWorkerGlobalScope;
+declare let self: ServiceWorkerGlobalScope
 
-const CACHE = "sl-v1";
+const CACHE = "sl-v1"
 
 const PRECACHE_URLS = [
 	"/styles/main.css",
@@ -15,14 +15,14 @@ const PRECACHE_URLS = [
 	"/icons/apple-icon-180.png",
 	"/icons/manifest-icon-192.maskable.png",
 	"/icons/manifest-icon-512.maskable.png",
-];
+]
 
 self.addEventListener("install", (event) => {
-	self.skipWaiting();
+	self.skipWaiting()
 	event.waitUntil(
 		caches.open(CACHE).then((cache) => cache.addAll(PRECACHE_URLS)),
-	);
-});
+	)
+})
 
 self.addEventListener("activate", (event) => {
 	event.waitUntil(
@@ -33,15 +33,15 @@ self.addEventListener("activate", (event) => {
 					keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)),
 				),
 			),
-	);
-	self.clients.claim();
-});
+	)
+	self.clients.claim()
+})
 
 self.addEventListener("fetch", (event) => {
-	const { request } = event;
-	if (request.method !== "GET") return;
+	const { request } = event
+	if (request.method !== "GET") return
 
-	const url = new URL(request.url);
+	const url = new URL(request.url)
 
 	const isStaticAsset =
 		url.pathname.startsWith("/styles/") ||
@@ -50,33 +50,31 @@ self.addEventListener("fetch", (event) => {
 		url.pathname === "/favicon.ico" ||
 		url.pathname === "/favicon.svg" ||
 		url.pathname === "/bg1.webp" ||
-		url.pathname === "/manifest.webmanifest";
+		url.pathname === "/manifest.webmanifest"
 
-	event.respondWith(
-		isStaticAsset ? cacheFirst(request) : networkFirst(request),
-	);
-});
+	event.respondWith(isStaticAsset ? cacheFirst(request) : networkFirst(request))
+})
 
 async function cacheFirst(request: Request): Promise<Response> {
-	const cached = await caches.match(request);
-	if (cached) return cached;
-	const response = await fetch(request);
+	const cached = await caches.match(request)
+	if (cached) return cached
+	const response = await fetch(request)
 	if (response.ok) {
-		const cache = await caches.open(CACHE);
-		cache.put(request, response.clone());
+		const cache = await caches.open(CACHE)
+		cache.put(request, response.clone())
 	}
-	return response;
+	return response
 }
 
 async function networkFirst(request: Request): Promise<Response> {
-	const cache = await caches.open(CACHE);
+	const cache = await caches.open(CACHE)
 	try {
-		const response = await fetch(request);
-		if (response.ok) cache.put(request, response.clone());
-		return response;
+		const response = await fetch(request)
+		if (response.ok) cache.put(request, response.clone())
+		return response
 	} catch {
 		return (
 			(await cache.match(request)) ?? new Response("Offline", { status: 503 })
-		);
+		)
 	}
 }

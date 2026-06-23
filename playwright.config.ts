@@ -1,4 +1,4 @@
-import { defineConfig } from "@playwright/test";
+import { defineConfig } from "@playwright/test"
 
 export default defineConfig({
 	testDir: "./tests",
@@ -11,4 +11,4 @@ export default defineConfig({
 		reuseExistingServer: !process.env.CI,
 		timeout: 30_000,
 	},
-});
+})

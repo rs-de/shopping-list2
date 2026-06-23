@@ -1,38 +1,38 @@
-import { clientEntry, type Handle, on, ref } from "remix/ui";
+import { clientEntry, type Handle, on, ref } from "remix/ui"
 
-import type { Translations } from "../i18n.ts";
+import type { Translations } from "../i18n.ts"
 
-type Article = { id: string; text: string };
-type ListRecord = { id: string; articles: Article[]; dirty: boolean };
+type Article = { id: string; text: string }
+type ListRecord = { id: string; articles: Article[]; dirty: boolean }
 
-let _db: Promise<IDBDatabase> | null = null;
+let _db: Promise<IDBDatabase> | null = null
 
 function openDb(): Promise<IDBDatabase> {
-	if (_db) return _db;
+	if (_db) return _db
 	_db = new Promise((resolve, reject) => {
-		const req = indexedDB.open("shopping-list", 2);
+		const req = indexedDB.open("shopping-list", 2)
 		req.onupgradeneeded = () => {
-			const db = req.result;
-			for (const n of Array.from(db.objectStoreNames)) db.deleteObjectStore(n);
-			db.createObjectStore("lists", { keyPath: "id" });
-		};
-		req.onsuccess = () => resolve(req.result);
+			const db = req.result
+			for (const n of Array.from(db.objectStoreNames)) db.deleteObjectStore(n)
+			db.createObjectStore("lists", { keyPath: "id" })
+		}
+		req.onsuccess = () => resolve(req.result)
 		req.onerror = () => {
-			_db = null;
-			reject(req.error);
-		};
-	});
-	return _db;
+			_db = null
+			reject(req.error)
+		}
+	})
+	return _db
 }
 
 async function readRecord(listId: string): Promise<ListRecord | null> {
-	const db = await openDb();
+	const db = await openDb()
 	return new Promise((resolve, reject) => {
-		const req = db.transaction("lists").objectStore("lists").get(listId);
+		const req = db.transaction("lists").objectStore("lists").get(listId)
 		req.onsuccess = () =>
-			resolve((req.result as ListRecord | undefined) ?? null);
-		req.onerror = () => reject(req.error);
-	});
+			resolve((req.result as ListRecord | undefined) ?? null)
+		req.onerror = () => reject(req.error)
+	})
 }
 
 async function writeRecord(
@@ -40,13 +40,13 @@ async function writeRecord(
 	articles: Article[],
 	dirty: boolean,
 ): Promise<void> {
-	const db = await openDb();
+	const db = await openDb()
 	return new Promise((resolve, reject) => {
-		const tx = db.transaction("lists", "readwrite");
-		tx.objectStore("lists").put({ id: listId, articles, dirty });
-		tx.oncomplete = () => resolve();
-		tx.onerror = () => reject(tx.error);
-	});
+		const tx = db.transaction("lists", "readwrite")
+		tx.objectStore("lists").put({ id: listId, articles, dirty })
+		tx.oncomplete = () => resolve()
+		tx.onerror = () => reject(tx.error)
+	})
 }
 
 export const ShoppingListApp = clientEntry(
@@ -54,242 +54,242 @@ export const ShoppingListApp = clientEntry(
 	function ShoppingListApp(
 		handle: Handle<{ listId: string; articles: Article[]; t: Translations }>,
 	) {
-		const listId = handle.props.listId;
-		let articles: Article[] = [...handle.props.articles];
-		const { t } = handle.props;
-		let selected = new Set<string>();
-		let syncStatus: "idle" | "syncing" | "synced" = "idle";
-		let clearOpen = false;
-		let helpOpen = false;
-		const debounceTimers = new Map<string, ReturnType<typeof setTimeout>>();
-		let addInputEl: HTMLInputElement | null = null;
-		let rejigN = 3;
-		let rejigAnchorEl: HTMLElement | null = null;
+		const listId = handle.props.listId
+		let articles: Article[] = [...handle.props.articles]
+		const { t } = handle.props
+		let selected = new Set<string>()
+		let syncStatus: "idle" | "syncing" | "synced" = "idle"
+		let clearOpen = false
+		let helpOpen = false
+		const debounceTimers = new Map<string, ReturnType<typeof setTimeout>>()
+		let addInputEl: HTMLInputElement | null = null
+		let rejigN = 3
+		let rejigAnchorEl: HTMLElement | null = null
 
 		// dirty: true when local articles diverge from server state
 		// dirtyGen: incremented on every dirty write — lets drainDirty detect
 		//           if new changes arrived while its fetch was in flight
-		let dirty = false;
-		let dirtyGen = 0;
-		let inFlight = 0;
-		let patchAbort: AbortController | null = null;
-		let retryDelay = 3_000;
-		let retryTimer: ReturnType<typeof setTimeout> | null = null;
+		let dirty = false
+		let dirtyGen = 0
+		let inFlight = 0
+		let patchAbort: AbortController | null = null
+		let retryDelay = 3_000
+		let retryTimer: ReturnType<typeof setTimeout> | null = null
 
 		handle.signal.addEventListener("abort", () => {
-			for (const t of debounceTimers.values()) clearTimeout(t);
-			clearRetry();
-		});
+			for (const t of debounceTimers.values()) clearTimeout(t)
+			clearRetry()
+		})
 
 		function markDirty() {
-			dirty = true;
-			dirtyGen++;
+			dirty = true
+			dirtyGen++
 		}
 
 		function scheduleRetry() {
-			if (retryTimer !== null || handle.signal.aborted) return;
+			if (retryTimer !== null || handle.signal.aborted) return
 			retryTimer = setTimeout(() => {
-				retryTimer = null;
-				void drainDirty().catch(() => {});
-			}, retryDelay);
-			retryDelay = Math.min(retryDelay * 2, 30_000);
+				retryTimer = null
+				void drainDirty().catch(() => {})
+			}, retryDelay)
+			retryDelay = Math.min(retryDelay * 2, 30_000)
 		}
 
 		function clearRetry() {
 			if (retryTimer !== null) {
-				clearTimeout(retryTimer);
-				retryTimer = null;
+				clearTimeout(retryTimer)
+				retryTimer = null
 			}
-			retryDelay = 3_000;
+			retryDelay = 3_000
 		}
 
 		handle.queueTask(() => {
-			localStorage.setItem("shoppingListId", listId);
+			localStorage.setItem("shoppingListId", listId)
 
 			// IDB init: if dirty, restore local state and start retry; else seed IDB
 			void (async () => {
-				if (handle.signal.aborted) return;
+				if (handle.signal.aborted) return
 				try {
-					const saved = await readRecord(listId);
+					const saved = await readRecord(listId)
 					if (saved?.dirty && !handle.signal.aborted) {
-						markDirty();
-						articles = saved.articles;
-						handle.update();
-						scheduleRetry();
+						markDirty()
+						articles = saved.articles
+						handle.update()
+						scheduleRetry()
 					} else {
-						await writeRecord(listId, articles, false);
+						await writeRecord(listId, articles, false)
 					}
 				} catch {
 					// IDB unavailable — server state is fine
 				}
-			})();
+			})()
 
 			window.addEventListener(
 				"online",
 				() => {
-					clearRetry(); // reset backoff on genuine reconnect
-					void drainDirty().catch(() => {});
+					clearRetry() // reset backoff on genuine reconnect
+					void drainDirty().catch(() => {})
 				},
 				{ signal: handle.signal },
-			);
-		});
+			)
+		})
 
 		async function drainDirty(): Promise<void> {
-			if (!dirty) return;
+			if (!dirty) return
 			// Snapshot current state and generation before the async fetch
-			const gen = dirtyGen;
-			const snapshot = [...articles];
+			const gen = dirtyGen
+			const snapshot = [...articles]
 			try {
-				const fd = new FormData();
-				fd.set("_action", "replaceArticles");
-				fd.set("articles", JSON.stringify(snapshot));
-				const res = await fetch(`/${listId}`, { method: "PATCH", body: fd });
+				const fd = new FormData()
+				fd.set("_action", "replaceArticles")
+				fd.set("articles", JSON.stringify(snapshot))
+				const res = await fetch(`/${listId}`, { method: "PATCH", body: fd })
 				if (!res.ok) {
-					scheduleRetry();
-					return;
+					scheduleRetry()
+					return
 				}
-				await res.json(); // consume body
+				await res.json() // consume body
 				if (dirtyGen !== gen) {
 					// New changes arrived during the fetch — retry with latest state
-					scheduleRetry();
-					return;
+					scheduleRetry()
+					return
 				}
-				dirty = false;
-				articles = snapshot;
-				clearRetry();
-				void writeRecord(listId, articles, false).catch(() => {});
+				dirty = false
+				articles = snapshot
+				clearRetry()
+				void writeRecord(listId, articles, false).catch(() => {})
 			} catch {
-				scheduleRetry();
-				return;
+				scheduleRetry()
+				return
 			}
 			if (!handle.signal.aborted) {
-				syncStatus = "synced";
-				handle.update();
+				syncStatus = "synced"
+				handle.update()
 			}
 		}
 
 		async function patch(body: FormData): Promise<void> {
-			patchAbort?.abort();
-			patchAbort = new AbortController();
-			const ownSignal = patchAbort.signal;
-			inFlight++;
+			patchAbort?.abort()
+			patchAbort = new AbortController()
+			const ownSignal = patchAbort.signal
+			inFlight++
 			// Two requests in flight means responses may arrive out of order.
 			// Mark dirty immediately so all responses are discarded and drainDirty
 			// reconciles the final state via replaceArticles.
-			if (inFlight > 1) markDirty();
-			syncStatus = "syncing";
-			handle.update();
+			if (inFlight > 1) markDirty()
+			syncStatus = "syncing"
+			handle.update()
 			try {
 				const res = await fetch(`/${listId}`, {
 					method: "PATCH",
 					body,
 					signal: AbortSignal.any([handle.signal, ownSignal]),
-				});
-				if (!res.ok) throw new Error("Server error");
-				const updated = (await res.json()) as { articles: Article[] };
-				inFlight--;
+				})
+				if (!res.ok) throw new Error("Server error")
+				const updated = (await res.json()) as { articles: Article[] }
+				inFlight--
 				if (inFlight === 0) {
 					if (
 						!dirty ||
 						JSON.stringify(updated.articles) === JSON.stringify(articles)
 					) {
-						dirty = false;
-						clearRetry();
-						articles = updated.articles;
-						syncStatus = "synced";
-						void writeRecord(listId, articles, false).catch(() => {});
+						dirty = false
+						clearRetry()
+						articles = updated.articles
+						syncStatus = "synced"
+						void writeRecord(listId, articles, false).catch(() => {})
 					} else {
-						void writeRecord(listId, articles, true).catch(() => {});
-						scheduleRetry();
+						void writeRecord(listId, articles, true).catch(() => {})
+						scheduleRetry()
 					}
 				}
 			} catch {
-				inFlight--;
+				inFlight--
 				if (ownSignal.aborted) {
 					// Superseded — dirty already set above, newer patch handles retry
-					handle.update();
-					return;
+					handle.update()
+					return
 				}
 				if (!handle.signal.aborted) {
-					markDirty();
-					void writeRecord(listId, articles, true).catch(() => {});
-					scheduleRetry();
+					markDirty()
+					void writeRecord(listId, articles, true).catch(() => {})
+					scheduleRetry()
 				}
 			}
-			handle.update();
+			handle.update()
 		}
 
 		function scheduleChange(articleId: string, text: string) {
-			clearTimeout(debounceTimers.get(articleId));
+			clearTimeout(debounceTimers.get(articleId))
 			debounceTimers.set(
 				articleId,
 				setTimeout(() => {
-					const fd = new FormData();
-					fd.set("_action", "changeArticle");
-					fd.set("id", articleId);
-					fd.set("text", text);
-					patch(fd);
+					const fd = new FormData()
+					fd.set("_action", "changeArticle")
+					fd.set("id", articleId)
+					fd.set("text", text)
+					patch(fd)
 				}, 750),
-			);
+			)
 		}
 
 		async function addArticle() {
-			const text = addInputEl?.value.trim() ?? "";
-			if (!text) return;
-			const id = crypto.randomUUID().slice(0, 8);
-			const fd = new FormData();
-			fd.set("_action", "addArticle");
-			fd.set("id", id);
-			fd.set("new", text);
-			articles = [...articles, { id, text }];
-			if (addInputEl) addInputEl.value = "";
-			await handle.update();
-			addInputEl?.focus();
-			await patch(fd);
+			const text = addInputEl?.value.trim() ?? ""
+			if (!text) return
+			const id = crypto.randomUUID().slice(0, 8)
+			const fd = new FormData()
+			fd.set("_action", "addArticle")
+			fd.set("id", id)
+			fd.set("new", text)
+			articles = [...articles, { id, text }]
+			if (addInputEl) addInputEl.value = ""
+			await handle.update()
+			addInputEl?.focus()
+			await patch(fd)
 		}
 
 		async function deleteSelected() {
-			const ids = [...selected];
-			if (!ids.length) return;
-			const fd = new FormData();
-			fd.set("_action", "deleteArticles");
-			for (const id of ids) fd.append("selected", id);
-			articles = articles.filter((a) => !selected.has(a.id));
-			selected = new Set();
-			handle.update();
-			await patch(fd);
+			const ids = [...selected]
+			if (!ids.length) return
+			const fd = new FormData()
+			fd.set("_action", "deleteArticles")
+			for (const id of ids) fd.append("selected", id)
+			articles = articles.filter((a) => !selected.has(a.id))
+			selected = new Set()
+			handle.update()
+			await patch(fd)
 		}
 
 		async function clearList() {
-			const fd = new FormData();
-			fd.set("_action", "clearList");
-			articles = [];
-			selected = new Set();
-			clearOpen = false;
-			handle.update();
-			await patch(fd);
+			const fd = new FormData()
+			fd.set("_action", "clearList")
+			articles = []
+			selected = new Set()
+			clearOpen = false
+			handle.update()
+			await patch(fd)
 		}
 
 		async function rejig(partitionNumber: number) {
-			const ids = [...selected];
-			if (!ids.length) return;
-			const fd = new FormData();
-			fd.set("_action", "rejig");
-			for (const id of ids) fd.append("selected", id);
-			fd.set("partitionNumber", String(partitionNumber));
-			fd.set("partitionCount", String(rejigN));
-			selected = new Set();
-			handle.update();
-			await patch(fd);
+			const ids = [...selected]
+			if (!ids.length) return
+			const fd = new FormData()
+			fd.set("_action", "rejig")
+			for (const id of ids) fd.append("selected", id)
+			fd.set("partitionNumber", String(partitionNumber))
+			fd.set("partitionCount", String(rejigN))
+			selected = new Set()
+			handle.update()
+			await patch(fd)
 		}
 
 		async function share() {
-			const url = location.href;
+			const url = location.href
 			try {
 				if (navigator.share) {
-					await navigator.share({ url, title: t.ShoppingList });
+					await navigator.share({ url, title: t.ShoppingList })
 				} else {
-					await navigator.clipboard.writeText(url);
+					await navigator.clipboard.writeText(url)
 				}
 			} catch {
 				// user cancelled or API unavailable
@@ -297,11 +297,11 @@ export const ShoppingListApp = clientEntry(
 		}
 
 		return () => {
-			const showDelete = selected.size > 0;
-			const showRejig = selected.size > 0 && articles.length > 5;
-			const rejigMid = Math.ceil(rejigN / 2);
+			const showDelete = selected.size > 0
+			const showRejig = selected.size > 0 && articles.length > 5
+			const rejigMid = Math.ceil(rejigN / 2)
 			const rejigButtons = Array.from({ length: rejigN }, (_, i) => {
-				const partition = i + 1;
+				const partition = i + 1
 				const labelKey =
 					partition === 1
 						? "pickupTime_early"
@@ -309,7 +309,7 @@ export const ShoppingListApp = clientEntry(
 							? "pickupTime_medium"
 							: partition === rejigN
 								? "pickupTime_late"
-								: null;
+								: null
 				return (
 					<button
 						key={String(partition)}
@@ -319,8 +319,8 @@ export const ShoppingListApp = clientEntry(
 					>
 						{labelKey ? t[labelKey] : ""}
 					</button>
-				);
-			});
+				)
+			})
 
 			return (
 				<div class="sl-app">
@@ -331,7 +331,7 @@ export const ShoppingListApp = clientEntry(
 							<ul
 								class="sl-list"
 								mix={ref((node) => {
-									rejigAnchorEl = (node as HTMLElement).querySelector("li");
+									rejigAnchorEl = (node as HTMLElement).querySelector("li")
 								})}
 							>
 								{articles.map((article) => (
@@ -348,13 +348,13 @@ export const ShoppingListApp = clientEntry(
 											aria-label="Article text"
 											mix={[
 												ref((node) => {
-													(node as HTMLInputElement).value = article.text;
+													;(node as HTMLInputElement).value = article.text
 												}),
 												on("input", (e) => {
 													scheduleChange(
 														article.id,
 														(e.currentTarget as HTMLInputElement).value,
-													);
+													)
 												}),
 											]}
 										/>
@@ -364,15 +364,15 @@ export const ShoppingListApp = clientEntry(
 											checked={selected.has(article.id)}
 											mix={on("change", (e) => {
 												const checked = (e.currentTarget as HTMLInputElement)
-													.checked;
+													.checked
 												if (checked) {
-													selected = new Set([...selected, article.id]);
+													selected = new Set([...selected, article.id])
 												} else {
 													selected = new Set(
 														[...selected].filter((id) => id !== article.id),
-													);
+													)
 												}
-												handle.update();
+												handle.update()
 											})}
 										/>
 									</li>
@@ -406,12 +406,12 @@ export const ShoppingListApp = clientEntry(
 								aria-label="New article"
 								mix={[
 									ref((node) => {
-										addInputEl = node as HTMLInputElement;
+										addInputEl = node as HTMLInputElement
 									}),
 									on("keydown", async (e) => {
 										if (e.key === "Enter") {
-											e.preventDefault();
-											await addArticle();
+											e.preventDefault()
+											await addArticle()
 										}
 									}),
 								]}
@@ -432,8 +432,8 @@ export const ShoppingListApp = clientEntry(
 									class="btn btn-secondary"
 									type="button"
 									mix={on("click", () => {
-										clearOpen = true;
-										handle.update();
+										clearOpen = true
+										handle.update()
 									})}
 								>
 									{t.clearList}
@@ -474,14 +474,14 @@ export const ShoppingListApp = clientEntry(
 							class="sl-rejig"
 							key="rejig"
 							style={(() => {
-								const r = rejigAnchorEl?.getBoundingClientRect();
+								const r = rejigAnchorEl?.getBoundingClientRect()
 								return r
 									? {
 											left: `${r.right - 170}px`,
 											top: `${r.top - 35}px`,
 											transform: "none",
 										}
-									: { transform: "none" };
+									: { transform: "none" }
 							})()}
 						>
 							<button
@@ -489,8 +489,8 @@ export const ShoppingListApp = clientEntry(
 								type="button"
 								aria-label="What is rejig?"
 								mix={on("click", () => {
-									helpOpen = !helpOpen;
-									handle.update();
+									helpOpen = !helpOpen
+									handle.update()
 								})}
 							>
 								?
@@ -503,16 +503,16 @@ export const ShoppingListApp = clientEntry(
 							<select
 								class="sl-rejig-select"
 								mix={ref((node) => {
-									(node as HTMLSelectElement).addEventListener(
+									;(node as HTMLSelectElement).addEventListener(
 										"change",
 										(e) => {
 											rejigN = Number(
 												(e.currentTarget as HTMLSelectElement).value,
-											);
-											handle.update();
+											)
+											handle.update()
 										},
 										{ signal: handle.signal },
-									);
+									)
 								})}
 							>
 								<option value="3" selected={rejigN === 3}>
@@ -566,8 +566,8 @@ export const ShoppingListApp = clientEntry(
 									class="btn btn-secondary"
 									type="button"
 									mix={on("click", () => {
-										clearOpen = false;
-										handle.update();
+										clearOpen = false
+										handle.update()
 									})}
 								>
 									{t.cancel}
@@ -583,7 +583,7 @@ export const ShoppingListApp = clientEntry(
 						</div>
 					</div>
 				</div>
-			);
-		};
+			)
+		}
 	},
-);
+)

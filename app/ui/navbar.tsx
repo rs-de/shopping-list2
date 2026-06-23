@@ -1,4 +1,4 @@
-import type { Handle } from "remix/ui";
+import type { Handle } from "remix/ui"
 
 export function Navbar(_handle: Handle) {
 	return () => (
@@ -94,5 +94,5 @@ export function Navbar(_handle: Handle) {
 				<span class="btn-coffee__label">Buy me a coffee</span>
 			</a>
 		</nav>
-	);
+	)
 }

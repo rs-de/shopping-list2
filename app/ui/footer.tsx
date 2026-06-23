@@ -1,11 +1,11 @@
-import type { Handle } from "remix/ui";
+import type { Handle } from "remix/ui"
 
-import pkg from "../../package.json" with { type: "json" };
-import type { Translations } from "../i18n.ts";
+import pkg from "../../package.json" with { type: "json" }
+import type { Translations } from "../i18n.ts"
 
 export function Footer(handle: Handle<{ t: Translations }>) {
 	return () => {
-		const { t } = handle.props;
+		const { t } = handle.props
 		return (
 			<footer class="app-footer">
 				<div class="app-footer__copy">
@@ -53,6 +53,6 @@ export function Footer(handle: Handle<{ t: Translations }>) {
 					|<a href="/changelog">v{pkg.version}</a>
 				</div>
 			</footer>
-		);
-	};
+		)
+	}
 }

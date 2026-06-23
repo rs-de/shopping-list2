@@ -109,3 +109,6 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 33. Server-side max-length validation for article text (256 chars)
     `(edit app/actions/list/controller.tsx: validate text in addArticle/changeArticle/replaceArticles)`
+
+34. Switch Biome formatter to no-semicolons and reformat all files
+    `(edit biome.json: semicolons asNeeded; pnpm check --write)`

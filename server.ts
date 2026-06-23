@@ -1,8 +1,8 @@
-import * as http from "node:http";
-import * as path from "node:path";
-import { createRequestListener } from "remix/node-fetch-server";
+import * as http from "node:http"
+import * as path from "node:path"
+import { createRequestListener } from "remix/node-fetch-server"
 
-import { router } from "./app/router.ts";
+import { router } from "./app/router.ts"
 
 const STATIC_EXTS = new Set([
 	"css",
@@ -16,74 +16,74 @@ const STATIC_EXTS = new Set([
 	"woff2",
 	"ttf",
 	"gif",
-]);
+])
 
 function withSecurityHeaders(response: Response): Response {
-	const headers = new Headers(response.headers);
+	const headers = new Headers(response.headers)
 	headers.set(
 		"Content-Security-Policy",
 		"default-src 'self'; frame-ancestors 'none'",
-	);
-	headers.set("X-Frame-Options", "DENY");
-	headers.set("X-Content-Type-Options", "nosniff");
-	headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+	)
+	headers.set("X-Frame-Options", "DENY")
+	headers.set("X-Content-Type-Options", "nosniff")
+	headers.set("Referrer-Policy", "strict-origin-when-cross-origin")
 	return new Response(response.body, {
 		status: response.status,
 		statusText: response.statusText,
 		headers,
-	});
+	})
 }
 
 function withCacheHeaders(response: Response, url: URL): Response {
-	const ext = path.extname(url.pathname).slice(1).toLowerCase();
-	if (!response.ok || !STATIC_EXTS.has(ext)) return response;
-	const headers = new Headers(response.headers);
+	const ext = path.extname(url.pathname).slice(1).toLowerCase()
+	if (!response.ok || !STATIC_EXTS.has(ext)) return response
+	const headers = new Headers(response.headers)
 	// SW must never be immutably cached — browsers check for updates on every load
 	if (url.pathname === "/sw.js") {
-		headers.set("Cache-Control", "no-cache");
+		headers.set("Cache-Control", "no-cache")
 	} else {
-		headers.set("Cache-Control", "public, max-age=31536000, immutable");
+		headers.set("Cache-Control", "public, max-age=31536000, immutable")
 	}
 	return new Response(response.body, {
 		status: response.status,
 		statusText: response.statusText,
 		headers,
-	});
+	})
 }
 
-const port = process.env.PORT ? Number.parseInt(process.env.PORT, 10) : 44100;
+const port = process.env.PORT ? Number.parseInt(process.env.PORT, 10) : 44100
 
 const server = http.createServer(
 	createRequestListener(async (request) => {
-		const url = new URL(request.url);
+		const url = new URL(request.url)
 		try {
 			return withSecurityHeaders(
 				withCacheHeaders(await router.fetch(request), url),
-			);
+			)
 		} catch (error) {
 			if (!(request.signal.aborted && error === request.signal.reason)) {
-				console.error(error);
+				console.error(error)
 			}
-			return new Response("Internal Server Error", { status: 500 });
+			return new Response("Internal Server Error", { status: 500 })
 		}
 	}),
-);
+)
 
 server.listen(port, () => {
-	console.log(`Server listening on http://localhost:${port}`);
-});
+	console.log(`Server listening on http://localhost:${port}`)
+})
 
-let shuttingDown = false;
+let shuttingDown = false
 
 function shutdown() {
 	if (shuttingDown) {
-		return;
+		return
 	}
 
-	shuttingDown = true;
-	server.close(() => process.exit(0));
-	server.closeAllConnections();
+	shuttingDown = true
+	server.close(() => process.exit(0))
+	server.closeAllConnections()
 }
 
-process.on("SIGINT", shutdown);
-process.on("SIGTERM", shutdown);
+process.on("SIGINT", shutdown)
+process.on("SIGTERM", shutdown)

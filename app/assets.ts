@@ -1,6 +1,6 @@
-import { createAssetServer } from "remix/assets";
+import { createAssetServer } from "remix/assets"
 
-const rootDir = process.cwd();
+const rootDir = process.cwd()
 
 export const assetServer = createAssetServer({
 	basePath: "/assets",
@@ -19,4 +19,4 @@ export const assetServer = createAssetServer({
 			),
 		},
 	},
-});
+})

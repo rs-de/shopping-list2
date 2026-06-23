@@ -1,4 +1,4 @@
-import { get, route } from "remix/routes";
+import { get, route } from "remix/routes"
 
 export const routes = route({
 	assets: get("/assets/*path"),
@@ -12,4 +12,4 @@ export const routes = route({
 		manifest: get("/:listId/manifest"),
 	},
 	notFound: get("/*path"),
-});
+})

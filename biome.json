@@ -7,5 +7,10 @@
 	},
 	"files": {
 		"includes": ["**", "!dist"]
+	},
+	"javascript": {
+		"formatter": {
+			"semicolons": "asNeeded"
+		}
 	}
 }
