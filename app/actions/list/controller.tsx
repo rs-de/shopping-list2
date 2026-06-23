@@ -74,7 +74,7 @@ export default createController(routes.list, {
 						case "addArticle": {
 							const id = String(form.get("id") ?? "");
 							const text = String(form.get("new") ?? "").trim();
-							if (!id || !text)
+							if (!id || !text || text.length > 256)
 								return new Response("Bad Request", { status: 400 });
 							const updated = await db.shoppingList.update({
 								where: { id: listId },
@@ -85,7 +85,8 @@ export default createController(routes.list, {
 						case "changeArticle": {
 							const id = String(form.get("id") ?? "");
 							const text = String(form.get("text") ?? "");
-							if (!id) return new Response("Bad Request", { status: 400 });
+							if (!id || text.length > 256)
+								return new Response("Bad Request", { status: 400 });
 							const updated = await db.shoppingList.update({
 								where: { id: listId },
 								data: {
@@ -134,6 +135,8 @@ export default createController(routes.list, {
 							const newArticles = JSON.parse(
 								String(form.get("articles") ?? "[]"),
 							) as Article[];
+							if (newArticles.some((a) => typeof a.text !== "string" || a.text.length > 256))
+								return new Response("Bad Request", { status: 400 });
 							const updated = await db.shoppingList.update({
 								where: { id: listId },
 								data: { articles: newArticles },

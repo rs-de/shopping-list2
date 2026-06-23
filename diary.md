@@ -103,3 +103,9 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 31. Skip drainDirty when last response already matches client state
     `(edit app/assets/shopping-list.tsx: compare articles in patch() dirty path)`
+
+32. Add security response headers: CSP, X-Frame-Options, nosniff, Referrer-Policy
+    `(edit server.ts: withSecurityHeaders applied to all responses)`
+
+33. Server-side max-length validation for article text (256 chars)
+    `(edit app/actions/list/controller.tsx: validate text in addArticle/changeArticle/replaceArticles)`

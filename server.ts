@@ -18,6 +18,22 @@ const STATIC_EXTS = new Set([
 	"gif",
 ]);
 
+function withSecurityHeaders(response: Response): Response {
+	const headers = new Headers(response.headers);
+	headers.set(
+		"Content-Security-Policy",
+		"default-src 'self'; frame-ancestors 'none'",
+	);
+	headers.set("X-Frame-Options", "DENY");
+	headers.set("X-Content-Type-Options", "nosniff");
+	headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+	return new Response(response.body, {
+		status: response.status,
+		statusText: response.statusText,
+		headers,
+	});
+}
+
 function withCacheHeaders(response: Response, url: URL): Response {
 	const ext = path.extname(url.pathname).slice(1).toLowerCase();
 	if (!response.ok || !STATIC_EXTS.has(ext)) return response;
@@ -41,7 +57,7 @@ const server = http.createServer(
 	createRequestListener(async (request) => {
 		const url = new URL(request.url);
 		try {
-			return withCacheHeaders(await router.fetch(request), url);
+			return withSecurityHeaders(withCacheHeaders(await router.fetch(request), url));
 		} catch (error) {
 			if (!(request.signal.aborted && error === request.signal.reason)) {
 				console.error(error);
