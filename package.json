@@ -7,7 +7,6 @@
 		"predev": "lsof -ti:44100 | xargs kill -9 2>/dev/null; true",
 		"dev": "node --watch --import remix/node-tsx server.ts",
 		"start": "node --import remix/node-tsx server.ts",
-		"test": "node --import remix/node-tsx --test",
 		"test:e2e": "playwright test",
 		"lighthouse": "node --import remix/node-tsx scripts/lighthouse.ts",
 		"typecheck": "tsc --noEmit",
