@@ -135,7 +135,11 @@ export default createController(routes.list, {
 							const newArticles = JSON.parse(
 								String(form.get("articles") ?? "[]"),
 							) as Article[];
-							if (newArticles.some((a) => typeof a.text !== "string" || a.text.length > 256))
+							if (
+								newArticles.some(
+									(a) => typeof a.text !== "string" || a.text.length > 256,
+								)
+							)
 								return new Response("Bad Request", { status: 400 });
 							const updated = await db.shoppingList.update({
 								where: { id: listId },

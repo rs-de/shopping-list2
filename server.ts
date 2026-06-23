@@ -57,7 +57,9 @@ const server = http.createServer(
 	createRequestListener(async (request) => {
 		const url = new URL(request.url);
 		try {
-			return withSecurityHeaders(withCacheHeaders(await router.fetch(request), url));
+			return withSecurityHeaders(
+				withCacheHeaders(await router.fetch(request), url),
+			);
 		} catch (error) {
 			if (!(request.signal.aborted && error === request.signal.reason)) {
 				console.error(error);
