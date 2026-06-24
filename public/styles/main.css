@@ -651,6 +651,10 @@ a {
 	margin-top: 0.5rem;
 }
 
+.sl-actions .btn-primary {
+	flex: 1;
+}
+
 /* Sync status */
 .sl-sync-row {
 	display: flex;
@@ -804,6 +808,10 @@ a {
 }
 
 /* Delete bar (fixed bottom) */
+.sl-delete-bar .btn {
+	width: 100%;
+}
+
 .sl-delete-bar {
 	position: fixed;
 	bottom: 0;

@@ -112,3 +112,6 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 34. Switch Biome formatter to no-semicolons and reformat all files
     `(edit biome.json: semicolons asNeeded; pnpm check --write)`
+
+35. Replace inline style props with CSS rules + ref-based DOM positioning
+   `(edit shopping-list.tsx + main.css: no style= attrs, rejig via ref)`

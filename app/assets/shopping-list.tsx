@@ -421,7 +421,6 @@ export const ShoppingListApp = clientEntry(
 						<div class="sl-actions">
 							<button
 								class="btn btn-primary"
-								style={{ flex: "1" }}
 								type="button"
 								mix={on("click", addArticle)}
 							>
@@ -473,16 +472,14 @@ export const ShoppingListApp = clientEntry(
 						<div
 							class="sl-rejig"
 							key="rejig"
-							style={(() => {
+							mix={ref((node) => {
+								if (!node) return
 								const r = rejigAnchorEl?.getBoundingClientRect()
-								return r
-									? {
-											left: `${r.right - 170}px`,
-											top: `${r.top - 35}px`,
-											transform: "none",
-										}
-									: { transform: "none" }
-							})()}
+								if (r) {
+									;(node as HTMLElement).style.left = `${r.right - 170}px`
+									;(node as HTMLElement).style.top = `${r.top - 35}px`
+								}
+							})}
 						>
 							<button
 								class="sl-rejig-help"
@@ -534,7 +531,6 @@ export const ShoppingListApp = clientEntry(
 					>
 						<button
 							class="btn btn-primary"
-							style={{ width: "100%" }}
 							type="button"
 							mix={on("click", deleteSelected)}
 						>
