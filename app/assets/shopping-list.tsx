@@ -420,7 +420,7 @@ export const ShoppingListApp = clientEntry(
 
 						<div class="sl-actions">
 							<button
-								class="btn btn-primary"
+								class="btn btn-primary sl-add-btn"
 								type="button"
 								mix={on("click", addArticle)}
 							>
@@ -530,7 +530,7 @@ export const ShoppingListApp = clientEntry(
 						class={`sl-delete-bar${showDelete ? " sl-delete-bar--visible" : ""}`}
 					>
 						<button
-							class="btn btn-primary"
+							class="btn btn-primary sl-delete-btn"
 							type="button"
 							mix={on("click", deleteSelected)}
 						>

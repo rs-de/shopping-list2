@@ -115,3 +115,6 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 35. Replace inline style props with CSS rules + ref-based DOM positioning
    `(edit shopping-list.tsx + main.css: no style= attrs, rejig via ref)`
+
+36. Replace context-based CSS selectors with dedicated element classes
+   `(edit shopping-list.tsx + main.css: sl-add-btn, sl-delete-btn)`

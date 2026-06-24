@@ -651,7 +651,7 @@ a {
 	margin-top: 0.5rem;
 }
 
-.sl-actions .btn-primary {
+.sl-add-btn {
 	flex: 1;
 }
 
@@ -808,7 +808,7 @@ a {
 }
 
 /* Delete bar (fixed bottom) */
-.sl-delete-bar .btn {
+.sl-delete-btn {
 	width: 100%;
 }
 
