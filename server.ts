@@ -38,12 +38,8 @@ function withCacheHeaders(response: Response, url: URL): Response {
 	const ext = path.extname(url.pathname).slice(1).toLowerCase()
 	if (!response.ok || !STATIC_EXTS.has(ext)) return response
 	const headers = new Headers(response.headers)
-	// SW must never be immutably cached — browsers check for updates on every load
-	if (url.pathname === "/sw.js") {
-		headers.set("Cache-Control", "no-cache")
-	} else {
-		headers.set("Cache-Control", "public, max-age=31536000, immutable")
-	}
+	// SW owns the cache — HTTP layer just needs to revalidate, not store forever
+	headers.set("Cache-Control", "no-cache")
 	return new Response(response.body, {
 		status: response.status,
 		statusText: response.statusText,

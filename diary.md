@@ -118,3 +118,6 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 36. Replace context-based CSS selectors with dedicated element classes
    `(edit shopping-list.tsx + main.css: sl-add-btn, sl-delete-btn)`
+
+37. SW-driven caching: version-keyed cache, dev networkFirst, no-cache HTTP
+   `(edit assets.ts + sw.ts + server.ts + package.json: APP_VERSION define)`

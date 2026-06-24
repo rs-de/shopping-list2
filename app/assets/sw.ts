@@ -3,8 +3,11 @@
 export type {}
 
 declare let self: ServiceWorkerGlobalScope
+declare const APP_VERSION: string
+declare const process: { env: { NODE_ENV: string } }
 
-const CACHE = "sl-v1"
+const IS_DEV = process.env.NODE_ENV === "development"
+const CACHE = `sl-v${APP_VERSION}`
 
 const PRECACHE_URLS = [
 	"/styles/main.css",
@@ -52,7 +55,9 @@ self.addEventListener("fetch", (event) => {
 		url.pathname === "/bg1.webp" ||
 		url.pathname === "/manifest.webmanifest"
 
-	event.respondWith(isStaticAsset ? cacheFirst(request) : networkFirst(request))
+	event.respondWith(
+		IS_DEV || !isStaticAsset ? networkFirst(request) : cacheFirst(request),
+	)
 })
 
 async function cacheFirst(request: Request): Promise<Response> {
