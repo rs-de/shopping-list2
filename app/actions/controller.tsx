@@ -12,6 +12,7 @@ import { db } from "../db.ts"
 import { loadTranslations, preferredLang } from "../i18n.ts"
 import { routes } from "../routes.ts"
 import { Document } from "../ui/document.tsx"
+import { generateId } from "../utils/id.ts"
 
 const DIR = path.dirname(url.fileURLToPath(import.meta.url))
 const ROOT = path.resolve(DIR, "../..")
@@ -42,7 +43,9 @@ export default createController(routes, {
 				if (isRateLimited()) {
 					return new Response("Too Many Requests", { status: 429 })
 				}
-				const list = await db.shoppingList.create({ data: {} })
+				const list = await db.shoppingList.create({
+					data: { id: generateId() },
+				})
 				return redirect(`/${list.id}`, 303)
 			}
 			const lang = preferredLang(request.headers.get("accept-language"))

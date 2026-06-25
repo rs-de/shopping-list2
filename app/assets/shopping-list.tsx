@@ -1,7 +1,7 @@
-import { nanoid } from "nanoid"
 import { clientEntry, type Handle, on, ref } from "remix/ui"
 
 import type { Translations } from "../i18n.ts"
+import { generateId } from "../utils/id.ts"
 
 type Article = { id: string; text: string }
 type ListRecord = { id: string; articles: Article[]; dirty: boolean }
@@ -237,7 +237,7 @@ export const ShoppingListApp = clientEntry(
 		async function addArticle() {
 			const text = addInputEl?.value.trim() ?? ""
 			if (!text) return
-			const id = nanoid(10)
+			const id = generateId()
 			const fd = new FormData()
 			fd.set("_action", "addArticle")
 			fd.set("id", id)

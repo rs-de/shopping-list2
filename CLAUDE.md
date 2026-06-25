@@ -73,6 +73,10 @@ See `.agents/skills/remix/SKILL.md` for the full Remix 3 pattern reference.
 
 Refer to `.agents/skills/remix/SKILL.md` for Remix 3 patterns.
 
+## Code Principles
+
+- **No logic duplication** — shared logic lives in `app/utils/`. If the same concept (a formula, a constant, a transformation) appears in more than one place, extract it before adding a second copy. This applies across the server/client boundary: nanoid-based ID generation is a good example — one `generateId()` in `utils/id.ts`, imported by both sides.
+
 ## Design Decisions
 
 - **CSS** — plain `public/styles/main.css`; Radix UI blue/slate colors as CSS custom properties; no Tailwind, no CSS-in-JS
