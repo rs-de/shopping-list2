@@ -121,3 +121,6 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 37. SW-driven caching: version-keyed cache, dev networkFirst, no-cache HTTP
    `(edit assets.ts + sw.ts + server.ts + package.json: APP_VERSION define)`
+
+38. Switch article ID generation from uuid-slice to nanoid (10 chars, ~60 bits)
+   `pnpm add nanoid && (edit shopping-list.tsx: nanoid(10) replaces randomUUID().slice(0,8))`

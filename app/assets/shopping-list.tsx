@@ -1,3 +1,4 @@
+import { nanoid } from "nanoid"
 import { clientEntry, type Handle, on, ref } from "remix/ui"
 
 import type { Translations } from "../i18n.ts"
@@ -236,7 +237,7 @@ export const ShoppingListApp = clientEntry(
 		async function addArticle() {
 			const text = addInputEl?.value.trim() ?? ""
 			if (!text) return
-			const id = crypto.randomUUID().slice(0, 8)
+			const id = nanoid(10)
 			const fd = new FormData()
 			fd.set("_action", "addArticle")
 			fd.set("id", id)
