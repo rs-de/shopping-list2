@@ -40,7 +40,6 @@ export function Document(handle: Handle<DocumentProps>) {
 					<link rel="manifest" href={manifestHref} />
 					<link rel="apple-touch-icon" href="/icons/apple-icon-180.png" />
 					<link rel="icon" type="image/x-icon" href="/favicon.ico" />
-					<link rel="preload" href="/bg1.webp" as="image" type="image/webp" />
 					<link rel="stylesheet" href="/styles/main.css" />
 					<title>{title}</title>
 					{head}
