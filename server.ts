@@ -1,4 +1,5 @@
 import * as http from "node:http"
+import * as os from "node:os"
 import * as path from "node:path"
 import { createRequestListener } from "remix/node-fetch-server"
 
@@ -65,8 +66,18 @@ const server = http.createServer(
 	}),
 )
 
+function getLanAddress(): string | undefined {
+	for (const ifaces of Object.values(os.networkInterfaces())) {
+		for (const iface of ifaces ?? []) {
+			if (iface.family === "IPv4" && !iface.internal) return iface.address
+		}
+	}
+}
+
 server.listen(port, () => {
-	console.log(`Server listening on http://localhost:${port}`)
+	console.log(`  Local:   http://localhost:${port}`)
+	const lan = getLanAddress()
+	if (lan) console.log(`  Network: http://${lan}:${port}`)
 })
 
 let shuttingDown = false
