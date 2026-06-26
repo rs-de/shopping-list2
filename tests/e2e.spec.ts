@@ -14,7 +14,7 @@ test.describe
 		test("create list → navigate to list page", async ({ page }) => {
 			await page.goto("/")
 			await page.click("button.home-menu__create-btn")
-			await page.waitForURL(/\/\w+$/)
+			await page.waitForURL(/\/[A-Za-z0-9_-]{10}$/)
 			listUrl = page.url()
 			await expect(page.locator("h1.sl-heading")).toBeVisible()
 		})

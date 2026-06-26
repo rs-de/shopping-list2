@@ -7,11 +7,12 @@ import { redirect } from "remix/response/redirect"
 import { createController } from "remix/router"
 
 import { HomeMenu } from "../assets/home-menu.tsx"
-import { assetServer } from "../assets.ts"
+import { appVersion, assetServer } from "../assets.ts"
 import { db } from "../db.ts"
-import { loadTranslations, preferredLang } from "../i18n.ts"
+import { getTranslations } from "../i18n.ts"
 import { routes } from "../routes.ts"
 import { Document } from "../ui/document.tsx"
+import { ErrorPage } from "../ui/error-page.tsx"
 import { generateId } from "../utils/id.ts"
 
 const DIR = path.dirname(url.fileURLToPath(import.meta.url))
@@ -26,10 +27,7 @@ export default createController(routes, {
 			)
 		},
 		async version() {
-			const pkg = JSON.parse(
-				await fs.readFile(path.join(ROOT, "package.json"), "utf-8"),
-			) as { version: string }
-			return Response.json({ version: pkg.version })
+			return Response.json({ version: appVersion })
 		},
 		async sw({ request }) {
 			const url = new URL("/assets/app/assets/sw.ts", request.url)
@@ -48,8 +46,7 @@ export default createController(routes, {
 				})
 				return redirect(`/${list.id}`, 303)
 			}
-			const lang = preferredLang(request.headers.get("accept-language"))
-			const t = await loadTranslations(lang)
+			const { lang, t } = await getTranslations(request)
 			return render(
 				<Document title={t["page-title"]} lang={lang} t={t}>
 					<div class="content-box home-page">
@@ -66,8 +63,7 @@ export default createController(routes, {
 			)
 		},
 		async changelog({ request, render }) {
-			const lang = preferredLang(request.headers.get("accept-language"))
-			const t = await loadTranslations(lang)
+			const { lang, t } = await getTranslations(request)
 			const file = path.join(ROOT, "CHANGELOG.md")
 			const markdown = await fs.readFile(file, "utf-8")
 			const html = await marked(markdown)
@@ -78,8 +74,7 @@ export default createController(routes, {
 			)
 		},
 		async about({ request, render }) {
-			const lang = preferredLang(request.headers.get("accept-language"))
-			const t = await loadTranslations(lang)
+			const { lang, t } = await getTranslations(request)
 			const file = path.join(DIR, "about", `about.${lang}.md`)
 			const markdown = await fs.readFile(file, "utf-8")
 			const html = await marked(markdown)
@@ -96,17 +91,15 @@ export default createController(routes, {
 			)
 		},
 		async notFound({ request, render }) {
-			const lang = preferredLang(request.headers.get("accept-language"))
-			const t = await loadTranslations(lang)
+			const { lang, t } = await getTranslations(request)
 			return render(
 				<Document title="404 — Shopping List" lang={lang} t={t}>
-					<div class="content-box error-page">
-						<h1 class="error-page__code">404</h1>
-						<p class="error-page__msg">Page not found.</p>
-						<a href="/" class="btn btn-primary">
-							Go home
-						</a>
-					</div>
+					<ErrorPage
+						code={404}
+						message="Page not found."
+						href="/"
+						label="Go home"
+					/>
 				</Document>,
 				{ status: 404 },
 			)

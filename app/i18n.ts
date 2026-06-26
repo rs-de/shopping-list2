@@ -20,3 +20,11 @@ export async function loadTranslations(lang: Lang): Promise<Translations> {
 	const content = await fs.readFile(file, "utf-8")
 	return JSON.parse(content) as Translations
 }
+
+export async function getTranslations(
+	request: Request,
+): Promise<{ lang: Lang; t: Translations }> {
+	const lang = preferredLang(request.headers.get("accept-language"))
+	const t = await loadTranslations(lang)
+	return { lang, t }
+}

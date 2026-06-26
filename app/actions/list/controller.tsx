@@ -3,10 +3,21 @@ import { createController } from "remix/router"
 
 import { ShoppingListApp } from "../../assets/shopping-list.tsx"
 import { db } from "../../db.ts"
-import { loadTranslations, preferredLang } from "../../i18n.ts"
+import { getTranslations } from "../../i18n.ts"
 import { routes } from "../../routes.ts"
 import { Document } from "../../ui/document.tsx"
+import { ErrorPage } from "../../ui/error-page.tsx"
 import { type Article, moveArticles } from "../../utils/moveArticles.ts"
+
+const badRequest = (msg = "Bad Request") => new Response(msg, { status: 400 })
+
+async function updateList(listId: string, articles: Article[]) {
+	const updated = await db.shoppingList.update({
+		where: { id: listId },
+		data: { articles },
+	})
+	return Response.json(updated)
+}
 
 export default createController(routes.list, {
 	actions: {
@@ -50,17 +61,15 @@ export default createController(routes.list, {
 					where: { id: listId },
 				})
 				if (!list) {
-					const lang = preferredLang(request.headers.get("accept-language"))
-					const t = await loadTranslations(lang)
+					const { lang, t } = await getTranslations(request)
 					return render(
 						<Document title="404 — Shopping List" lang={lang} t={t}>
-							<div class="content-box error-page">
-								<h1 class="error-page__code">404</h1>
-								<p class="error-page__msg">List not found.</p>
-								<a href="/" class="btn btn-primary">
-									Go home
-								</a>
-							</div>
+							<ErrorPage
+								code={404}
+								message="List not found."
+								href="/"
+								label="Go home"
+							/>
 						</Document>,
 						{ status: 404 },
 					)
@@ -74,62 +83,42 @@ export default createController(routes.list, {
 						case "addArticle": {
 							const id = String(form.get("id") ?? "")
 							const text = String(form.get("new") ?? "").trim()
-							if (!id || !text || text.length > 256)
-								return new Response("Bad Request", { status: 400 })
-							const updated = await db.shoppingList.update({
-								where: { id: listId },
-								data: { articles: [...articles, { id, text }] },
-							})
-							return Response.json(updated)
+							if (!id || !text || text.length > 256) return badRequest()
+							return updateList(listId, [...articles, { id, text }])
 						}
 						case "changeArticle": {
 							const id = String(form.get("id") ?? "")
 							const text = String(form.get("text") ?? "")
-							if (!id || text.length > 256)
-								return new Response("Bad Request", { status: 400 })
-							const updated = await db.shoppingList.update({
-								where: { id: listId },
-								data: {
-									articles: articles.map((a) =>
-										a.id === id ? { ...a, text } : a,
-									),
-								},
-							})
-							return Response.json(updated)
+							if (!id || text.length > 256) return badRequest()
+							return updateList(
+								listId,
+								articles.map((a) => (a.id === id ? { ...a, text } : a)),
+							)
 						}
 						case "deleteArticles": {
 							const ids = form.getAll("selected").map(String)
-							const updated = await db.shoppingList.update({
-								where: { id: listId },
-								data: { articles: articles.filter((a) => !ids.includes(a.id)) },
-							})
-							return Response.json(updated)
+							return updateList(
+								listId,
+								articles.filter((a) => !ids.includes(a.id)),
+							)
 						}
 						case "rejig": {
 							const selected = form.getAll("selected").map(String)
 							const partitionNumber = Number(form.get("partitionNumber"))
 							const partitionCount = Number(form.get("partitionCount"))
-							if (!selected.length)
-								return new Response("Bad Request", { status: 400 })
-							const updated = await db.shoppingList.update({
-								where: { id: listId },
-								data: {
-									articles: moveArticles({
-										idsToRejig: selected,
-										partitionNumber,
-										partitionCount,
-										articles,
-									}),
-								},
-							})
-							return Response.json(updated)
+							if (!selected.length) return badRequest()
+							return updateList(
+								listId,
+								moveArticles({
+									idsToRejig: selected,
+									partitionNumber,
+									partitionCount,
+									articles,
+								}),
+							)
 						}
 						case "clearList": {
-							const updated = await db.shoppingList.update({
-								where: { id: listId },
-								data: { articles: [] },
-							})
-							return Response.json(updated)
+							return updateList(listId, [])
 						}
 						case "replaceArticles": {
 							const newArticles = JSON.parse(
@@ -140,22 +129,15 @@ export default createController(routes.list, {
 									(a) => typeof a.text !== "string" || a.text.length > 256,
 								)
 							)
-								return new Response("Bad Request", { status: 400 })
-							const updated = await db.shoppingList.update({
-								where: { id: listId },
-								data: { articles: newArticles },
-							})
-							return Response.json(updated)
+								return badRequest()
+							return updateList(listId, newArticles)
 						}
 						default:
-							return new Response("Bad Request: unknown _action", {
-								status: 400,
-							})
+							return badRequest("Bad Request: unknown _action")
 					}
 				}
 
-				const lang = preferredLang(request.headers.get("accept-language"))
-				const t = await loadTranslations(lang)
+				const { lang, t } = await getTranslations(request)
 
 				return render(
 					<Document
@@ -171,17 +153,18 @@ export default createController(routes.list, {
 				if (request.method !== "GET") {
 					return new Response("Internal Server Error", { status: 500 })
 				}
-				const lang = preferredLang(request.headers.get("accept-language"))
-				const t = await loadTranslations(lang).catch(() => ({}) as never)
+				const { lang, t } = await getTranslations(request).catch(() => ({
+					lang: "en" as const,
+					t: {} as Record<string, string>,
+				}))
 				return render(
 					<Document title="Error — Shopping List" lang={lang} t={t}>
-						<div class="content-box error-page">
-							<h1 class="error-page__code">500</h1>
-							<p class="error-page__msg">Something went wrong.</p>
-							<a href={`/${listId}`} class="btn btn-primary">
-								Retry
-							</a>
-						</div>
+						<ErrorPage
+							code={500}
+							message="Something went wrong."
+							href={`/${listId}`}
+							label="Retry"
+						/>
 					</Document>,
 					{ status: 500 },
 				)
