@@ -2,6 +2,7 @@ import { clientEntry, type Handle, on, ref } from "remix/ui"
 
 import type { Translations } from "../i18n.ts"
 import { generateId } from "../utils/id.ts"
+import { moveArticles } from "../utils/moveArticles.ts"
 
 type Article = { id: string; text: string }
 type ListRecord = { id: string; articles: Article[]; dirty: boolean }
@@ -279,6 +280,12 @@ export const ShoppingListApp = clientEntry(
 			for (const id of ids) fd.append("selected", id)
 			fd.set("partitionNumber", String(partitionNumber))
 			fd.set("partitionCount", String(rejigN))
+			articles = moveArticles({
+				idsToRejig: ids,
+				partitionNumber,
+				partitionCount: rejigN,
+				articles,
+			})
 			selected = new Set()
 			handle.update()
 			await patch(fd)
