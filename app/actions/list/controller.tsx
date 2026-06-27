@@ -12,6 +12,34 @@ import { type Article, moveArticles } from "../../utils/moveArticles.ts"
 
 const badRequest = (msg = "Bad Request") => new Response(msg, { status: 400 })
 
+function mutateArticles(
+	form: FormData,
+	articles: Article[],
+): Article[] | Response {
+	switch (form.get("_action")) {
+		case "addArticle": {
+			const id = String(form.get("id") ?? "").trim()
+			const text = String(form.get("new") ?? "").trim()
+			if (!id || !text || text.length > 256) return badRequest()
+			return [...articles, { id, text }]
+		}
+		case "changeArticle": {
+			const id = String(form.get("id") ?? "")
+			const text = String(form.get("text") ?? "")
+			if (!id || text.length > 256) return badRequest()
+			return articles.map((a) => (a.id === id ? { ...a, text } : a))
+		}
+		case "deleteArticles": {
+			const ids = form.getAll("selected").map(String)
+			return articles.filter((a) => !ids.includes(a.id))
+		}
+		case "clearList":
+			return []
+		default:
+			return badRequest()
+	}
+}
+
 async function updateList(listId: string, articles: Article[]) {
 	const updated = await db.shoppingList.update({
 		where: { id: listId },
@@ -77,114 +105,38 @@ export default createController(routes.list, {
 				}
 				const articles = list.articles as Article[]
 
-				if (request.method === "POST") {
-						const form = await request.formData()
-						switch (form.get("_action")) {
-							case "addArticle": {
-								const id = String(form.get("id") ?? "").trim()
-								const text = String(form.get("new") ?? "").trim()
-								if (!id || !text || text.length > 256) return badRequest()
-								await db.shoppingList.update({
-									where: { id: listId },
-									data: { articles: [...articles, { id, text }] },
-								})
-								return redirect(`/${listId}`)
-							}
-							case "changeArticle": {
-								const id = String(form.get("id") ?? "")
-								const text = String(form.get("text") ?? "")
-								if (!id || text.length > 256) return badRequest()
-								await db.shoppingList.update({
-									where: { id: listId },
-									data: {
-										articles: articles.map((a) =>
-											a.id === id ? { ...a, text } : a,
-										),
-									},
-								})
-								return redirect(`/${listId}`)
-							}
-							case "deleteArticles": {
-								const ids = form.getAll("selected").map(String)
-								await db.shoppingList.update({
-									where: { id: listId },
-									data: {
-										articles: articles.filter((a) => !ids.includes(a.id)),
-									},
-								})
-								return redirect(`/${listId}`)
-							}
-							case "clearList": {
-								await db.shoppingList.update({
-									where: { id: listId },
-									data: { articles: [] },
-								})
-								return redirect(`/${listId}`)
-							}
-							default:
-								return badRequest()
-						}
-					}
-
-					if (request.method === "PATCH") {
+				if (request.method === "POST" || request.method === "PATCH") {
 					const form = await request.formData()
 
-					switch (form.get("_action")) {
-						case "addArticle": {
-							const id = String(form.get("id") ?? "")
-							const text = String(form.get("new") ?? "").trim()
-							if (!id || !text || text.length > 256) return badRequest()
-							return updateList(listId, [...articles, { id, text }])
-						}
-						case "changeArticle": {
-							const id = String(form.get("id") ?? "")
-							const text = String(form.get("text") ?? "")
-							if (!id || text.length > 256) return badRequest()
-							return updateList(
-								listId,
-								articles.map((a) => (a.id === id ? { ...a, text } : a)),
-							)
-						}
-						case "deleteArticles": {
-							const ids = form.getAll("selected").map(String)
-							return updateList(
-								listId,
-								articles.filter((a) => !ids.includes(a.id)),
-							)
-						}
-						case "rejig": {
+					// PATCH-only actions
+					if (request.method === "PATCH") {
+						const action = form.get("_action")
+						if (action === "rejig") {
 							const selected = form.getAll("selected").map(String)
 							const partitionNumber = Number(form.get("partitionNumber"))
 							const partitionCount = Number(form.get("partitionCount"))
 							if (!selected.length) return badRequest()
 							return updateList(
 								listId,
-								moveArticles({
-									idsToRejig: selected,
-									partitionNumber,
-									partitionCount,
-									articles,
-								}),
+								moveArticles({ idsToRejig: selected, partitionNumber, partitionCount, articles }),
 							)
 						}
-						case "clearList": {
-							return updateList(listId, [])
-						}
-						case "replaceArticles": {
+						if (action === "replaceArticles") {
 							const newArticles = JSON.parse(
 								String(form.get("articles") ?? "[]"),
 							) as Article[]
-							if (
-								newArticles.some(
-									(a) => typeof a.text !== "string" || a.text.length > 256,
-								)
-							)
+							if (newArticles.some((a) => typeof a.text !== "string" || a.text.length > 256))
 								return badRequest()
 							return updateList(listId, newArticles)
 						}
-						default:
-							return badRequest("Bad Request: unknown _action")
 					}
+
+					const next = mutateArticles(form, articles)
+					if (next instanceof Response) return next
+
+					if (request.method === "PATCH") return updateList(listId, next)
+					await db.shoppingList.update({ where: { id: listId }, data: { articles: next } })
+					return redirect(`/${listId}`)
 				}
 
 				const { lang, t } = await getTranslations(request)

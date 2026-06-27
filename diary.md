@@ -156,3 +156,6 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 48. move all inputs to native HTML forms with POST fallback for pre-JS path
    `(edit shopping-list.tsx + list/controller.tsx + main.css)`
 
+49. consolidate duplicated POST/PATCH mutation logic in list controller
+   `(edit list/controller.tsx: extract mutateArticles(), unify POST+PATCH block)`
+
