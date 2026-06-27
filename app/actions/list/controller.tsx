@@ -7,6 +7,7 @@ import { getTranslations } from "../../i18n.ts"
 import { routes } from "../../routes.ts"
 import { Document } from "../../ui/document.tsx"
 import { ErrorPage } from "../../ui/error-page.tsx"
+import { generateId } from "../../utils/id.ts"
 import { type Article, moveArticles } from "../../utils/moveArticles.ts"
 
 const badRequest = (msg = "Bad Request") => new Response(msg, { status: 400 })
@@ -76,7 +77,19 @@ export default createController(routes.list, {
 				}
 				const articles = list.articles as Article[]
 
-				if (request.method === "PATCH") {
+				if (request.method === "POST") {
+						const form = await request.formData()
+						const id = String(form.get("id") ?? "").trim()
+						const text = String(form.get("new") ?? "").trim()
+						if (!id || !text || text.length > 256) return badRequest()
+						await db.shoppingList.update({
+							where: { id: listId },
+							data: { articles: [...articles, { id, text }] },
+						})
+						return redirect(`/${listId}`)
+					}
+
+					if (request.method === "PATCH") {
 					const form = await request.formData()
 
 					switch (form.get("_action")) {
@@ -146,7 +159,7 @@ export default createController(routes.list, {
 						t={t}
 						manifestHref={`/${listId}/manifest`}
 					>
-						<ShoppingListApp listId={listId} articles={articles} t={t} />
+						<ShoppingListApp listId={listId} articles={articles} t={t} nextId={generateId()} />
 					</Document>,
 				)
 			} catch {

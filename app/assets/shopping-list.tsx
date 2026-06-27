@@ -55,7 +55,12 @@ async function writeRecord(
 export const ShoppingListApp = clientEntry(
 	import.meta.url,
 	function ShoppingListApp(
-		handle: Handle<{ listId: string; articles: Article[]; t: Translations }>,
+		handle: Handle<{
+			listId: string
+			articles: Article[]
+			t: Translations
+			nextId: string
+		}>,
 	) {
 		const listId = handle.props.listId
 		let articles: Article[] = [...handle.props.articles]
@@ -65,6 +70,7 @@ export const ShoppingListApp = clientEntry(
 		let helpOpen = false
 		const debounceTimers = new Map<string, ReturnType<typeof setTimeout>>()
 		let addInputEl: HTMLInputElement | null = null
+		let nextId = handle.props.nextId
 		let rejigN = 3
 		let rejigAnchorEl: HTMLElement | null = null
 		let hasShare = false
@@ -250,7 +256,8 @@ export const ShoppingListApp = clientEntry(
 		async function addArticle() {
 			const text = addInputEl?.value.trim() ?? ""
 			if (!text) return
-			const id = generateId()
+			const id = nextId
+			nextId = generateId()
 			const fd = new FormData()
 			fd.set("_action", "addArticle")
 			fd.set("id", id)
@@ -419,84 +426,85 @@ export const ShoppingListApp = clientEntry(
 							</ul>
 						)}
 
-						<div class="sl-add-form">
-							<span class="sl-add-icon" aria-hidden="true">
-								<svg
-									viewBox="0 0 20 20"
-									fill="currentColor"
-									width="24"
-									height="24"
-									aria-hidden="true"
-								>
-									<path
-										fill-rule="evenodd"
-										d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
-										clip-rule="evenodd"
-									/>
-								</svg>
-							</span>
-							<input
-								type="text"
-								class="sl-add-input"
-								placeholder={t.input_article_to_add}
-								maxLength={75}
-								autoComplete="off"
-								enterKeyHint="go"
-								aria-label="New article"
-								mix={[
-									ref((node) => {
+						<form
+							method="post"
+							mix={on<HTMLFormElement>("submit", async (e) => {
+								e.preventDefault()
+								await addArticle()
+							})}
+						>
+							<div class="sl-add-form">
+								<input type="hidden" name="id" value={nextId} />
+								<span class="sl-add-icon" aria-hidden="true">
+									<svg
+										viewBox="0 0 20 20"
+										fill="currentColor"
+										width="24"
+										height="24"
+										aria-hidden="true"
+									>
+										<path
+											fill-rule="evenodd"
+											d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
+											clip-rule="evenodd"
+										/>
+									</svg>
+								</span>
+								<input
+									type="text"
+									name="new"
+									class="sl-add-input"
+									placeholder={t.input_article_to_add}
+									maxLength={75}
+									autoComplete="off"
+									enterKeyHint="go"
+									aria-label="New article"
+									mix={ref((node) => {
 										addInputEl = node as HTMLInputElement
-									}),
-									on("keydown", async (e) => {
-										if (e.key === "Enter") {
-											e.preventDefault()
-											await addArticle()
-										}
-									}),
-								]}
-							/>
-						</div>
+									})}
+								/>
+							</div>
 
-						<div class="sl-actions">
-							<button
-								class="btn btn-primary sl-add-btn"
-								type="button"
-								mix={on("click", addArticle)}
-							>
-								{t.Add}
-							</button>
-							{articles.length > 0 && (
+							<div class="sl-actions">
+								<button
+									class="btn btn-primary sl-add-btn"
+									type="submit"
+								>
+									{t.Add}
+								</button>
+								{articles.length > 0 && (
+									<button
+										class="btn btn-secondary"
+										type="button"
+										mix={on("click", () => {
+											clearOpen = true
+											handle.update()
+										})}
+									>
+										{t.clearList}
+									</button>
+								)}
 								<button
 									class="btn btn-secondary"
 									type="button"
-									mix={on("click", () => {
-										clearOpen = true
-										handle.update()
-									})}
+									mix={on("click", share)}
 								>
-									{t.clearList}
+									<svg
+										width="20"
+										height="20"
+										viewBox="0 0 50 50"
+										xmlns="http://www.w3.org/2000/svg"
+										fill="currentColor"
+										aria-hidden="true"
+									>
+										<path d="M30.3 13.7L25 8.4l-5.3 5.3-1.4-1.4L25 5.6l6.7 6.7z" />
+										<path d="M24 7h2v21h-2z" />
+										<path d="M35 40H15c-1.7 0-3-1.3-3-3V19c0-1.7 1.3-3 3-3h7v2h-7c-.6 0-1 .4-1 1v18c0 .6.4 1 1 1h20c.6 0 1-.4 1-1V19c0-.6-.4-1-1-1h-7v-2h7c1.7 0 3 1.3 3 3v18c0 1.7-1.3 3-3 3z" />
+									</svg>
+									{hasShare ? t.share : t["copy-link"]}
 								</button>
-							)}
-							<button
-								class="btn btn-secondary"
-								type="button"
-								mix={on("click", share)}
-							>
-								<svg
-									width="20"
-									height="20"
-									viewBox="0 0 50 50"
-									xmlns="http://www.w3.org/2000/svg"
-									fill="currentColor"
-									aria-hidden="true"
-								>
-									<path d="M30.3 13.7L25 8.4l-5.3 5.3-1.4-1.4L25 5.6l6.7 6.7z" />
-									<path d="M24 7h2v21h-2z" />
-									<path d="M35 40H15c-1.7 0-3-1.3-3-3V19c0-1.7 1.3-3 3-3h7v2h-7c-.6 0-1 .4-1 1v18c0 .6.4 1 1 1h20c.6 0 1-.4 1-1V19c0-.6-.4-1-1-1h-7v-2h7c1.7 0 3 1.3 3 3v18c0 1.7-1.3 3-3 3z" />
-								</svg>
-								{hasShare ? t.share : t["copy-link"]}
-							</button>
-						</div>
+							</div>
+						</form>
 					</div>
 
 					{showRejig && (

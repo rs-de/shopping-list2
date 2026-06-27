@@ -152,3 +152,6 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 47. fix: wait for networkidle on list-page navigations in e2e tests so the
    `clientEntry` dynamic import completes before filling the add-input
    `(edit tests/e2e.spec.ts: { waitUntil: "networkidle" } on goto(listUrl))`
+
+48. wrap add-article input in <form>: native Enter + POST fallback before JS mounts
+   `(edit shopping-list.tsx + list/controller.tsx: form submit + POST handler)`
