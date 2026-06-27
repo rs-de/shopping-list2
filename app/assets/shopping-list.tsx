@@ -60,7 +60,6 @@ export const ShoppingListApp = clientEntry(
 		let articles: Article[] = [...handle.props.articles]
 		const { t } = handle.props
 		let selected = new Set<string>()
-		let syncError = false
 		let clearOpen = false
 		let helpOpen = false
 		const debounceTimers = new Map<string, ReturnType<typeof setTimeout>>()
@@ -90,15 +89,12 @@ export const ShoppingListApp = clientEntry(
 
 		function scheduleRetry() {
 			if (retryTimer !== null || handle.signal.aborted) return
+			if (!navigator.onLine) return // online event will trigger drainDirty
 			retryTimer = setTimeout(() => {
 				retryTimer = null
 				void drainDirty().catch(() => {})
 			}, retryDelay)
 			retryDelay = Math.min(retryDelay * 2, 30_000)
-			if (retryDelay >= 12_000 && navigator.onLine && !syncError) {
-				syncError = true
-				handle.update()
-			}
 		}
 
 		function clearRetry() {
@@ -107,10 +103,6 @@ export const ShoppingListApp = clientEntry(
 				retryTimer = null
 			}
 			retryDelay = 3_000
-			if (syncError) {
-				syncError = false
-				handle.update()
-			}
 		}
 
 		handle.queueTask(() => {
@@ -143,16 +135,6 @@ export const ShoppingListApp = clientEntry(
 				{ signal: handle.signal },
 			)
 
-			window.addEventListener(
-				"offline",
-				() => {
-					if (syncError) {
-						syncError = false
-						handle.update()
-					}
-				},
-				{ signal: handle.signal },
-			)
 		})
 
 		async function drainDirty(): Promise<void> {
@@ -183,7 +165,6 @@ export const ShoppingListApp = clientEntry(
 				scheduleRetry()
 				return
 			}
-			// nothing to re-render on drain success — clearRetry() handles syncError
 		}
 
 		async function patch(body: FormData): Promise<void> {
@@ -593,11 +574,6 @@ export const ShoppingListApp = clientEntry(
 						</div>
 					</div>
 
-					{syncError && (
-						<div class="sl-toast sl-toast--error" role="alert">
-							{t.sync_error}
-						</div>
-					)}
 				</div>
 			)
 		}

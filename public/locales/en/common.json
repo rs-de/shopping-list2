@@ -28,6 +28,5 @@
 	"createShoppinglistError": "An error occurred while creating the shopping list. Please try again in a minute or so. If the problem persists, please contact us.",
 	"clearList": "Clear list",
 	"clearList-confirm": "Do you really want to clear the list?",
-	"cancel": "Cancel",
-	"sync_error": "Changes not synced — retrying…"
+	"cancel": "Cancel"
 }

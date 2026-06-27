@@ -128,5 +128,5 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 39. Fix rejig optimistic update; add Playwright tests for all list actions
    `(edit shopping-list.tsx + e2e.spec.ts: rejig fix + optimistic tests)`
 
-40. Drop sync row; add fixed toast for persistent server errors (≥3 retries)
-   `(edit shopping-list.tsx + main.css + locales: syncError toast, no layout shift)`
+40. Drop sync row; silent retry skips timer when offline (online event wakes it)
+   `(edit shopping-list.tsx + main.css + locales: no UI noise, offline-aware retry)`

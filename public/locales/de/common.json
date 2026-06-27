@@ -28,6 +28,5 @@
 	"createShoppinglistError": "Beim Erstellen der Liste ist ein Fehler aufgetreten. Bitte versuche es in einer Minute noch einmal. Wenn das Problem weiterhin besteht, kontaktiere uns bitte.",
 	"clearList": "Liste leeren",
 	"clearList-confirm": "Möchtest du die Liste wirklich leeren?",
-	"cancel": "Abbrechen",
-	"sync_error": "Änderungen nicht synchronisiert — wird wiederholt…"
+	"cancel": "Abbrechen"
 }
