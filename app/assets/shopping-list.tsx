@@ -303,12 +303,25 @@ export const ShoppingListApp = clientEntry(
 		}
 
 		async function share() {
-			try {
-				await navigator.clipboard.writeText(location.href)
-				toast.show(t.copied)
-			} catch {
-				// clipboard unavailable
+			const url = location.href
+			let copied = false
+			if (navigator.clipboard) {
+				try {
+					await navigator.clipboard.writeText(url)
+					copied = true
+				} catch { /* fall through */ }
 			}
+			if (!copied) {
+				// fallback for non-secure contexts (HTTP on local network)
+				const el = document.createElement("input")
+				el.style.cssText = "position:fixed;opacity:0"
+				el.value = url
+				document.body.appendChild(el)
+				el.select()
+				copied = document.execCommand("copy")
+				document.body.removeChild(el)
+			}
+			if (copied) toast.show(t.copied)
 		}
 
 		return () => {
