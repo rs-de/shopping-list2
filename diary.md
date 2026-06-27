@@ -153,5 +153,6 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
    `clientEntry` dynamic import completes before filling the add-input
    `(edit tests/e2e.spec.ts: { waitUntil: "networkidle" } on goto(listUrl))`
 
-48. wrap add-article input in <form>: native Enter + POST fallback before JS mounts
-   `(edit shopping-list.tsx + list/controller.tsx: form submit + POST handler)`
+48. move all inputs to native HTML forms with POST fallback for pre-JS path
+   `(edit shopping-list.tsx + list/controller.tsx + main.css)`
+

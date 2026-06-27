@@ -66,7 +66,7 @@ export const ShoppingListApp = clientEntry(
 		let articles: Article[] = [...handle.props.articles]
 		const { t } = handle.props
 		let selected = new Set<string>()
-		let clearOpen = false
+		let clearDialogEl: HTMLDialogElement | null = null
 		let helpOpen = false
 		const debounceTimers = new Map<string, ReturnType<typeof setTimeout>>()
 		let addInputEl: HTMLInputElement | null = null
@@ -239,16 +239,21 @@ export const ShoppingListApp = clientEntry(
 			handle.update()
 		}
 
+		function patchChange(articleId: string, text: string) {
+			const fd = new FormData()
+			fd.set("_action", "changeArticle")
+			fd.set("id", articleId)
+			fd.set("text", text)
+			patch(fd)
+		}
+
 		function scheduleChange(articleId: string, text: string) {
 			clearTimeout(debounceTimers.get(articleId))
 			debounceTimers.set(
 				articleId,
 				setTimeout(() => {
-					const fd = new FormData()
-					fd.set("_action", "changeArticle")
-					fd.set("id", articleId)
-					fd.set("text", text)
-					patch(fd)
+					debounceTimers.delete(articleId)
+					patchChange(articleId, text)
 				}, 750),
 			)
 		}
@@ -286,7 +291,6 @@ export const ShoppingListApp = clientEntry(
 			fd.set("_action", "clearList")
 			articles = []
 			selected = new Set()
-			clearOpen = false
 			handle.update()
 			await patch(fd)
 		}
@@ -373,6 +377,17 @@ export const ShoppingListApp = clientEntry(
 					<h1 class="sl-heading">{t.ShoppingList}</h1>
 
 					<div class="sl-card">
+						<form
+							id="articles-form"
+							method="post"
+							mix={on<HTMLFormElement>("submit", async (e) => {
+								e.preventDefault()
+								const submitter = (e as unknown as SubmitEvent)
+									.submitter as HTMLButtonElement | null
+								if (submitter?.value === "deleteArticles") await deleteSelected()
+							})}
+						/>
+
 						{articles.length > 0 && (
 							<ul
 								class="sl-list"
@@ -385,28 +400,58 @@ export const ShoppingListApp = clientEntry(
 										key={article.id}
 										class={`sl-item${selected.has(article.id) ? " sl-item--checked" : ""}`}
 									>
-										<input
-											type="text"
-											class="sl-item-input"
-											maxLength={75}
-											autoComplete="off"
-											enterKeyHint="done"
-											aria-label="Article text"
-											mix={[
-												ref((node) => {
-													;(node as HTMLInputElement).value = article.text
-												}),
-												on("input", (e) => {
-													scheduleChange(
-														article.id,
-														(e.currentTarget as HTMLInputElement).value,
-													)
-												}),
-											]}
-										/>
+										<form
+											method="post"
+											mix={on<HTMLFormElement>("submit", (e) => {
+												e.preventDefault()
+												const text = (
+													(e as unknown as SubmitEvent)
+														.target as HTMLFormElement
+												).elements.namedItem(
+													"text",
+												) as HTMLInputElement
+												clearTimeout(debounceTimers.get(article.id))
+												debounceTimers.delete(article.id)
+												patchChange(article.id, text.value)
+											})}
+										>
+											<input
+												type="hidden"
+												name="_action"
+												value="changeArticle"
+											/>
+											<input
+												type="hidden"
+												name="id"
+												value={article.id}
+											/>
+											<input
+												type="text"
+												name="text"
+												class="sl-item-input"
+												maxLength={75}
+												autoComplete="off"
+												enterKeyHint="done"
+												aria-label="Article text"
+												mix={[
+													ref((node) => {
+														;(node as HTMLInputElement).value = article.text
+													}),
+													on("input", (e) => {
+														scheduleChange(
+															article.id,
+															(e.currentTarget as HTMLInputElement).value,
+														)
+													}),
+												]}
+											/>
+										</form>
 										<input
 											type="checkbox"
 											aria-label="Select article"
+											name="selected"
+											value={article.id}
+											form="articles-form"
 											checked={selected.has(article.id)}
 											mix={on("change", (e) => {
 												const checked = (e.currentTarget as HTMLInputElement)
@@ -469,6 +514,8 @@ export const ShoppingListApp = clientEntry(
 								<button
 									class="btn btn-primary sl-add-btn"
 									type="submit"
+									name="_action"
+									value="addArticle"
 								>
 									{t.Add}
 								</button>
@@ -477,8 +524,7 @@ export const ShoppingListApp = clientEntry(
 										class="btn btn-secondary"
 										type="button"
 										mix={on("click", () => {
-											clearOpen = true
-											handle.update()
+											if (clearDialogEl) clearDialogEl.showModal()
 										})}
 									>
 										{t.clearList}
@@ -570,8 +616,10 @@ export const ShoppingListApp = clientEntry(
 					>
 						<button
 							class="btn btn-primary sl-delete-btn"
-							type="button"
-							mix={on("click", deleteSelected)}
+							type="submit"
+							name="_action"
+							value="deleteArticles"
+							form="articles-form"
 						>
 							<svg
 								viewBox="0 0 20 20"
@@ -590,33 +638,39 @@ export const ShoppingListApp = clientEntry(
 						</button>
 					</div>
 
-					<div
-						class={`sl-dialog-overlay${clearOpen ? " sl-dialog-overlay--visible" : ""}`}
+					<dialog
+						class="sl-dialog"
+						mix={ref((node) => {
+							clearDialogEl = node as HTMLDialogElement
+						})}
 					>
-						<div class="sl-dialog">
-							<h2 class="sl-dialog-title">{t.clearList}</h2>
-							<p>{t["clearList-confirm"]}</p>
-							<div class="sl-dialog-actions">
-								<button
-									class="btn btn-secondary"
-									type="button"
-									mix={on("click", () => {
-										clearOpen = false
-										handle.update()
-									})}
-								>
+						<h2 class="sl-dialog-title">{t.clearList}</h2>
+						<p>{t["clearList-confirm"]}</p>
+						<div class="sl-dialog-actions">
+							<form method="dialog">
+								<button class="btn btn-secondary" type="submit">
 									{t.cancel}
 								</button>
+							</form>
+							<form
+								method="post"
+								mix={on<HTMLFormElement>("submit", async (e) => {
+									e.preventDefault()
+									clearDialogEl?.close()
+									await clearList()
+								})}
+							>
 								<button
 									class="btn btn-primary"
-									type="button"
-									mix={on("click", clearList)}
+									type="submit"
+									name="_action"
+									value="clearList"
 								>
 									{t.clearList}
 								</button>
-							</div>
+							</form>
 						</div>
-					</div>
+					</dialog>
 
 					{toast.render()}
 				</div>

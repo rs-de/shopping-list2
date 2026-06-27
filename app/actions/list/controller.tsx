@@ -79,14 +79,51 @@ export default createController(routes.list, {
 
 				if (request.method === "POST") {
 						const form = await request.formData()
-						const id = String(form.get("id") ?? "").trim()
-						const text = String(form.get("new") ?? "").trim()
-						if (!id || !text || text.length > 256) return badRequest()
-						await db.shoppingList.update({
-							where: { id: listId },
-							data: { articles: [...articles, { id, text }] },
-						})
-						return redirect(`/${listId}`)
+						switch (form.get("_action")) {
+							case "addArticle": {
+								const id = String(form.get("id") ?? "").trim()
+								const text = String(form.get("new") ?? "").trim()
+								if (!id || !text || text.length > 256) return badRequest()
+								await db.shoppingList.update({
+									where: { id: listId },
+									data: { articles: [...articles, { id, text }] },
+								})
+								return redirect(`/${listId}`)
+							}
+							case "changeArticle": {
+								const id = String(form.get("id") ?? "")
+								const text = String(form.get("text") ?? "")
+								if (!id || text.length > 256) return badRequest()
+								await db.shoppingList.update({
+									where: { id: listId },
+									data: {
+										articles: articles.map((a) =>
+											a.id === id ? { ...a, text } : a,
+										),
+									},
+								})
+								return redirect(`/${listId}`)
+							}
+							case "deleteArticles": {
+								const ids = form.getAll("selected").map(String)
+								await db.shoppingList.update({
+									where: { id: listId },
+									data: {
+										articles: articles.filter((a) => !ids.includes(a.id)),
+									},
+								})
+								return redirect(`/${listId}`)
+							}
+							case "clearList": {
+								await db.shoppingList.update({
+									where: { id: listId },
+									data: { articles: [] },
+								})
+								return redirect(`/${listId}`)
+							}
+							default:
+								return badRequest()
+						}
 					}
 
 					if (request.method === "PATCH") {

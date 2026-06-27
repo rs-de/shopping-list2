@@ -847,46 +847,18 @@ a {
 }
 
 /* Clear dialog */
-.sl-dialog-overlay {
-	position: fixed;
-	inset: 0;
-	background: hsl(0 0% 0% / 0.4);
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	padding: 1rem;
-	z-index: 50;
-	opacity: 0;
-	pointer-events: none;
-	transition: opacity 200ms ease-in;
-}
-
-.sl-dialog-overlay--visible {
-	opacity: 1;
-	pointer-events: auto;
-	transition: opacity 300ms ease-out;
-}
-
-.sl-dialog {
+dialog.sl-dialog {
 	background: hsl(var(--primary-3));
+	border: none;
 	border-radius: 0.75rem;
 	padding: 1.5rem;
-	width: 100%;
+	width: calc(100% - 2rem);
 	max-width: 24rem;
 	box-shadow: 0 20px 40px hsl(0 0% 0% / 0.25);
-	scale: 0.95;
-	opacity: 0;
-	transition:
-		scale 200ms ease-in,
-		opacity 200ms ease-in;
 }
 
-.sl-dialog-overlay--visible .sl-dialog {
-	scale: 1;
-	opacity: 1;
-	transition:
-		scale 300ms ease-out,
-		opacity 300ms ease-out;
+dialog.sl-dialog::backdrop {
+	background: hsl(0 0% 0% / 0.4);
 }
 
 .sl-dialog-title {
