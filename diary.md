@@ -125,5 +125,5 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 38. Switch to nanoid + extract generateId() util shared across list and articles
    `pnpm add nanoid && (add utils/id.ts; edit shopping-list.tsx+controller.tsx)`
 
-40. Fix rejig optimistic update; add Playwright tests for all list actions
+39. Fix rejig optimistic update; add Playwright tests for all list actions
    `(edit shopping-list.tsx + e2e.spec.ts: rejig fix + optimistic tests)`
