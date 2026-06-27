@@ -3,6 +3,7 @@ import { clientEntry, type Handle, on, ref } from "remix/ui"
 import type { Translations } from "../i18n.ts"
 import { generateId } from "../utils/id.ts"
 import { moveArticles } from "../utils/moveArticles.ts"
+import { createToast } from "../utils/toast.tsx"
 
 type Article = { id: string; text: string }
 type ListRecord = { id: string; articles: Article[]; dirty: boolean }
@@ -76,6 +77,8 @@ export const ShoppingListApp = clientEntry(
 		let patchAbort: AbortController | null = null
 		let retryDelay = 3_000
 		let retryTimer: ReturnType<typeof setTimeout> | null = null
+
+		const toast = createToast(() => handle.update(), handle.signal)
 
 		handle.signal.addEventListener("abort", () => {
 			for (const t of debounceTimers.values()) clearTimeout(t)
@@ -292,6 +295,7 @@ export const ShoppingListApp = clientEntry(
 					await navigator.share({ url, title: t.ShoppingList })
 				} else {
 					await navigator.clipboard.writeText(url)
+					toast.show(t.copied)
 				}
 			} catch {
 				// user cancelled or API unavailable
@@ -574,6 +578,8 @@ export const ShoppingListApp = clientEntry(
 						</div>
 					</div>
 
+
+				{toast.render()}
 				</div>
 			)
 		}

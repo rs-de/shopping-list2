@@ -130,3 +130,6 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 40. Drop sync row; silent retry skips timer when offline (online event wakes it)
    `(edit shopping-list.tsx + main.css + locales: no UI noise, offline-aware retry)`
+
+41. "Link copied!" toast via reusable createToast helper (auto-dismiss 2 s)
+   `(add utils/toast.tsx; edit shopping-list.tsx + main.css + locales)`
