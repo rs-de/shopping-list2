@@ -3,11 +3,11 @@
 export type {}
 
 declare let self: ServiceWorkerGlobalScope
-declare const APP_VERSION: string
+declare const BUILD_STAMP: string
 declare const process: { env: { NODE_ENV: string } }
 
 const IS_DEV = process.env.NODE_ENV === "development"
-const CACHE = `sl-v${APP_VERSION}`
+const CACHE = `sl-v${BUILD_STAMP}`
 
 const PRECACHE_URLS = [
 	"/styles/main.css",

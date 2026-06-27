@@ -1,9 +1,21 @@
+import { execSync } from "node:child_process"
+
 import { createAssetServer } from "remix/assets"
 import pkg from "../package.json" with { type: "json" }
 
 const rootDir = process.cwd()
 
 export const appVersion = pkg.version
+
+function getBuildStamp(): string {
+	try {
+		return execSync("git rev-parse --short HEAD", { encoding: "utf-8" }).trim()
+	} catch {
+		return "unknown"
+	}
+}
+
+const buildStamp = getBuildStamp()
 
 export const assetServer = createAssetServer({
 	basePath: "/assets",
@@ -20,7 +32,7 @@ export const assetServer = createAssetServer({
 			"process.env.NODE_ENV": JSON.stringify(
 				process.env.NODE_ENV ?? "development",
 			),
-			APP_VERSION: appVersion,
+			BUILD_STAMP: JSON.stringify(buildStamp),
 		},
 	},
 })

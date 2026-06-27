@@ -136,3 +136,6 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 42. SW notifies page on update; toast with Refresh action; only on real updates
    `(edit sw.ts + toast.tsx + shopping-list.tsx + main.css + locales)`
+
+43. Replace APP_VERSION with git hash as SW cache key; auto-busts on each deploy
+   `(edit assets.ts + sw.ts: BUILD_STAMP from git rev-parse --short HEAD)`
