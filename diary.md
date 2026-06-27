@@ -168,3 +168,6 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 52. fix cancel button size in clear-list dialog
    `(edit main.css: .sl-dialog-actions .btn-secondary → full btn sizing)`
+
+53. no-JS POST fallback for clear list; intercept submit to show dialog
+   `(edit shopping-list.tsx + main.css: restructure add form, clear-list form)`

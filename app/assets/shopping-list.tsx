@@ -472,6 +472,7 @@ export const ShoppingListApp = clientEntry(
 						)}
 
 						<form
+							id="form-add-article"
 							method="post"
 							mix={on<HTMLFormElement>("submit", async (e) => {
 								e.preventDefault()
@@ -509,48 +510,56 @@ export const ShoppingListApp = clientEntry(
 									})}
 								/>
 							</div>
+						</form>
 
-							<div class="sl-actions">
-								<button
-									class="btn btn-primary sl-add-btn"
-									type="submit"
-									name="_action"
-									value="addArticle"
+						<div class="sl-actions">
+							<button
+								class="btn btn-primary sl-add-btn"
+								type="submit"
+								form="form-add-article"
+								name="_action"
+								value="addArticle"
+							>
+								{t.Add}
+							</button>
+							{articles.length > 0 && (
+								<form
+									method="post"
+									mix={on<HTMLFormElement>("submit", (e) => {
+										e.preventDefault()
+										if (clearDialogEl) clearDialogEl.showModal()
+									})}
 								>
-									{t.Add}
-								</button>
-								{articles.length > 0 && (
 									<button
 										class="btn btn-secondary"
-										type="button"
-										mix={on("click", () => {
-											if (clearDialogEl) clearDialogEl.showModal()
-										})}
+										type="submit"
+										name="_action"
+										value="clearList"
 									>
 										{t.clearList}
 									</button>
-								)}
-								<button
-									class="btn btn-secondary"
-									type="button"
-									mix={on("click", share)}
+								</form>
+							)}
+							<button
+								class="btn btn-secondary"
+								type="button"
+								mix={on("click", share)}
+							>
+								<svg
+									width="20"
+									height="20"
+									viewBox="0 0 50 50"
+									xmlns="http://www.w3.org/2000/svg"
+									fill="currentColor"
+									aria-hidden="true"
 								>
-									<svg
-										width="20"
-										height="20"
-										viewBox="0 0 50 50"
-										xmlns="http://www.w3.org/2000/svg"
-										fill="currentColor"
-										aria-hidden="true"
-									>
-										<path d="M30.3 13.7L25 8.4l-5.3 5.3-1.4-1.4L25 5.6l6.7 6.7z" />
-										<path d="M24 7h2v21h-2z" />
-										<path d="M35 40H15c-1.7 0-3-1.3-3-3V19c0-1.7 1.3-3 3-3h7v2h-7c-.6 0-1 .4-1 1v18c0 .6.4 1 1 1h20c.6 0 1-.4 1-1V19c0-.6-.4-1-1-1h-7v-2h7c1.7 0 3 1.3 3 3v18c0 1.7-1.3 3-3 3z" />
-									</svg>
-									{hasShare ? t.share : t["copy-link"]}
-								</button>
-							</div>
-						</form>
+									<path d="M30.3 13.7L25 8.4l-5.3 5.3-1.4-1.4L25 5.6l6.7 6.7z" />
+									<path d="M24 7h2v21h-2z" />
+									<path d="M35 40H15c-1.7 0-3-1.3-3-3V19c0-1.7 1.3-3 3-3h7v2h-7c-.6 0-1 .4-1 1v18c0 .6.4 1 1 1h20c.6 0 1-.4 1-1V19c0-.6-.4-1-1-1h-7v-2h7c1.7 0 3 1.3 3 3v18c0 1.7-1.3 3-3 3z" />
+								</svg>
+								{hasShare ? t.share : t["copy-link"]}
+							</button>
+						</div>
 					</div>
 
 					{showRejig && (

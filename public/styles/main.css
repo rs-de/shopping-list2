@@ -651,6 +651,10 @@ a {
 	margin-top: 0.5rem;
 }
 
+.sl-actions > form {
+	display: contents;
+}
+
 .sl-add-btn {
 	flex: 1;
 }
