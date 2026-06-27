@@ -303,16 +303,11 @@ export const ShoppingListApp = clientEntry(
 		}
 
 		async function share() {
-			const url = location.href
 			try {
-				if (navigator.share) {
-					await navigator.share({ url, title: t.ShoppingList })
-				} else {
-					await navigator.clipboard.writeText(url)
-					toast.show(t.copied)
-				}
+				await navigator.clipboard.writeText(location.href)
+				toast.show(t.copied)
 			} catch {
-				// user cancelled or API unavailable
+				// clipboard unavailable
 			}
 		}
 

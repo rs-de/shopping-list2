@@ -139,3 +139,6 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 43. Replace APP_VERSION with git hash as SW cache key; auto-busts on each deploy
    `(edit assets.ts + sw.ts: BUILD_STAMP from git rev-parse --short HEAD)`
+
+44. Fix copy-link toast on iPhone: always use clipboard, drop navigator.share
+   `(edit shopping-list.tsx: remove navigator.share branch from share())`
