@@ -67,6 +67,7 @@ export const ShoppingListApp = clientEntry(
 		let addInputEl: HTMLInputElement | null = null
 		let rejigN = 3
 		let rejigAnchorEl: HTMLElement | null = null
+		let hasShare = false
 
 		// dirty: true when local articles diverge from server state
 		// dirtyGen: incremented on every dirty write — lets drainDirty detect
@@ -109,6 +110,8 @@ export const ShoppingListApp = clientEntry(
 		}
 
 		handle.queueTask(() => {
+			hasShare = Boolean(navigator.share)
+			handle.update()
 			localStorage.setItem("shoppingListId", listId)
 
 			// IDB init: if dirty, restore local state and start retry; else seed IDB
@@ -304,6 +307,12 @@ export const ShoppingListApp = clientEntry(
 
 		async function share() {
 			const url = location.href
+			if (hasShare) {
+				try {
+					await navigator.share({ url, title: t.ShoppingList })
+				} catch { /* cancelled */ }
+				return
+			}
 			let copied = false
 			if (navigator.clipboard) {
 				try {
@@ -483,7 +492,7 @@ export const ShoppingListApp = clientEntry(
 									<path d="M24 7h2v21h-2z" />
 									<path d="M35 40H15c-1.7 0-3-1.3-3-3V19c0-1.7 1.3-3 3-3h7v2h-7c-.6 0-1 .4-1 1v18c0 .6.4 1 1 1h20c.6 0 1-.4 1-1V19c0-.6-.4-1-1-1h-7v-2h7c1.7 0 3 1.3 3 3v18c0 1.7-1.3 3-3 3z" />
 								</svg>
-								{t["copy-link"]}
+								{hasShare ? t.share : t["copy-link"]}
 							</button>
 						</div>
 
