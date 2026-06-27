@@ -114,6 +114,17 @@ export default createController(routes.list, {
 				if (request.method === "POST" || request.method === "PATCH") {
 					const form = await request.formData()
 
+					// POST rejig (no-JS fallback)
+					if (request.method === "POST" && form.has("partitionNumber")) {
+						const partitionNumber = Number(form.get("partitionNumber"))
+						const partitionCount = Number(form.get("partitionCount"))
+						const ids = form.getAll("selected").map(String)
+						if (!ids.length || !partitionNumber || !partitionCount) return badRequest()
+						const next = moveArticles({ idsToRejig: ids, partitionNumber, partitionCount, articles })
+						await db.shoppingList.update({ where: { id: listId }, data: { articles: next } })
+						return redirect(`/${listId}`)
+					}
+
 					// PATCH-only actions
 					if (request.method === "PATCH") {
 						const action = form.get("_action")

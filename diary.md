@@ -174,3 +174,6 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 54. show delete bar without JS via CSS :has()
    `(edit main.css: .sl-card:has([name=selected]:checked) shows delete bar)`
+
+55. replace rejig popup with inline grid column (rowspan via grid-row: 1/-1)
+   `(edit shopping-list.tsx + main.css + list/controller.tsx)`

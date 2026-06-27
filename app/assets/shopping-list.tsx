@@ -72,7 +72,6 @@ export const ShoppingListApp = clientEntry(
 		let addInputEl: HTMLInputElement | null = null
 		let nextId = handle.props.nextId
 		let rejigN = 3
-		let rejigAnchorEl: HTMLElement | null = null
 		let hasShare = false
 
 		// dirty: true when local articles diverge from server state
@@ -348,7 +347,6 @@ export const ShoppingListApp = clientEntry(
 
 		return () => {
 			const showDelete = selected.size > 0
-			const showRejig = selected.size > 0 && articles.length > 5
 			const rejigMid = Math.ceil(rejigN / 2)
 			const rejigButtons = Array.from({ length: rejigN }, (_, i) => {
 				const partition = i + 1
@@ -364,8 +362,10 @@ export const ShoppingListApp = clientEntry(
 					<button
 						key={String(partition)}
 						class={`btn btn-secondary sl-rejig-btn${labelKey ? "" : " sl-rejig-btn--dot"}`}
-						type="button"
-						mix={on("click", () => rejig(partition))}
+						type="submit"
+						form="articles-form"
+						name="partitionNumber"
+						value={String(partition)}
 					>
 						{labelKey ? t[labelKey] : ""}
 					</button>
@@ -384,16 +384,18 @@ export const ShoppingListApp = clientEntry(
 								e.preventDefault()
 								const submitter = (e as unknown as SubmitEvent)
 									.submitter as HTMLButtonElement | null
-								if (submitter?.value === "deleteArticles") await deleteSelected()
+								if (submitter?.name === "partitionNumber") {
+									await rejig(Number(submitter.value))
+								} else if (submitter?.value === "deleteArticles") {
+									await deleteSelected()
+								}
 							})}
 						/>
 
 						{articles.length > 0 && (
 							<ul
 								class="sl-list"
-								mix={ref((node) => {
-									rejigAnchorEl = (node as HTMLElement).querySelector("li")
-								})}
+								style={`grid-template-rows: repeat(${articles.length}, auto)`}
 							>
 								{articles.map((article) => (
 									<li
@@ -468,6 +470,54 @@ export const ShoppingListApp = clientEntry(
 										/>
 									</li>
 								))}
+								{articles.length > 5 && (
+									<li class="sl-rejig-column" aria-hidden="true">
+										<button
+											class="sl-rejig-help"
+											type="button"
+											aria-label="What is rejig?"
+											mix={on("click", () => {
+												helpOpen = !helpOpen
+												handle.update()
+											})}
+										>
+											?
+										</button>
+										{helpOpen && (
+											<div class="sl-rejig-help-panel" key="help-panel">
+												{t.rejig_description}
+											</div>
+										)}
+										<select
+											class="sl-rejig-select"
+											name="partitionCount"
+											form="articles-form"
+											mix={ref((node) => {
+												;(node as HTMLSelectElement).addEventListener(
+													"change",
+													(e) => {
+														rejigN = Number(
+															(e.currentTarget as HTMLSelectElement).value,
+														)
+														handle.update()
+													},
+													{ signal: handle.signal },
+												)
+											})}
+										>
+											<option value="3" selected={rejigN === 3}>
+												3
+											</option>
+											<option value="5" selected={rejigN === 5}>
+												5
+											</option>
+											<option value="7" selected={rejigN === 7}>
+												7
+											</option>
+										</select>
+										{rejigButtons}
+									</li>
+								)}
 							</ul>
 						)}
 
@@ -561,64 +611,6 @@ export const ShoppingListApp = clientEntry(
 							</button>
 						</div>
 					</div>
-
-					{showRejig && (
-						<div
-							class="sl-rejig"
-							key="rejig"
-							mix={ref((node) => {
-								if (!node) return
-								const r = rejigAnchorEl?.getBoundingClientRect()
-								if (r) {
-									;(node as HTMLElement).style.left = `${r.right - 170}px`
-									;(node as HTMLElement).style.top = `${r.top - 35}px`
-								}
-							})}
-						>
-							<button
-								class="sl-rejig-help"
-								type="button"
-								aria-label="What is rejig?"
-								mix={on("click", () => {
-									helpOpen = !helpOpen
-									handle.update()
-								})}
-							>
-								?
-							</button>
-							{helpOpen && (
-								<div class="sl-rejig-help-panel" key="help-panel">
-									{t.rejig_description}
-								</div>
-							)}
-							<select
-								class="sl-rejig-select"
-								mix={ref((node) => {
-									;(node as HTMLSelectElement).addEventListener(
-										"change",
-										(e) => {
-											rejigN = Number(
-												(e.currentTarget as HTMLSelectElement).value,
-											)
-											handle.update()
-										},
-										{ signal: handle.signal },
-									)
-								})}
-							>
-								<option value="3" selected={rejigN === 3}>
-									3
-								</option>
-								<option value="5" selected={rejigN === 5}>
-									5
-								</option>
-								<option value="7" selected={rejigN === 7}>
-									7
-								</option>
-							</select>
-							{rejigButtons}
-						</div>
-					)}
 
 					<div
 						class={`sl-delete-bar${showDelete ? " sl-delete-bar--visible" : ""}`}
