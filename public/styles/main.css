@@ -880,6 +880,13 @@ dialog.sl-dialog::backdrop {
 	margin-top: 1.25rem;
 }
 
+.sl-dialog-actions .btn-secondary {
+	font-size: 1rem;
+	padding: 0.5rem 0.75rem;
+	min-width: 3.5rem;
+	min-height: 2.75rem;
+}
+
 /* ── Spinner ─────────────────────────────────────────────── */
 
 .spinner {

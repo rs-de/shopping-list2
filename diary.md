@@ -165,3 +165,6 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 51. update e2e: rename 404→400 test, add valid-ID auto-create test
    `(edit tests/e2e.spec.ts: 400 assertion + new auto-create test)`
+
+52. fix cancel button size in clear-list dialog
+   `(edit main.css: .sl-dialog-actions .btn-secondary → full btn sizing)`
