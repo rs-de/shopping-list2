@@ -154,7 +154,6 @@ export const ShoppingListApp = clientEntry(
 				},
 				{ signal: handle.signal },
 			)
-
 		})
 
 		async function drainDirty(): Promise<void> {
@@ -310,7 +309,9 @@ export const ShoppingListApp = clientEntry(
 			if (hasShare) {
 				try {
 					await navigator.share({ url, title: t.ShoppingList })
-				} catch { /* cancelled */ }
+				} catch {
+					/* cancelled */
+				}
 				return
 			}
 			let copied = false
@@ -318,7 +319,9 @@ export const ShoppingListApp = clientEntry(
 				try {
 					await navigator.clipboard.writeText(url)
 					copied = true
-				} catch { /* fall through */ }
+				} catch {
+					/* fall through */
+				}
 			}
 			if (!copied) {
 				// fallback for non-secure contexts (HTTP on local network)
@@ -495,7 +498,6 @@ export const ShoppingListApp = clientEntry(
 								{hasShare ? t.share : t["copy-link"]}
 							</button>
 						</div>
-
 					</div>
 
 					{showRejig && (
@@ -609,8 +611,7 @@ export const ShoppingListApp = clientEntry(
 						</div>
 					</div>
 
-
-				{toast.render()}
+					{toast.render()}
 				</div>
 			)
 		}
