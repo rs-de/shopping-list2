@@ -20,7 +20,7 @@ test.describe.serial("list workflow", () => {
 	})
 
 	test("add article → persists after reload", async ({ page }) => {
-		await page.goto(listUrl)
+		await page.goto(listUrl, { waitUntil: "networkidle" })
 
 		await page.fill("input.sl-add-input", "Milk")
 		const patchDone = page.waitForResponse(
@@ -60,7 +60,7 @@ test.describe.serial("optimistic updates", () => {
 	}
 
 	test("add article updates list before server responds", async ({ page }) => {
-		await page.goto(listUrl)
+		await page.goto(listUrl, { waitUntil: "networkidle" })
 		await slowPatch(page)
 		await page.fill("input.sl-add-input", "Butter")
 		await page.keyboard.press("Enter")
@@ -75,7 +75,7 @@ test.describe.serial("optimistic updates", () => {
 	test("change article text is visible before server responds", async ({
 		page,
 	}) => {
-		await page.goto(listUrl)
+		await page.goto(listUrl, { waitUntil: "networkidle" })
 		await addAndWait(page, "Eggs")
 		const input = page.locator("input.sl-item-input").last()
 		await slowPatch(page)
@@ -89,7 +89,7 @@ test.describe.serial("optimistic updates", () => {
 	})
 
 	test("delete article removes it before server responds", async ({ page }) => {
-		await page.goto(listUrl)
+		await page.goto(listUrl, { waitUntil: "networkidle" })
 		await addAndWait(page, "Sugar")
 		const count = await page.locator("input.sl-item-input").count()
 		await slowPatch(page)
@@ -106,7 +106,7 @@ test.describe.serial("optimistic updates", () => {
 	})
 
 	test("clear list empties it before server responds", async ({ page }) => {
-		await page.goto(listUrl)
+		await page.goto(listUrl, { waitUntil: "networkidle" })
 		if ((await page.locator("input.sl-item-input").count()) === 0)
 			await addAndWait(page, "Flour")
 		await slowPatch(page)
@@ -120,7 +120,7 @@ test.describe.serial("optimistic updates", () => {
 	})
 
 	test("rejig moves article before server responds", async ({ page }) => {
-		await page.goto(listUrl)
+		await page.goto(listUrl, { waitUntil: "networkidle" })
 		const existing = await page.locator("input.sl-item-input").count()
 		for (let i = existing; i < 6; i++) await addAndWait(page, `Item ${i + 1}`)
 		const firstText = await page

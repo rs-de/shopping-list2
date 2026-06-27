@@ -148,3 +148,7 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 46. Add compression middleware (gzip/brotli) for all text responses
    `(edit router.ts: compression() before staticFiles)`
+
+47. fix: wait for networkidle on list-page navigations in e2e tests so the
+   `clientEntry` dynamic import completes before filling the add-input
+   `(edit tests/e2e.spec.ts: { waitUntil: "networkidle" } on goto(listUrl))`

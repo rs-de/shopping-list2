@@ -111,7 +111,6 @@ export const ShoppingListApp = clientEntry(
 
 		handle.queueTask(() => {
 			hasShare = Boolean(navigator.share)
-			handle.update()
 			localStorage.setItem("shoppingListId", listId)
 
 			// IDB init: if dirty, restore local state and start retry; else seed IDB
@@ -122,7 +121,6 @@ export const ShoppingListApp = clientEntry(
 					if (saved?.dirty && !handle.signal.aborted) {
 						markDirty()
 						articles = saved.articles
-						handle.update()
 						scheduleRetry()
 					} else {
 						await writeRecord(listId, articles, false)
@@ -130,6 +128,7 @@ export const ShoppingListApp = clientEntry(
 				} catch {
 					// IDB unavailable — server state is fine
 				}
+				if (!handle.signal.aborted) handle.update()
 			})()
 
 			window.addEventListener(
