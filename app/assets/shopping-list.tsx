@@ -467,10 +467,10 @@ export const ShoppingListApp = clientEntry(
 							</button>
 						</div>
 
-						{(syncStatus === "syncing" || syncStatus === "synced") && (
+						{syncStatus === "syncing" && (
 							<div class="sl-sync-row">
-								<span class={`sync-status sync-status--${syncStatus}`}>
-									{syncStatus === "syncing" ? t.saving : t.saved}
+								<span class="sync-status sync-status--syncing">
+									{t.saving}
 								</span>
 							</div>
 						)}
