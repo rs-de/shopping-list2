@@ -133,3 +133,6 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 41. "Link copied!" toast via reusable createToast helper (auto-dismiss 2 s)
    `(add utils/toast.tsx; edit shopping-list.tsx + main.css + locales)`
+
+42. SW notifies page on update; toast with Refresh action; only on real updates
+   `(edit sw.ts + toast.tsx + shopping-list.tsx + main.css + locales)`

@@ -29,5 +29,7 @@
 	"clearList": "Liste leeren",
 	"clearList-confirm": "Möchtest du die Liste wirklich leeren?",
 	"cancel": "Abbrechen",
-	"copied": "Link kopiert!"
+	"copied": "Link kopiert!",
+	"sw_updated": "Neue Version verfügbar",
+	"sw_reload": "Aktualisieren"
 }

@@ -138,6 +138,20 @@ export const ShoppingListApp = clientEntry(
 				{ signal: handle.signal },
 			)
 
+			navigator.serviceWorker?.addEventListener(
+				"message",
+				(event: MessageEvent) => {
+					if (event.data?.type !== "SW_UPDATED") return
+					toast.show(t.sw_updated, "success", {
+						action: {
+							label: t.sw_reload,
+							onClick: () => location.reload(),
+						},
+					})
+				},
+				{ signal: handle.signal },
+			)
+
 		})
 
 		async function drainDirty(): Promise<void> {
