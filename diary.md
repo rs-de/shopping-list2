@@ -142,3 +142,9 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 44. Fix copy-link toast on iPhone: always use clipboard, drop navigator.share
    `(edit shopping-list.tsx: remove navigator.share branch from share())`
+
+45. Copy-link fallback for HTTP: execCommand('copy') when clipboard unavailable
+   `(edit shopping-list.tsx: execCommand fallback so toast fires on local network)`
+
+46. Add compression middleware (gzip/brotli) for all text responses
+   `(edit router.ts: compression() before staticFiles)`
