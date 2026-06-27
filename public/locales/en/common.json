@@ -29,6 +29,5 @@
 	"clearList": "Clear list",
 	"clearList-confirm": "Do you really want to clear the list?",
 	"cancel": "Cancel",
-	"saving": "Saving…",
-	"saved": "Saved"
+	"sync_error": "Changes not synced — retrying…"
 }

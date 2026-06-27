@@ -128,5 +128,5 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 39. Fix rejig optimistic update; add Playwright tests for all list actions
    `(edit shopping-list.tsx + e2e.spec.ts: rejig fix + optimistic tests)`
 
-40. Remove "Saved" confirmation hint; show "Saving…" only while in flight
-   `(edit app/assets/shopping-list.tsx: drop synced from sync-row condition)`
+40. Drop sync row; add fixed toast for persistent server errors (≥3 retries)
+   `(edit shopping-list.tsx + main.css + locales: syncError toast, no layout shift)`

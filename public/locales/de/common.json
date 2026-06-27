@@ -29,6 +29,5 @@
 	"clearList": "Liste leeren",
 	"clearList-confirm": "Möchtest du die Liste wirklich leeren?",
 	"cancel": "Abbrechen",
-	"saving": "Speichern…",
-	"saved": "Gespeichert"
+	"sync_error": "Änderungen nicht synchronisiert — wird wiederholt…"
 }

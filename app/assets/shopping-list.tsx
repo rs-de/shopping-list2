@@ -60,7 +60,7 @@ export const ShoppingListApp = clientEntry(
 		let articles: Article[] = [...handle.props.articles]
 		const { t } = handle.props
 		let selected = new Set<string>()
-		let syncStatus: "idle" | "syncing" | "synced" = "idle"
+		let syncError = false
 		let clearOpen = false
 		let helpOpen = false
 		const debounceTimers = new Map<string, ReturnType<typeof setTimeout>>()
@@ -95,6 +95,10 @@ export const ShoppingListApp = clientEntry(
 				void drainDirty().catch(() => {})
 			}, retryDelay)
 			retryDelay = Math.min(retryDelay * 2, 30_000)
+			if (retryDelay >= 12_000 && navigator.onLine && !syncError) {
+				syncError = true
+				handle.update()
+			}
 		}
 
 		function clearRetry() {
@@ -103,6 +107,10 @@ export const ShoppingListApp = clientEntry(
 				retryTimer = null
 			}
 			retryDelay = 3_000
+			if (syncError) {
+				syncError = false
+				handle.update()
+			}
 		}
 
 		handle.queueTask(() => {
@@ -131,6 +139,17 @@ export const ShoppingListApp = clientEntry(
 				() => {
 					clearRetry() // reset backoff on genuine reconnect
 					void drainDirty().catch(() => {})
+				},
+				{ signal: handle.signal },
+			)
+
+			window.addEventListener(
+				"offline",
+				() => {
+					if (syncError) {
+						syncError = false
+						handle.update()
+					}
 				},
 				{ signal: handle.signal },
 			)
@@ -164,10 +183,7 @@ export const ShoppingListApp = clientEntry(
 				scheduleRetry()
 				return
 			}
-			if (!handle.signal.aborted) {
-				syncStatus = "synced"
-				handle.update()
-			}
+			// nothing to re-render on drain success — clearRetry() handles syncError
 		}
 
 		async function patch(body: FormData): Promise<void> {
@@ -179,8 +195,6 @@ export const ShoppingListApp = clientEntry(
 			// Mark dirty immediately so all responses are discarded and drainDirty
 			// reconciles the final state via replaceArticles.
 			if (inFlight > 1) markDirty()
-			syncStatus = "syncing"
-			handle.update()
 			try {
 				const res = await fetch(`/${listId}`, {
 					method: "PATCH",
@@ -198,7 +212,6 @@ export const ShoppingListApp = clientEntry(
 						dirty = false
 						clearRetry()
 						articles = updated.articles
-						syncStatus = "synced"
 						void writeRecord(listId, articles, false).catch(() => {})
 					} else {
 						void writeRecord(listId, articles, true).catch(() => {})
@@ -467,13 +480,6 @@ export const ShoppingListApp = clientEntry(
 							</button>
 						</div>
 
-						{syncStatus === "syncing" && (
-							<div class="sl-sync-row">
-								<span class="sync-status sync-status--syncing">
-									{t.saving}
-								</span>
-							</div>
-						)}
 					</div>
 
 					{showRejig && (
@@ -586,6 +592,12 @@ export const ShoppingListApp = clientEntry(
 							</div>
 						</div>
 					</div>
+
+					{syncError && (
+						<div class="sl-toast sl-toast--error" role="alert">
+							{t.sync_error}
+						</div>
+					)}
 				</div>
 			)
 		}

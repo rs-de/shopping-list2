@@ -655,25 +655,24 @@ a {
 	flex: 1;
 }
 
-/* Sync status */
-.sl-sync-row {
-	display: flex;
-	justify-content: flex-end;
+/* Toast */
+.sl-toast {
+	position: fixed;
+	bottom: 1.5rem;
+	left: 50%;
+	transform: translateX(-50%);
+	padding: 0.5rem 1.25rem;
+	border-radius: 0.5rem;
+	font-size: 0.875rem;
+	font-weight: 500;
+	white-space: nowrap;
+	z-index: 100;
+	box-shadow: 0 2px 8px hsl(0 0% 0% / 0.2);
 }
 
-.sync-status {
-	font-size: 0.75rem;
-	color: hsl(var(--slate-11));
-	padding: 0.125rem 0.5rem;
-	border-radius: 9999px;
-}
-
-.sync-status--syncing {
-	color: hsl(var(--primary-11));
-}
-
-.sync-status--synced {
-	color: hsl(206 60% 35%);
+.sl-toast--error {
+	background: hsl(0 72% 51%);
+	color: #fff;
 }
 
 /* Empty state */
