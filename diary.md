@@ -171,3 +171,6 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 53. no-JS POST fallback for clear list; intercept submit to show dialog
    `(edit shopping-list.tsx + main.css: restructure add form, clear-list form)`
+
+54. show delete bar without JS via CSS :has()
+   `(edit main.css: .sl-card:has([name=selected]:checked) shows delete bar)`

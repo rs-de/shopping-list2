@@ -846,7 +846,8 @@ a {
 	transition: transform 300ms ease-out;
 }
 
-.sl-delete-bar--visible {
+.sl-delete-bar--visible,
+.sl-card:has(input[name="selected"]:checked) .sl-delete-bar {
 	transform: translateY(0);
 }
 
