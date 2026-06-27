@@ -122,11 +122,8 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 37. SW-driven caching: version-keyed cache, dev networkFirst, no-cache HTTP
    `(edit assets.ts + sw.ts + server.ts + package.json: APP_VERSION define)`
 
-38. Switch article ID generation from uuid-slice to nanoid (10 chars, ~60 bits)
-   `pnpm add nanoid && (edit shopping-list.tsx: nanoid(10) replaces randomUUID().slice(0,8))`
-
-39. Extract shared generateId() util; use for both article IDs and list IDs
-   `(add app/utils/id.ts; edit shopping-list.tsx + controller.tsx: import generateId)`
+38. Switch to nanoid + extract generateId() util shared across list and articles
+   `pnpm add nanoid && (add utils/id.ts; edit shopping-list.tsx+controller.tsx)`
 
 40. Fix rejig optimistic update; add Playwright tests for all list actions
    `(edit shopping-list.tsx + e2e.spec.ts: rejig fix + optimistic tests)`
