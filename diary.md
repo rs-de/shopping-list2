@@ -128,8 +128,5 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 39. Extract shared generateId() util; use for both article IDs and list IDs
    `(add app/utils/id.ts; edit shopping-list.tsx + controller.tsx: import generateId)`
 
-40. Fix rejig: apply moveArticles locally before patch() for instant reorder
-   `(edit app/assets/shopping-list.tsx: optimistic articles update in rejig())`
-
-41. Add Playwright optimistic-update tests for add/change/delete/clear/rejig
-   `(edit tests/e2e.spec.ts: serial describe with 2 s route-delay + 1 s assert)`
+40. Fix rejig optimistic update; add Playwright tests for all list actions
+   `(edit shopping-list.tsx + e2e.spec.ts: rejig fix + optimistic tests)`
