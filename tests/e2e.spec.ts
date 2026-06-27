@@ -148,10 +148,17 @@ test("404 for unknown multi-segment path", async ({ page }) => {
 	await expect(page.locator("h1.error-page__code")).toHaveText("404")
 })
 
-test("404 for unknown list ID", async ({ page }) => {
+test("400 for syntactically invalid list ID", async ({ page }) => {
 	const res = await page.goto("/not-a-real-list-id-xyzzy")
-	expect(res?.status()).toBe(404)
-	await expect(page.locator("h1.error-page__code")).toHaveText("404")
+	expect(res?.status()).toBe(400)
+	await expect(page.locator("h1.error-page__code")).toHaveText("400")
+})
+
+test("valid-format unknown ID auto-creates the list", async ({ page }) => {
+	// Use a fixed valid nanoid-10 ID that won't exist after a DB wipe
+	const res = await page.goto("/wipe_test1")
+	expect(res?.status()).toBe(200)
+	await expect(page.locator("h1.sl-heading")).toBeVisible()
 })
 
 test("/api/version returns version string", async ({ request }) => {

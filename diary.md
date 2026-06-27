@@ -159,3 +159,9 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 49. consolidate duplicated POST/PATCH mutation logic in list controller
    `(edit list/controller.tsx: extract mutateArticles(), unify POST+PATCH block)`
 
+
+50. auto-create list on valid-ID miss; 400 for invalid ID format
+   `(edit list/controller.tsx: VALID_ID guard → 400, create on miss)`
+
+51. update e2e: rename 404→400 test, add valid-ID auto-create test
+   `(edit tests/e2e.spec.ts: 400 assertion + new auto-create test)`

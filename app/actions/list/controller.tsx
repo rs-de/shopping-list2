@@ -86,22 +86,28 @@ export default createController(routes.list, {
 					return redirect(routes.home.href())
 				}
 
-				const list = await db.shoppingList.findUnique({
-					where: { id: listId },
-				})
-				if (!list) {
+				const VALID_ID = /^[A-Za-z0-9_-]{10}$/
+				if (!VALID_ID.test(listId)) {
 					const { lang, t } = await getTranslations(request)
 					return render(
-						<Document title="404 — Shopping List" lang={lang} t={t}>
+						<Document title="400 — Shopping List" lang={lang} t={t}>
 							<ErrorPage
-								code={404}
-								message="List not found."
+								code={400}
+								message="Invalid list ID."
 								href="/"
 								label="Go home"
 							/>
 						</Document>,
-						{ status: 404 },
+						{ status: 400 },
 					)
+				}
+				let list = await db.shoppingList.findUnique({
+					where: { id: listId },
+				})
+				if (!list) {
+					list = await db.shoppingList.create({
+						data: { id: listId, articles: [] },
+					})
 				}
 				const articles = list.articles as Article[]
 
