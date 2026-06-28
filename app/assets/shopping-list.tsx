@@ -423,6 +423,7 @@ export const ShoppingListApp = clientEntry(
 													type="text"
 													name="text"
 													class="sl-item-input"
+													defaultValue={article.text}
 													maxLength={75}
 													autoComplete="off"
 													enterKeyHint="done"

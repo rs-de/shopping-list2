@@ -192,3 +192,6 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 60. add no-JS e2e suite: add, rejig reveal, delete bar, delete, clear, rejig POST
    `(edit e2e.spec.ts: no-JS describe + submitAndWait helper; add sl-clear-btn class)`
+
+61. fix no-JS test suite: 4 bugs found while making all 18 tests pass
+   `(edit shopping-list.tsx+main.css+e2e.spec.ts: defaultValue, ~ combinator, force click, goto)`

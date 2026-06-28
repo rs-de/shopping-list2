@@ -858,7 +858,7 @@ a {
 }
 
 .sl-delete-bar--visible,
-.sl-card:has(input[name="selected"]:checked) .sl-delete-bar {
+.sl-card:has(input[name="selected"]:checked) ~ .sl-delete-bar {
 	transform: translateY(0);
 }
 

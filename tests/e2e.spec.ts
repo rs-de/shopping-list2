@@ -202,7 +202,12 @@ test.describe
 				.locator('input[type="checkbox"][aria-label="Select article"]')
 				.first()
 				.check()
-			await submitAndWait(page, () => page.click("button.sl-delete-btn"))
+			// Delete bar slides in with a 300ms CSS transition; wait for the
+			// button itself to reach the viewport before submitting
+			await expect(page.locator("button.sl-delete-btn")).toBeInViewport()
+			await submitAndWait(page, () =>
+				page.locator("button.sl-delete-btn").click({ force: true }),
+			)
 			await expect(page.locator("input.sl-item-input")).toHaveCount(before - 1)
 		})
 
@@ -218,6 +223,7 @@ test.describe
 		})
 
 		test("rejig via POST moves selected article to end", async ({ page }) => {
+			await page.goto(listUrl)
 			// List is empty after the clear above — add 6 items via POST
 			for (const text of ["A", "B", "C", "D", "E", "F"]) {
 				await page.fill("input.sl-add-input", text)
