@@ -193,7 +193,6 @@ test.describe
 			await page.goto(listUrl)
 			// column starts with visibility:hidden — should be hidden before animation
 			await expect(page.locator(".sl-rejig-column")).toBeHidden()
-			await page.waitForTimeout(500)
 			await expect(page.locator(".sl-rejig-column")).toBeVisible()
 		})
 
@@ -247,7 +246,7 @@ test.describe
 				.locator("input.sl-item-input")
 				.last()
 				.inputValue()
-			await page.waitForTimeout(500) // let sl-rejig-reveal animation fire
+			await expect(page.locator(".sl-rejig-column")).toBeVisible()
 			await page
 				.locator('input[type="checkbox"][aria-label="Select article"]')
 				.last()

@@ -225,3 +225,6 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 71. Show "list cleaned up" as toast instead of static paragraph on recreate
    `(edit home-menu.tsx: replace <p> with createToast on recreateId)`
+
+72. Replace waitForTimeout(500) with toBeVisible() in tests for animation waits
+   `(edit tests/e2e.spec.ts: drop fixed sleeps, poll instead)`
