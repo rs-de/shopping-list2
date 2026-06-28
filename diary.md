@@ -198,3 +198,6 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 62. type-safe TranslationKey derived from English JSON (getTranslations() reverted: SSR)
    `(edit app/i18n.ts: import type en; TranslationKey = keyof typeof en)`
+
+63. Add startup cleanup: delete ShoppingLists not updated in 90+ days
+   `(edit server.ts: runCleanup() on start + setInterval 24h)`

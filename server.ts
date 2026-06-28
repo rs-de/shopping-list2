@@ -3,7 +3,19 @@ import * as os from "node:os"
 import * as path from "node:path"
 import { createRequestListener } from "remix/node-fetch-server"
 
+import { db } from "./app/db.ts"
 import { router } from "./app/router.ts"
+
+const CLEANUP_INTERVAL_MS = 24 * 60 * 60 * 1000
+const STALE_THRESHOLD_DAYS = 90
+
+async function runCleanup() {
+	const cutoff = new Date(Date.now() - STALE_THRESHOLD_DAYS * 24 * 60 * 60 * 1000)
+	const { count } = await db.shoppingList.deleteMany({
+		where: { updatedAt: { lt: cutoff } },
+	})
+	if (count > 0) console.log(`Cleanup: removed ${count} stale list(s)`)
+}
 
 const STATIC_EXTS = new Set([
 	"css",
@@ -78,6 +90,8 @@ server.listen(port, () => {
 	console.log(`  Local:   http://localhost:${port}`)
 	const lan = getLanAddress()
 	if (lan) console.log(`  Network: http://${lan}:${port}`)
+	runCleanup().catch(console.error)
+	setInterval(() => runCleanup().catch(console.error), CLEANUP_INTERVAL_MS)
 })
 
 let shuttingDown = false
