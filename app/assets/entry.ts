@@ -42,9 +42,12 @@ function showUpdateBanner(): void {
 	const el = document.createElement("div")
 	el.id = "sl-update-banner"
 	el.className = "sl-update-banner"
-	el.innerHTML =
-		"<span>A new version is available.</span>" +
-		'<button onclick="location.reload()">Reload</button>'
+	const span = document.createElement("span")
+	span.textContent = "A new version is available."
+	const btn = document.createElement("button")
+	btn.textContent = "Reload"
+	btn.addEventListener("click", () => location.reload())
+	el.append(span, btn)
 	document.body.prepend(el)
 }
 
