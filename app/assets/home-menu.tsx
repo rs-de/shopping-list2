@@ -6,17 +6,28 @@ const LOCAL_STORAGE_KEY = "shoppingListId"
 
 export const HomeMenu = clientEntry(
 	import.meta.url,
-	function HomeMenu(handle: Handle<{ t: Translations }>) {
+	function HomeMenu(handle: Handle<{ t: Translations; recreateId?: string }>) {
 		let listId: string | null = null
-		const { t } = handle.props
+		const { t, recreateId } = handle.props
 
 		handle.queueTask(() => {
 			listId = localStorage.getItem(LOCAL_STORAGE_KEY)
 			handle.update()
 		})
 
-		return () =>
-			listId ? (
+		return () => {
+			if (recreateId) {
+				return (
+					<form method="post" class="home-menu__form">
+						<p class="home-menu__cleaned-up">{t["list-cleaned-up"]}</p>
+						<input type="hidden" name="id" value={recreateId} />
+						<button type="submit" class="btn btn-primary home-menu__create-btn">
+							{t["recreate-list"]}
+						</button>
+					</form>
+				)
+			}
+			return listId ? (
 				<a href={`/${listId}`} class="home-menu__show-link">
 					{t["show-my-list"]}
 				</a>
@@ -27,5 +38,6 @@ export const HomeMenu = clientEntry(
 					</button>
 				</form>
 			)
+		}
 	},
 )

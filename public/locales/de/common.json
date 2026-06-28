@@ -31,5 +31,7 @@
 	"cancel": "Abbrechen",
 	"copied": "Link kopiert!",
 	"sw_updated": "Neue Version verfügbar",
-	"sw_reload": "Aktualisieren"
+	"sw_reload": "Aktualisieren",
+	"list-cleaned-up": "Deine Liste wurde bereinigt.",
+	"recreate-list": "Liste wiederherstellen"
 }

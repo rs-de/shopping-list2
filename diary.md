@@ -201,3 +201,9 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 63. Add startup cleanup: delete ShoppingLists not updated in 90+ days
    `(edit server.ts: runCleanup() on start + setInterval 24h)`
+
+64. Extract global rate limiter to utils/rateLimit.ts; wire into home POST
+   `(edit utils/rateLimit.ts+controller.tsx: shared isRateLimited())`
+
+65. Unknown list → redirect /?recreate=id; home recreates with same ID
+   `(edit list/controller.tsx+controller.tsx+home-menu.tsx+locales: recreate flow)`

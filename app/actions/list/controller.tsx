@@ -101,13 +101,11 @@ export default createController(routes.list, {
 						{ status: 400 },
 					)
 				}
-				let list = await db.shoppingList.findUnique({
+				const list = await db.shoppingList.findUnique({
 					where: { id: listId },
 				})
 				if (!list) {
-					list = await db.shoppingList.create({
-						data: { id: listId, articles: [] },
-					})
+					return redirect(`/?recreate=${encodeURIComponent(listId)}`)
 				}
 				const articles = list.articles as Article[]
 

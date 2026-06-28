@@ -31,5 +31,7 @@
 	"cancel": "Cancel",
 	"copied": "Link copied!",
 	"sw_updated": "New version available",
-	"sw_reload": "Refresh"
+	"sw_reload": "Refresh",
+	"list-cleaned-up": "Your list was cleaned up.",
+	"recreate-list": "Recreate list"
 }

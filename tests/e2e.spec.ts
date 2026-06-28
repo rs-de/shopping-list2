@@ -260,11 +260,13 @@ test("400 for syntactically invalid list ID", async ({ page }) => {
 	await expect(page.locator("h1.error-page__code")).toHaveText("400")
 })
 
-test("valid-format unknown ID auto-creates the list", async ({ page }) => {
-	// Use a fixed valid nanoid-10 ID that won't exist after a DB wipe
+test("valid-format unknown ID redirects to home with recreate prompt", async ({
+	page,
+}) => {
 	const res = await page.goto("/wipe_test1")
 	expect(res?.status()).toBe(200)
-	await expect(page.locator("h1.sl-heading")).toBeVisible()
+	await expect(page).toHaveURL(/\?recreate=wipe_test1/)
+	await expect(page.locator("h1")).toBeVisible()
 })
 
 test("/api/version returns version string", async ({ request }) => {

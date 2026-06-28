@@ -14,6 +14,7 @@ import { routes } from "../routes.ts"
 import { Document } from "../ui/document.tsx"
 import { ErrorPage } from "../ui/error-page.tsx"
 import { generateId } from "../utils/id.ts"
+import { isRateLimited } from "../utils/rateLimit.ts"
 
 const DIR = path.dirname(url.fileURLToPath(import.meta.url))
 const ROOT = path.resolve(DIR, "../..")
@@ -37,15 +38,26 @@ export default createController(routes, {
 			)
 		},
 		async home({ request, render }) {
+			const VALID_ID = /^[A-Za-z0-9_-]{10}$/
 			if (request.method === "POST") {
 				if (isRateLimited()) {
 					return new Response("Too Many Requests", { status: 429 })
 				}
-				const list = await db.shoppingList.create({
-					data: { id: generateId() },
+				const form = await request.formData()
+				const requestedId = String(form.get("id") ?? "").trim()
+				const id =
+					requestedId && VALID_ID.test(requestedId) ? requestedId : generateId()
+				await db.shoppingList.upsert({
+					where: { id },
+					create: { id, articles: [] },
+					update: {},
 				})
-				return redirect(`/${list.id}`, 303)
+				return redirect(`/${id}`, 303)
 			}
+			const url = new URL(request.url)
+			const recreateId = url.searchParams.get("recreate") ?? undefined
+			const validRecreateId =
+				recreateId && VALID_ID.test(recreateId) ? recreateId : undefined
 			const { lang, t } = await getTranslations(request)
 			return render(
 				<Document title={t["page-title"]} lang={lang} t={t}>
@@ -55,7 +67,7 @@ export default createController(routes, {
 							<h2>{t["app-teaser-text"]}</h2>
 						</div>
 						<div class="home-menu">
-							<HomeMenu t={t} />
+							<HomeMenu t={t} recreateId={validRecreateId} />
 						</div>
 						<span aria-hidden="true" />
 					</div>
@@ -106,12 +118,3 @@ export default createController(routes, {
 		},
 	},
 })
-
-let rateLimitUntil = 0
-
-function isRateLimited(): boolean {
-	const now = Date.now()
-	if (now < rateLimitUntil) return true
-	rateLimitUntil = now + 5_000
-	return false
-}
