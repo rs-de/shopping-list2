@@ -188,7 +188,10 @@ export const ShoppingListApp = clientEntry(
 					toast.show(t.sw_updated, "success", {
 						action: {
 							label: t.sw_reload,
-							onClick: () => location.reload(),
+							onClick: () => {
+								toast.dismiss()
+								window.location.assign(window.location.href)
+							},
 						},
 					})
 				},
