@@ -119,9 +119,18 @@ export default createController(routes.list, {
 						const partitionNumber = Number(form.get("partitionNumber"))
 						const partitionCount = Number(form.get("partitionCount"))
 						const ids = form.getAll("selected").map(String)
-						if (!ids.length || !partitionNumber || !partitionCount) return badRequest()
-						const next = moveArticles({ idsToRejig: ids, partitionNumber, partitionCount, articles })
-						await db.shoppingList.update({ where: { id: listId }, data: { articles: next } })
+						if (!ids.length || !partitionNumber || !partitionCount)
+							return badRequest()
+						const next = moveArticles({
+							idsToRejig: ids,
+							partitionNumber,
+							partitionCount,
+							articles,
+						})
+						await db.shoppingList.update({
+							where: { id: listId },
+							data: { articles: next },
+						})
 						return redirect(`/${listId}`)
 					}
 
@@ -135,14 +144,23 @@ export default createController(routes.list, {
 							if (!selected.length) return badRequest()
 							return updateList(
 								listId,
-								moveArticles({ idsToRejig: selected, partitionNumber, partitionCount, articles }),
+								moveArticles({
+									idsToRejig: selected,
+									partitionNumber,
+									partitionCount,
+									articles,
+								}),
 							)
 						}
 						if (action === "replaceArticles") {
 							const newArticles = JSON.parse(
 								String(form.get("articles") ?? "[]"),
 							) as Article[]
-							if (newArticles.some((a) => typeof a.text !== "string" || a.text.length > 256))
+							if (
+								newArticles.some(
+									(a) => typeof a.text !== "string" || a.text.length > 256,
+								)
+							)
 								return badRequest()
 							return updateList(listId, newArticles)
 						}
@@ -152,7 +170,10 @@ export default createController(routes.list, {
 					if (next instanceof Response) return next
 
 					if (request.method === "PATCH") return updateList(listId, next)
-					await db.shoppingList.update({ where: { id: listId }, data: { articles: next } })
+					await db.shoppingList.update({
+						where: { id: listId },
+						data: { articles: next },
+					})
 					return redirect(`/${listId}`)
 				}
 
@@ -165,7 +186,12 @@ export default createController(routes.list, {
 						t={t}
 						manifestHref={`/${listId}/manifest`}
 					>
-						<ShoppingListApp listId={listId} articles={articles} t={t} nextId={generateId()} />
+						<ShoppingListApp
+							listId={listId}
+							articles={articles}
+							t={t}
+							nextId={generateId()}
+						/>
 					</Document>,
 				)
 			} catch {

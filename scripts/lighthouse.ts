@@ -39,11 +39,10 @@ async function waitForServer(ms = 10_000): Promise<void> {
 let serverProcess: ReturnType<typeof spawn> | null = null
 
 if (!(await isServerUp())) {
-	serverProcess = spawn(
-		"node",
-		["--import", "remix/node-tsx", "server.ts"],
-		{ stdio: "ignore", env: { ...process.env, NODE_ENV: "production" } },
-	)
+	serverProcess = spawn("node", ["--import", "remix/node-tsx", "server.ts"], {
+		stdio: "ignore",
+		env: { ...process.env, NODE_ENV: "production" },
+	})
 	await waitForServer()
 }
 
@@ -90,7 +89,9 @@ if (failed.length) {
 }
 
 if (failures.length) {
-	console.log(`\nFailed thresholds:\n${failures.map((f) => `  • ${f}`).join("\n")}\n`)
+	console.log(
+		`\nFailed thresholds:\n${failures.map((f) => `  • ${f}`).join("\n")}\n`,
+	)
 	process.exit(1)
 }
 

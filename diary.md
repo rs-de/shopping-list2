@@ -180,3 +180,9 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 56. fix rejig column positioning: absolute within list, JS centers on last checked
    `(edit shopping-list.tsx + main.css: sl-list-outer + position:absolute rejig)`
+
+57. rejig column: overlay (no layout shift), rotateY reveal, no-JS anti-FOUC delay
+   `(edit main.css + shopping-list.tsx: absolute pos, keyframe reveal, --js class)`
+
+58. bigger checkbox touch target (44 px) + more clearance to rejig column
+   `(edit shopping-list.tsx: wrap checkbox in label.sl-item-check; edit main.css)`

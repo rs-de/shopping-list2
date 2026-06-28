@@ -36,8 +36,7 @@ self.addEventListener("activate", (event) => {
 			await self.clients.claim()
 			if (isUpdate) {
 				const clients = await self.clients.matchAll({ type: "window" })
-				for (const client of clients)
-					client.postMessage({ type: "SW_UPDATED" })
+				for (const client of clients) client.postMessage({ type: "SW_UPDATED" })
 			}
 		}),
 	)
