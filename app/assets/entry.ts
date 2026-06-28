@@ -20,7 +20,8 @@ if ("serviceWorker" in navigator) {
 }
 
 // Version check: show reload banner when a new deployment is detected
-let _knownVersion: string | null = null
+const VERSION_KEY = "sl-version"
+let _knownVersion: string | null = localStorage.getItem(VERSION_KEY)
 
 async function checkVersion(): Promise<void> {
 	try {
@@ -29,6 +30,7 @@ async function checkVersion(): Promise<void> {
 		const { version } = (await res.json()) as { version: string }
 		if (_knownVersion === null) {
 			_knownVersion = version
+			localStorage.setItem(VERSION_KEY, version)
 		} else if (_knownVersion !== version) {
 			showUpdateBanner()
 		}
