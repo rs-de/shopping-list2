@@ -1,5 +1,5 @@
 {
-	"name": "shopping-list2",
+	"name": "shopping-list",
 	"version": "1.8.0",
 	"private": true,
 	"type": "module",
@@ -13,7 +13,8 @@
 		"typecheck": "tsc --noEmit",
 		"format": "biome format --write .",
 		"lint": "biome lint --write .",
-		"check": "biome check --write ."
+		"check": "biome check --write .",
+		"migrate": "prisma migrate deploy"
 	},
 	"engines": {
 		"node": ">=24"

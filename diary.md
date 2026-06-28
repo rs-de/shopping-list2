@@ -237,3 +237,6 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 75. Rename fly.io app from shopping-list2 to shopping-list
    `(edit fly.toml: app = 'shopping-list')`
+
+76. Add migrate script and rename package name to shopping-list
+   `(edit package.json: name field + migrate script)`
