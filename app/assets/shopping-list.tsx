@@ -75,7 +75,7 @@ export const ShoppingListApp = clientEntry(
 		let addInputEl: HTMLInputElement | null = null
 		let nextId = handle.props.nextId
 		let rejigN = 3
-		let hasShare = false
+		const hasShare = Boolean(navigator.share)
 
 		// dirty: true when local articles diverge from server state
 		// dirtyGen: incremented on every dirty write — lets drainDirty detect
@@ -118,7 +118,6 @@ export const ShoppingListApp = clientEntry(
 		}
 
 		handle.queueTask(() => {
-			hasShare = Boolean(navigator.share)
 			localStorage.setItem("shoppingListId", listId)
 			const savedRejigN = Number(localStorage.getItem("rejigN"))
 			if ([3, 5, 7].includes(savedRejigN)) rejigN = savedRejigN
@@ -666,7 +665,7 @@ export const ShoppingListApp = clientEntry(
 									<path d="M24 7h2v21h-2z" />
 									<path d="M35 40H15c-1.7 0-3-1.3-3-3V19c0-1.7 1.3-3 3-3h7v2h-7c-.6 0-1 .4-1 1v18c0 .6.4 1 1 1h20c.6 0 1-.4 1-1V19c0-.6-.4-1-1-1h-7v-2h7c1.7 0 3 1.3 3 3v18c0 1.7-1.3 3-3 3z" />
 								</svg>
-								{hasShare ? t.share : t["copy-link"]}
+								{t.share}
 							</button>
 						</div>
 					</div>
