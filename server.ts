@@ -10,7 +10,9 @@ const CLEANUP_INTERVAL_MS = 24 * 60 * 60 * 1000
 const STALE_THRESHOLD_DAYS = 90
 
 async function runCleanup() {
-	const cutoff = new Date(Date.now() - STALE_THRESHOLD_DAYS * 24 * 60 * 60 * 1000)
+	const cutoff = new Date(
+		Date.now() - STALE_THRESHOLD_DAYS * 24 * 60 * 60 * 1000,
+	)
 	const { count } = await db.shoppingList.deleteMany({
 		where: { updatedAt: { lt: cutoff } },
 	})
