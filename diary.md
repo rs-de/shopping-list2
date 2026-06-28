@@ -240,3 +240,6 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 76. Add migrate script and rename package name to shopping-list
    `(edit package.json: name field + migrate script)`
+
+77. Remove LiteFS — revert to simple volume mount and direct app start
+   `(edit Dockerfile+fly.toml: drop litefs; rm litefs.yml)`

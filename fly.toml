@@ -4,8 +4,7 @@ primary_region = 'fra'
 [build]
 
 [env]
-  DATABASE_URL = 'file:/litefs/prod.db'
-  PRIMARY_REGION = 'fra'
+  DATABASE_URL = 'file:/data/prod.db'
 
 [http_service]
   internal_port = 8080
@@ -16,4 +15,4 @@ primary_region = 'fra'
 
 [[mounts]]
   source = 'shopping_list_data'
-  destination = '/var/lib/litefs'
+  destination = '/data'
