@@ -186,3 +186,6 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 58. bigger checkbox touch target (44 px) + more clearance to rejig column
    `(edit shopping-list.tsx: wrap checkbox in label.sl-item-check; edit main.css)`
+
+59. tighten vertical spacing to fit more list rows on screen
+   `(edit main.css: heading, page padding, item padding, list gap, form spacing)`
