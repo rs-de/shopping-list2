@@ -33,5 +33,8 @@
 	"sw_updated": "Neue Version verfügbar",
 	"sw_reload": "Aktualisieren",
 	"list-cleaned-up": "Deine Liste wurde bereinigt.",
-	"recreate-list": "Liste wiederherstellen"
+	"recreate-list": "Liste wiederherstellen",
+	"install_prompt": "Zur Startseite hinzufügen für schnellen Zugriff",
+	"install_action": "Installieren",
+	"install_ios": "Tippe Teilen ⬆ dann \"Zum Home-Bildschirm\""
 }

@@ -3,6 +3,9 @@ primary_region = 'fra'
 
 [build]
 
+[deploy]
+  release_command = "pnpm exec prisma migrate deploy"
+
 [env]
   DATABASE_URL = 'file:/data/prod.db'
 

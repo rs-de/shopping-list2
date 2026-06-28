@@ -51,6 +51,10 @@ async function writeRecord(
 	})
 }
 
+interface BeforeInstallPromptEvent extends Event {
+	prompt(): Promise<void>
+}
+
 export const ShoppingListApp = clientEntry(
 	import.meta.url,
 	function ShoppingListApp(
@@ -136,6 +140,38 @@ export const ShoppingListApp = clientEntry(
 				}
 				if (!handle.signal.aborted) handle.update()
 			})()
+
+			// Homescreen install prompt
+			if (!localStorage.getItem("sl-install-prompted")) {
+				const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent)
+				const isStandalone =
+					(navigator as Navigator & { standalone?: boolean }).standalone === true ||
+					window.matchMedia("(display-mode: standalone)").matches
+				if (!isStandalone) {
+					if (isIOS) {
+						localStorage.setItem("sl-install-prompted", "1")
+						toast.show(t.install_ios, "success", { duration: 8000 })
+					} else {
+						window.addEventListener(
+							"beforeinstallprompt",
+							(e) => {
+								e.preventDefault()
+								localStorage.setItem("sl-install-prompted", "1")
+								toast.show(t.install_prompt, "success", {
+									action: {
+										label: t.install_action,
+										onClick: () => {
+											;(e as BeforeInstallPromptEvent).prompt()
+											toast.dismiss()
+										},
+									},
+								})
+							},
+							{ once: true, signal: handle.signal },
+						)
+					}
+				}
+			}
 
 			window.addEventListener(
 				"online",

@@ -17,4 +17,4 @@ ENV NODE_ENV=production
 ENV PORT=8080
 EXPOSE 8080
 
-CMD ["sh", "-c", "pnpm exec prisma migrate deploy && node --import remix/node-tsx server.ts"]
+CMD ["node", "--import", "remix/node-tsx", "server.ts"]
