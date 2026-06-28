@@ -196,5 +196,5 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 61. fix no-JS test suite: 4 bugs found while making all 18 tests pass
    `(edit shopping-list.tsx+main.css+e2e.spec.ts: defaultValue, ~ combinator, force click, goto)`
 
-62. globalise translations: typed keys from JSON, embed in <script>, getTranslations()
-   `(edit i18n.ts, document.tsx, new assets/i18n.ts, home-menu.tsx, shopping-list.tsx)`
+62. type-safe TranslationKey derived from English JSON (getTranslations() reverted: SSR)
+   `(edit app/i18n.ts: import type en; TranslationKey = keyof typeof en)`
