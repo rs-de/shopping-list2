@@ -27,6 +27,35 @@ export default createController(routes, {
 				new Response("Not Found", { status: 404 })
 			)
 		},
+		async manifest({ request }) {
+			const { t } = await getTranslations(request)
+			return new Response(
+				JSON.stringify({
+					name: t.ShoppingList,
+					short_name: t.ShoppingList,
+					description: t["page-meta-description"],
+					start_url: "/",
+					display: "standalone",
+					background_color: "#eaf4ff",
+					theme_color: "hsl(206, 100%, 50%)",
+					icons: [
+						{
+							src: "/icons/manifest-icon-192.maskable.png",
+							sizes: "192x192",
+							type: "image/png",
+							purpose: "any maskable",
+						},
+						{
+							src: "/icons/manifest-icon-512.maskable.png",
+							sizes: "512x512",
+							type: "image/png",
+							purpose: "any maskable",
+						},
+					],
+				}),
+				{ headers: { "content-type": "application/manifest+json" } },
+			)
+		},
 		async version() {
 			return Response.json({ version: appVersion })
 		},
