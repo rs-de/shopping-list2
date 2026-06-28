@@ -41,6 +41,7 @@ async function checkVersion(): Promise<void> {
 
 function showUpdateBanner(newVersion: string): void {
 	if (document.getElementById("sl-update-banner")) return
+	localStorage.setItem(VERSION_KEY, newVersion)
 	const el = document.createElement("div")
 	el.id = "sl-update-banner"
 	el.className = "sl-update-banner"
@@ -48,10 +49,7 @@ function showUpdateBanner(newVersion: string): void {
 	span.textContent = "A new version is available."
 	const btn = document.createElement("button")
 	btn.textContent = "Reload"
-	btn.addEventListener("click", () => {
-		localStorage.setItem(VERSION_KEY, newVersion)
-		window.location.assign(window.location.href)
-	})
+	btn.addEventListener("click", () => window.location.assign(window.location.href))
 	el.append(span, btn)
 	document.body.prepend(el)
 }

@@ -246,3 +246,6 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 78. Fix Docker build: pin pnpm@10.6.2, restore onlyBuiltDependencies, rename app
    `(edit package.json+fly.toml+Dockerfile: pnpm pin + build script approval)`
+
+N. fix SW_UPDATED toast reload on iOS: dismiss toast + use location.assign
+   `(edit app/assets/shopping-list.tsx: onClick dismisses toast and uses window.location.assign)`
