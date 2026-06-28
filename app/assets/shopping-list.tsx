@@ -117,6 +117,8 @@ export const ShoppingListApp = clientEntry(
 		handle.queueTask(() => {
 			hasShare = Boolean(navigator.share)
 			localStorage.setItem("shoppingListId", listId)
+			const savedRejigN = Number(localStorage.getItem("rejigN"))
+			if ([3, 5, 7].includes(savedRejigN)) rejigN = savedRejigN
 
 			// IDB init: if dirty, restore local state and start retry; else seed IDB
 			void (async () => {
@@ -503,6 +505,7 @@ export const ShoppingListApp = clientEntry(
 														rejigN = Number(
 															(e.currentTarget as HTMLSelectElement).value,
 														)
+														localStorage.setItem("rejigN", String(rejigN))
 														handle.update()
 													},
 													{ signal: handle.signal },

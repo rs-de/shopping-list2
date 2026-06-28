@@ -146,6 +146,18 @@ test.describe
 			await page.waitForResponse((r) => r.request().method() === "PATCH")
 			await page.unrouteAll()
 		})
+
+		test("rejigN selection persists across page reload", async ({ page }) => {
+			await page.goto(listUrl, { waitUntil: "networkidle" })
+			await page
+				.locator('input[type="checkbox"][aria-label="Select article"]')
+				.first()
+				.check()
+			await expect(page.locator(".sl-rejig-column")).toBeVisible()
+			await page.selectOption("select.sl-rejig-select", "5")
+			await page.reload({ waitUntil: "networkidle" })
+			await expect(page.locator("select.sl-rejig-select")).toHaveValue("5")
+		})
 	})
 
 // POST→redirect helper: waitForURL detects navigation even when URL stays the same

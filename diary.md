@@ -207,3 +207,6 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 65. Unknown list → redirect /?recreate=id; home recreates with same ID
    `(edit list/controller.tsx+controller.tsx+home-menu.tsx+locales: recreate flow)`
+
+66. Persist rejigN to localStorage so the preferred stop count survives reload
+   `(edit app/assets/shopping-list.tsx: read/write rejigN from localStorage)`
