@@ -243,3 +243,6 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 77. Remove LiteFS — revert to simple volume mount and direct app start
    `(edit Dockerfile+fly.toml: drop litefs; rm litefs.yml)`
+
+78. Fix Docker build: pin pnpm@10.6.2, restore onlyBuiltDependencies, rename app
+   `(edit package.json+fly.toml+Dockerfile: pnpm pin + build script approval)`

@@ -16,6 +16,7 @@
 		"check": "biome check --write .",
 		"migrate": "prisma migrate deploy"
 	},
+	"packageManager": "pnpm@10.6.2",
 	"engines": {
 		"node": ">=24"
 	},
@@ -40,6 +41,7 @@
 	"pnpm": {
 		"onlyBuiltDependencies": [
 			"@prisma/engines",
+			"esbuild",
 			"prisma"
 		]
 	}

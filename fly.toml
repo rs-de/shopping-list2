@@ -1,4 +1,4 @@
-app = 'shopping-list'
+app = 'rs-de-shopping-list'
 primary_region = 'fra'
 
 [build]
