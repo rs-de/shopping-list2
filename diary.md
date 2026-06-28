@@ -213,3 +213,6 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 67. Add sortKey+createdAt to Article, add sortArticles util, reset dev DB
    `rm dev.db && pnpm dlx prisma db push && (edit utils/moveArticles.ts: type+sort fn)`
+
+68. Server: addArticle stores sortKey+createdAt; rejig sets sortKey; remove moveArticles
+   `(edit controller.tsx: addArticle+rejig use sortKey, drop moveArticles)`

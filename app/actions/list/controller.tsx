@@ -8,7 +8,7 @@ import { routes } from "../../routes.ts"
 import { Document } from "../../ui/document.tsx"
 import { ErrorPage } from "../../ui/error-page.tsx"
 import { generateId } from "../../utils/id.ts"
-import { type Article, moveArticles } from "../../utils/moveArticles.ts"
+import { type Article, sortArticles } from "../../utils/moveArticles.ts"
 
 const badRequest = (msg = "Bad Request") => new Response(msg, { status: 400 })
 
@@ -20,8 +20,10 @@ function mutateArticles(
 		case "addArticle": {
 			const id = String(form.get("id") ?? "").trim()
 			const text = String(form.get("new") ?? "").trim()
-			if (!id || !text || text.length > 256) return badRequest()
-			return [...articles, { id, text }]
+			const sortKey = Number(form.get("sortKey"))
+			const createdAt = Number(form.get("createdAt")) || Date.now()
+			if (!id || !text || text.length > 256 || !sortKey) return badRequest()
+			return sortArticles([...articles, { id, text, sortKey, createdAt }])
 		}
 		case "changeArticle": {
 			const id = String(form.get("id") ?? "")
@@ -115,16 +117,13 @@ export default createController(routes.list, {
 					// POST rejig (no-JS fallback)
 					if (request.method === "POST" && form.has("partitionNumber")) {
 						const partitionNumber = Number(form.get("partitionNumber"))
-						const partitionCount = Number(form.get("partitionCount"))
 						const ids = form.getAll("selected").map(String)
-						if (!ids.length || !partitionNumber || !partitionCount)
-							return badRequest()
-						const next = moveArticles({
-							idsToRejig: ids,
-							partitionNumber,
-							partitionCount,
-							articles,
-						})
+						if (!ids.length || !partitionNumber) return badRequest()
+						const next = sortArticles(
+							articles.map((a) =>
+								ids.includes(a.id) ? { ...a, sortKey: partitionNumber } : a,
+							),
+						)
 						await db.shoppingList.update({
 							where: { id: listId },
 							data: { articles: next },
@@ -138,16 +137,16 @@ export default createController(routes.list, {
 						if (action === "rejig") {
 							const selected = form.getAll("selected").map(String)
 							const partitionNumber = Number(form.get("partitionNumber"))
-							const partitionCount = Number(form.get("partitionCount"))
-							if (!selected.length) return badRequest()
+							if (!selected.length || !partitionNumber) return badRequest()
 							return updateList(
 								listId,
-								moveArticles({
-									idsToRejig: selected,
-									partitionNumber,
-									partitionCount,
-									articles,
-								}),
+								sortArticles(
+									articles.map((a) =>
+										selected.includes(a.id)
+											? { ...a, sortKey: partitionNumber }
+											: a,
+									),
+								),
 							)
 						}
 						if (action === "replaceArticles") {
