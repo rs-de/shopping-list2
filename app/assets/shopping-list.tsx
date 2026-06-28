@@ -393,85 +393,116 @@ export const ShoppingListApp = clientEntry(
 						/>
 
 						{articles.length > 0 && (
-							<ul
-								class="sl-list"
-								style={`grid-template-rows: repeat(${articles.length}, auto)`}
-							>
-								{articles.map((article) => (
-									<li
-										key={article.id}
-										class={`sl-item${selected.has(article.id) ? " sl-item--checked" : ""}`}
-									>
-										<form
-											method="post"
-											mix={on<HTMLFormElement>("submit", (e) => {
-												e.preventDefault()
-												const text = (
-													(e as unknown as SubmitEvent)
-														.target as HTMLFormElement
-												).elements.namedItem(
-													"text",
-												) as HTMLInputElement
-												clearTimeout(debounceTimers.get(article.id))
-												debounceTimers.delete(article.id)
-												patchChange(article.id, text.value)
-											})}
+							<div class="sl-list-outer">
+								<ul
+									class={`sl-list${articles.length > 5 ? " sl-list--has-rejig" : ""}`}
+								>
+									{articles.map((article) => (
+										<li
+											key={article.id}
+											class={`sl-item${selected.has(article.id) ? " sl-item--checked" : ""}`}
 										>
+											<form
+												method="post"
+												mix={on<HTMLFormElement>("submit", (e) => {
+													e.preventDefault()
+													const text = (
+														(e as unknown as SubmitEvent)
+															.target as HTMLFormElement
+													).elements.namedItem(
+														"text",
+													) as HTMLInputElement
+													clearTimeout(debounceTimers.get(article.id))
+													debounceTimers.delete(article.id)
+													patchChange(article.id, text.value)
+												})}
+											>
+												<input
+													type="hidden"
+													name="_action"
+													value="changeArticle"
+												/>
+												<input
+													type="hidden"
+													name="id"
+													value={article.id}
+												/>
+												<input
+													type="text"
+													name="text"
+													class="sl-item-input"
+													maxLength={75}
+													autoComplete="off"
+													enterKeyHint="done"
+													aria-label="Article text"
+													mix={[
+														ref((node) => {
+															;(node as HTMLInputElement).value = article.text
+														}),
+														on("input", (e) => {
+															scheduleChange(
+																article.id,
+																(e.currentTarget as HTMLInputElement).value,
+															)
+														}),
+													]}
+												/>
+											</form>
 											<input
-												type="hidden"
-												name="_action"
-												value="changeArticle"
-											/>
-											<input
-												type="hidden"
-												name="id"
+												type="checkbox"
+												aria-label="Select article"
+												name="selected"
 												value={article.id}
-											/>
-											<input
-												type="text"
-												name="text"
-												class="sl-item-input"
-												maxLength={75}
-												autoComplete="off"
-												enterKeyHint="done"
-												aria-label="Article text"
-												mix={[
-													ref((node) => {
-														;(node as HTMLInputElement).value = article.text
-													}),
-													on("input", (e) => {
-														scheduleChange(
-															article.id,
-															(e.currentTarget as HTMLInputElement).value,
+												form="articles-form"
+												checked={selected.has(article.id)}
+												mix={on("change", (e) => {
+													const checked = (e.currentTarget as HTMLInputElement)
+														.checked
+													if (checked) {
+														selected = new Set([...selected, article.id])
+													} else {
+														selected = new Set(
+															[...selected].filter((id) => id !== article.id),
 														)
-													}),
-												]}
+													}
+													handle.update()
+												})}
 											/>
-										</form>
-										<input
-											type="checkbox"
-											aria-label="Select article"
-											name="selected"
-											value={article.id}
-											form="articles-form"
-											checked={selected.has(article.id)}
-											mix={on("change", (e) => {
-												const checked = (e.currentTarget as HTMLInputElement)
-													.checked
-												if (checked) {
-													selected = new Set([...selected, article.id])
-												} else {
-													selected = new Set(
-														[...selected].filter((id) => id !== article.id),
-													)
-												}
-												handle.update()
-											})}
-										/>
-									</li>
-								))}
+										</li>
+									))}
+								</ul>
 								{articles.length > 5 && (
-									<li class="sl-rejig-column" aria-hidden="true">
+									<div
+										class="sl-rejig-column"
+										mix={ref((node) => {
+											const el = node as HTMLElement
+											const list = el.previousElementSibling as HTMLElement
+											const position = () => {
+												const checked = list.querySelectorAll<HTMLInputElement>(
+													'input[name="selected"]:checked',
+												)
+												if (checked.length > 0) {
+													const last = checked[checked.length - 1]
+													const listRect = list.getBoundingClientRect()
+													const lastRect = last.getBoundingClientRect()
+													const target =
+														lastRect.top +
+														lastRect.height / 2 -
+														listRect.top -
+														el.offsetHeight / 2
+													el.style.top = `${Math.max(0, Math.min(listRect.height - el.offsetHeight, target))}px`
+													el.style.transform = "none"
+												} else {
+													el.style.top = "50%"
+													el.style.transform = "translateY(-50%)"
+												}
+											}
+											position()
+											list.addEventListener("change", position, {
+												signal: handle.signal,
+											})
+										})}
+									>
 										<button
 											class="sl-rejig-help"
 											type="button"
@@ -516,9 +547,9 @@ export const ShoppingListApp = clientEntry(
 											</option>
 										</select>
 										{rejigButtons}
-									</li>
+									</div>
 								)}
-							</ul>
+							</div>
 						)}
 
 						<form

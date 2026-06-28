@@ -177,3 +177,6 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 55. replace rejig popup with inline grid column (rowspan via grid-row: 1/-1)
    `(edit shopping-list.tsx + main.css + list/controller.tsx)`
+
+56. fix rejig column positioning: absolute within list, JS centers on last checked
+   `(edit shopping-list.tsx + main.css: sl-list-outer + position:absolute rejig)`
