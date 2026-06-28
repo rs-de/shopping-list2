@@ -31,7 +31,7 @@ export function Footer(handle: Handle<{ t: Translations }>) {
 					|
 					{/* biome-ignore lint/a11y/useAnchorContent: aria-label provides the accessible name */}
 					<a
-						href="https://github.com/rs-de/shopping-list"
+						href="https://github.com/rs-de/shopping-list2"
 						target="_blank"
 						rel="noreferrer"
 						aria-label="View on GitHub"
