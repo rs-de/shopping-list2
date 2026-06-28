@@ -1,9 +1,9 @@
 import { clientEntry, type Handle, on, ref } from "remix/ui"
 
+import type { Translations } from "../i18n.ts"
 import { generateId } from "../utils/id.ts"
 import { moveArticles } from "../utils/moveArticles.ts"
 import { createToast } from "../utils/toast.tsx"
-import { getTranslations } from "./i18n.ts"
 
 type Article = { id: string; text: string }
 type ListRecord = { id: string; articles: Article[]; dirty: boolean }
@@ -58,12 +58,13 @@ export const ShoppingListApp = clientEntry(
 		handle: Handle<{
 			listId: string
 			articles: Article[]
+			t: Translations
 			nextId: string
 		}>,
 	) {
 		const listId = handle.props.listId
 		let articles: Article[] = [...handle.props.articles]
-		const t = getTranslations()
+		const { t } = handle.props
 		let selected = new Set<string>()
 		let clearDialogEl: HTMLDialogElement | null = null
 		let helpOpen = false

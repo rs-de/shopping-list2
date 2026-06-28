@@ -189,6 +189,7 @@ export default createController(routes.list, {
 						<ShoppingListApp
 							listId={listId}
 							articles={articles}
+							t={t}
 							nextId={generateId()}
 						/>
 					</Document>,

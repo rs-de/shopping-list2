@@ -55,7 +55,7 @@ export default createController(routes, {
 							<h2>{t["app-teaser-text"]}</h2>
 						</div>
 						<div class="home-menu">
-							<HomeMenu />
+							<HomeMenu t={t} />
 						</div>
 						<span aria-hidden="true" />
 					</div>

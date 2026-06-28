@@ -1,14 +1,14 @@
 import { clientEntry, type Handle } from "remix/ui"
 
-import { getTranslations } from "./i18n.ts"
+import type { Translations } from "../i18n.ts"
 
 const LOCAL_STORAGE_KEY = "shoppingListId"
 
 export const HomeMenu = clientEntry(
 	import.meta.url,
-	function HomeMenu(handle: Handle) {
+	function HomeMenu(handle: Handle<{ t: Translations }>) {
 		let listId: string | null = null
-		const t = getTranslations()
+		const { t } = handle.props
 
 		handle.queueTask(() => {
 			listId = localStorage.getItem(LOCAL_STORAGE_KEY)
