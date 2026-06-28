@@ -210,3 +210,6 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 66. Persist rejigN to localStorage so the preferred stop count survives reload
    `(edit app/assets/shopping-list.tsx: read/write rejigN from localStorage)`
+
+67. Add sortKey+createdAt to Article, add sortArticles util, reset dev DB
+   `rm dev.db && pnpm dlx prisma db push && (edit utils/moveArticles.ts: type+sort fn)`
