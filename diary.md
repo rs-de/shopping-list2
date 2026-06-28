@@ -219,3 +219,6 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 69. Client: new articles get sortKey=rejigN+createdAt; display sorted; rejig sets sortKey; rejigN change clamps
    `(edit shopping-list.tsx: sortKey integration throughout)`
+
+70. Remove moveArticles.ts; rename util to articles.ts; fix tests for sortKey model
+   `rm utils/moveArticles.ts && (edit utils/articles.ts+shopping-list.tsx+e2e.spec.ts: cleanup)`

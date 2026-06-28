@@ -7,8 +7,8 @@ import { getTranslations, type Translations } from "../../i18n.ts"
 import { routes } from "../../routes.ts"
 import { Document } from "../../ui/document.tsx"
 import { ErrorPage } from "../../ui/error-page.tsx"
+import { type Article, sortArticles } from "../../utils/articles.ts"
 import { generateId } from "../../utils/id.ts"
-import { type Article, sortArticles } from "../../utils/moveArticles.ts"
 
 const badRequest = (msg = "Bad Request") => new Response(msg, { status: 400 })
 

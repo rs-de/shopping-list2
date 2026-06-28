@@ -1,8 +1,8 @@
 import { clientEntry, type Handle, on, ref } from "remix/ui"
 
 import type { Translations } from "../i18n.ts"
+import { type Article, sortArticles } from "../utils/articles.ts"
 import { generateId } from "../utils/id.ts"
-import { type Article, sortArticles } from "../utils/moveArticles.ts"
 import { createToast } from "../utils/toast.tsx"
 
 type ListRecord = { id: string; articles: Article[]; dirty: boolean }
@@ -270,7 +270,10 @@ export const ShoppingListApp = clientEntry(
 			fd.set("new", text)
 			fd.set("sortKey", String(rejigN))
 			fd.set("createdAt", String(createdAt))
-			articles = sortArticles([...articles, { id, text, sortKey: rejigN, createdAt }])
+			articles = sortArticles([
+				...articles,
+				{ id, text, sortKey: rejigN, createdAt },
+			])
 			if (addInputEl) addInputEl.value = ""
 			await handle.update()
 			addInputEl?.focus()
@@ -496,8 +499,6 @@ export const ShoppingListApp = clientEntry(
 										)}
 										<select
 											class="sl-rejig-select"
-											name="partitionCount"
-											form="articles-form"
 											mix={ref((node) => {
 												;(node as HTMLSelectElement).addEventListener(
 													"change",
@@ -552,6 +553,7 @@ export const ShoppingListApp = clientEntry(
 						>
 							<div class="sl-add-form">
 								<input type="hidden" name="id" value={nextId} />
+								<input type="hidden" name="sortKey" value={rejigN} />
 								<span class="sl-add-icon" aria-hidden="true">
 									<svg
 										viewBox="0 0 20 20"

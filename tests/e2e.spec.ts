@@ -129,18 +129,20 @@ test.describe
 			await page.goto(listUrl, { waitUntil: "networkidle" })
 			const existing = await page.locator("input.sl-item-input").count()
 			for (let i = existing; i < 6; i++) await addAndWait(page, `Item ${i + 1}`)
-			const firstText = await page
+			// All items default to the last sortKey bucket; select the last item and
+			// move it to the first bucket (Early) — it should appear first immediately.
+			const lastText = await page
 				.locator("input.sl-item-input")
-				.first()
+				.last()
 				.inputValue()
 			await page
 				.locator('input[type="checkbox"][aria-label="Select article"]')
-				.first()
+				.last()
 				.check()
 			await slowPatch(page)
-			await page.locator('button.sl-rejig-btn:has-text("Late")').click()
-			await expect(page.locator("input.sl-item-input").last()).toHaveValue(
-				firstText,
+			await page.locator('button.sl-rejig-btn:has-text("Early")').click()
+			await expect(page.locator("input.sl-item-input").first()).toHaveValue(
+				lastText,
 				{ timeout: 1000 },
 			)
 			await page.waitForResponse((r) => r.request().method() === "PATCH")
@@ -234,28 +236,28 @@ test.describe
 			await expect(page.locator("input.sl-item-input")).toHaveCount(0)
 		})
 
-		test("rejig via POST moves selected article to end", async ({ page }) => {
+		test("rejig via POST moves selected article to front", async ({ page }) => {
 			await page.goto(listUrl)
 			// List is empty after the clear above — add 6 items via POST
 			for (const text of ["A", "B", "C", "D", "E", "F"]) {
 				await page.fill("input.sl-add-input", text)
 				await submitAndWait(page, () => page.click("button.sl-add-btn"))
 			}
-			const firstText = await page
+			const lastText = await page
 				.locator("input.sl-item-input")
-				.first()
+				.last()
 				.inputValue()
 			await page.waitForTimeout(500) // let sl-rejig-reveal animation fire
 			await page
 				.locator('input[type="checkbox"][aria-label="Select article"]')
-				.first()
+				.last()
 				.check()
-			// last rejig button = highest partition = "Late"
+			// first rejig button = partition 1 = "Early" = lowest sortKey
 			await submitAndWait(page, () =>
-				page.locator("button.sl-rejig-btn").last().click(),
+				page.locator("button.sl-rejig-btn").first().click(),
 			)
-			await expect(page.locator("input.sl-item-input").last()).toHaveValue(
-				firstText,
+			await expect(page.locator("input.sl-item-input").first()).toHaveValue(
+				lastText,
 			)
 		})
 	})
