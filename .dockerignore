@@ -1,0 +1,7 @@
+node_modules/
+.git/
+*.db
+.env
+test-results/
+playwright-report/
+.claude/

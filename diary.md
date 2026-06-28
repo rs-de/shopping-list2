@@ -228,3 +228,12 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 72. Replace waitForTimeout(500) with toBeVisible() in tests for animation waits
    `(edit tests/e2e.spec.ts: drop fixed sleeps, poll instead)`
+
+73. Add Dockerfile, .dockerignore, and fly.toml for fly.io deployment
+   `(create Dockerfile+.dockerignore+fly.toml: LiteFS-ready path at /litefs)`
+
+74. Wire up LiteFS: binary, config, updated Dockerfile and fly.toml
+   `(create litefs.yml; edit Dockerfile+fly.toml: litefs mount as entrypoint)`
+
+75. Rename fly.io app from shopping-list2 to shopping-list
+   `(edit fly.toml: app = 'shopping-list')`
