@@ -189,3 +189,6 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 59. tighten vertical spacing to fit more list rows on screen
    `(edit main.css: heading, page padding, item padding, list gap, form spacing)`
+
+60. add no-JS e2e suite: add, rejig reveal, delete bar, delete, clear, rejig POST
+   `(edit e2e.spec.ts: no-JS describe + submitAndWait helper; add sl-clear-btn class)`

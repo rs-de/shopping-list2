@@ -584,7 +584,7 @@ export const ShoppingListApp = clientEntry(
 									})}
 								>
 									<button
-										class="btn btn-secondary"
+										class="btn btn-secondary sl-clear-btn"
 										type="submit"
 										name="_action"
 										value="clearList"

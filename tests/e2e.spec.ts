@@ -116,7 +116,7 @@ test.describe
 			if ((await page.locator("input.sl-item-input").count()) === 0)
 				await addAndWait(page, "Flour")
 			await slowPatch(page)
-			await page.locator('button:has-text("Clear list")').first().click()
+			await page.locator("button.sl-clear-btn").first().click()
 			await page.locator('.sl-dialog button:has-text("Clear list")').click()
 			await expect(page.locator("input.sl-item-input")).toHaveCount(0, {
 				timeout: 1000,
@@ -145,6 +145,100 @@ test.describe
 			)
 			await page.waitForResponse((r) => r.request().method() === "PATCH")
 			await page.unrouteAll()
+		})
+	})
+
+// POST→redirect helper: waitForURL detects navigation even when URL stays the same
+async function submitAndWait(page: Page, click: () => Promise<void>) {
+	await Promise.all([
+		page.waitForURL((url) => url.href === listUrl, { waitUntil: "load" }),
+		click(),
+	])
+}
+
+test.describe
+	.serial("no-JS fallback", () => {
+		test.use({ javaScriptEnabled: false })
+
+		test("add article via POST redirects back with new item", async ({
+			page,
+		}) => {
+			await page.goto(listUrl)
+			const before = await page.locator("input.sl-item-input").count()
+			await page.fill("input.sl-add-input", "NoJS Item")
+			await submitAndWait(page, () => page.click("button.sl-add-btn"))
+			await expect(page.locator("input.sl-item-input")).toHaveCount(before + 1)
+			await expect(page.locator("input.sl-item-input").last()).toHaveValue(
+				"NoJS Item",
+			)
+		})
+
+		test("rejig column hidden initially then visible after 400 ms", async ({
+			page,
+		}) => {
+			await page.goto(listUrl)
+			// column starts with visibility:hidden — should be hidden before animation
+			await expect(page.locator(".sl-rejig-column")).toBeHidden()
+			await page.waitForTimeout(500)
+			await expect(page.locator(".sl-rejig-column")).toBeVisible()
+		})
+
+		test("checked checkbox reveals delete bar via CSS :has()", async ({
+			page,
+		}) => {
+			await page.goto(listUrl)
+			await expect(page.locator(".sl-delete-bar")).not.toBeInViewport()
+			await page
+				.locator('input[type="checkbox"][aria-label="Select article"]')
+				.first()
+				.check()
+			await expect(page.locator(".sl-delete-bar")).toBeInViewport()
+		})
+
+		test("delete selected via POST removes the article", async ({ page }) => {
+			await page.goto(listUrl)
+			const before = await page.locator("input.sl-item-input").count()
+			await page
+				.locator('input[type="checkbox"][aria-label="Select article"]')
+				.first()
+				.check()
+			await submitAndWait(page, () => page.click("button.sl-delete-btn"))
+			await expect(page.locator("input.sl-item-input")).toHaveCount(before - 1)
+		})
+
+		test("clear list via POST empties list without dialog", async ({
+			page,
+		}) => {
+			await page.goto(listUrl)
+			// Without JS the toolbar Clear list button submits directly — no dialog
+			await submitAndWait(page, () =>
+				page.locator("button.sl-clear-btn").first().click(),
+			)
+			await expect(page.locator("input.sl-item-input")).toHaveCount(0)
+		})
+
+		test("rejig via POST moves selected article to end", async ({ page }) => {
+			// List is empty after the clear above — add 6 items via POST
+			for (const text of ["A", "B", "C", "D", "E", "F"]) {
+				await page.fill("input.sl-add-input", text)
+				await submitAndWait(page, () => page.click("button.sl-add-btn"))
+			}
+			const firstText = await page
+				.locator("input.sl-item-input")
+				.first()
+				.inputValue()
+			await page.waitForTimeout(500) // let sl-rejig-reveal animation fire
+			await page
+				.locator('input[type="checkbox"][aria-label="Select article"]')
+				.first()
+				.check()
+			// last rejig button = highest partition = "Late"
+			await submitAndWait(page, () =>
+				page.locator("button.sl-rejig-btn").last().click(),
+			)
+			await expect(page.locator("input.sl-item-input").last()).toHaveValue(
+				firstText,
+			)
 		})
 	})
 
