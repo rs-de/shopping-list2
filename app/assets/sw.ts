@@ -9,22 +9,8 @@ declare const process: { env: { NODE_ENV: string } }
 const IS_DEV = process.env.NODE_ENV === "development"
 const CACHE = `sl-v${BUILD_STAMP}`
 
-const PRECACHE_URLS = [
-	"/styles/main.css",
-	"/logo.svg",
-	"/favicon.ico",
-	"/bg1.webp",
-	"/manifest.webmanifest",
-	"/icons/apple-icon-180.png",
-	"/icons/manifest-icon-192.maskable.png",
-	"/icons/manifest-icon-512.maskable.png",
-]
-
-self.addEventListener("install", (event) => {
+self.addEventListener("install", () => {
 	self.skipWaiting()
-	event.waitUntil(
-		caches.open(CACHE).then((cache) => cache.addAll(PRECACHE_URLS)),
-	)
 })
 
 self.addEventListener("activate", (event) => {
@@ -57,10 +43,30 @@ self.addEventListener("fetch", (event) => {
 		url.pathname === "/bg1.webp" ||
 		url.pathname === "/manifest.webmanifest"
 
+	const isNavigation = request.mode === "navigate"
+
 	event.respondWith(
-		IS_DEV || !isStaticAsset ? networkFirst(request) : cacheFirst(request),
+		IS_DEV
+			? networkFirst(request)
+			: isNavigation
+				? staleWhileRevalidate(request)
+				: isStaticAsset
+					? cacheFirst(request)
+					: networkFirst(request),
 	)
 })
+
+async function staleWhileRevalidate(request: Request): Promise<Response> {
+	const cache = await caches.open(CACHE)
+	const cached = await cache.match(request)
+	const fetchPromise = fetch(request)
+		.then((response) => {
+			if (response.ok) cache.put(request, response.clone())
+			return response
+		})
+		.catch(() => cached ?? new Response("Offline", { status: 503 }))
+	return cached ?? fetchPromise
+}
 
 async function cacheFirst(request: Request): Promise<Response> {
 	const cached = await caches.match(request)
