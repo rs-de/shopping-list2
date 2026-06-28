@@ -32,14 +32,14 @@ async function checkVersion(): Promise<void> {
 			_knownVersion = version
 			localStorage.setItem(VERSION_KEY, version)
 		} else if (_knownVersion !== version) {
-			showUpdateBanner()
+			showUpdateBanner(version)
 		}
 	} catch {
 		// network unavailable — ignore
 	}
 }
 
-function showUpdateBanner(): void {
+function showUpdateBanner(newVersion: string): void {
 	if (document.getElementById("sl-update-banner")) return
 	const el = document.createElement("div")
 	el.id = "sl-update-banner"
@@ -48,7 +48,10 @@ function showUpdateBanner(): void {
 	span.textContent = "A new version is available."
 	const btn = document.createElement("button")
 	btn.textContent = "Reload"
-	btn.addEventListener("click", () => location.reload())
+	btn.addEventListener("click", () => {
+		localStorage.setItem(VERSION_KEY, newVersion)
+		window.location.assign(window.location.href)
+	})
 	el.append(span, btn)
 	document.body.prepend(el)
 }
