@@ -262,7 +262,9 @@ test("400 for syntactically invalid list ID", async ({ page }) => {
 
 test("valid-format unknown ID redirects to home with recreate prompt", async ({
 	page,
+	request,
 }) => {
+	await request.delete("/wipe_test1") // ensure list doesn't exist
 	const res = await page.goto("/wipe_test1")
 	expect(res?.status()).toBe(200)
 	await expect(page).toHaveURL(/\?recreate=wipe_test1/)
