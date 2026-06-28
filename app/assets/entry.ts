@@ -7,6 +7,8 @@ run({
 	},
 	async resolveFrame(src, signal, target) {
 		const headers = new Headers({ accept: "text/html" })
+		const lang = document.documentElement.lang
+		if (lang) headers.set("accept-language", lang)
 		if (target) headers.set("x-remix-target", target)
 		const response = await fetch(src, { headers, signal })
 		return response.body ?? (await response.text())
