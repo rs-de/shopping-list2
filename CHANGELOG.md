@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.8.0 2026-06-28
+
+- Complete rewrite on Remix 3 (new server framework)
+- Offline-first via Service Worker — asset caching with version-keyed invalidation
+- All mutations work without JavaScript (native HTML form POST fallbacks)
+- Article sort order (rejig) — drag to reorder, persisted server-side via sortKey
+- SW update notification with persistent action toast
+- Native share sheet on mobile; clipboard + toast fallback for copy-link
+- Auto-create list on valid-ID miss; explicit recreate flow with toast
+- Stale list cleanup — lists inactive for 90 days are deleted automatically
+- Gzip/brotli compression middleware
+- Security headers (CSP, X-Frame-Options, etc.) and server-side input validation
+- Typed i18n translation keys
+- Lighthouse 100/100/100/100
+- Deployed to fly.io
+
 ## 1.7.0 2023-08-31
 
 - Add clear list button
