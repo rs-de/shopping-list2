@@ -222,3 +222,6 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 70. Remove moveArticles.ts; rename util to articles.ts; fix tests for sortKey model
    `rm utils/moveArticles.ts && (edit utils/articles.ts+shopping-list.tsx+e2e.spec.ts: cleanup)`
+
+71. Show "list cleaned up" as toast instead of static paragraph on recreate
+   `(edit home-menu.tsx: replace <p> with createToast on recreateId)`
