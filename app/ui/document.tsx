@@ -51,6 +51,11 @@ export function Document(handle: Handle<DocumentProps>) {
 						<Footer t={t} />
 					</div>
 					<script
+						type="application/json"
+						id="sl-i18n"
+						innerHTML={JSON.stringify(t).replace(/</g, "\\u003c")}
+					/>
+					<script
 						type="module"
 						src={routes.assets.href({ path: "app/assets/entry.ts" })}
 					></script>

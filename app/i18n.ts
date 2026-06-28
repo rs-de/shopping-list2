@@ -4,8 +4,11 @@ import * as url from "node:url"
 
 import { AcceptLanguage } from "remix/headers/accept-language"
 
+import type en from "../public/locales/en/common.json"
+
 export type Lang = "de" | "en"
-export type Translations = Record<string, string>
+export type TranslationKey = keyof typeof en
+export type Translations = Record<TranslationKey, string>
 
 const DIR = path.dirname(url.fileURLToPath(import.meta.url))
 

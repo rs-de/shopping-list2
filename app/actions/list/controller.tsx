@@ -3,7 +3,7 @@ import { createController } from "remix/router"
 
 import { ShoppingListApp } from "../../assets/shopping-list.tsx"
 import { db } from "../../db.ts"
-import { getTranslations } from "../../i18n.ts"
+import { getTranslations, type Translations } from "../../i18n.ts"
 import { routes } from "../../routes.ts"
 import { Document } from "../../ui/document.tsx"
 import { ErrorPage } from "../../ui/error-page.tsx"
@@ -189,7 +189,6 @@ export default createController(routes.list, {
 						<ShoppingListApp
 							listId={listId}
 							articles={articles}
-							t={t}
 							nextId={generateId()}
 						/>
 					</Document>,
@@ -200,7 +199,7 @@ export default createController(routes.list, {
 				}
 				const { lang, t } = await getTranslations(request).catch(() => ({
 					lang: "en" as const,
-					t: {} as Record<string, string>,
+					t: {} as Translations,
 				}))
 				return render(
 					<Document title="Error — Shopping List" lang={lang} t={t}>
