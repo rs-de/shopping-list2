@@ -2,10 +2,9 @@ import { clientEntry, type Handle, on, ref } from "remix/ui"
 
 import type { Translations } from "../i18n.ts"
 import { generateId } from "../utils/id.ts"
-import { moveArticles } from "../utils/moveArticles.ts"
+import { type Article, sortArticles } from "../utils/moveArticles.ts"
 import { createToast } from "../utils/toast.tsx"
 
-type Article = { id: string; text: string }
 type ListRecord = { id: string; articles: Article[]; dirty: boolean }
 
 let _db: Promise<IDBDatabase> | null = null
@@ -264,11 +263,14 @@ export const ShoppingListApp = clientEntry(
 			if (!text) return
 			const id = nextId
 			nextId = generateId()
+			const createdAt = Date.now()
 			const fd = new FormData()
 			fd.set("_action", "addArticle")
 			fd.set("id", id)
 			fd.set("new", text)
-			articles = [...articles, { id, text }]
+			fd.set("sortKey", String(rejigN))
+			fd.set("createdAt", String(createdAt))
+			articles = sortArticles([...articles, { id, text, sortKey: rejigN, createdAt }])
 			if (addInputEl) addInputEl.value = ""
 			await handle.update()
 			addInputEl?.focus()
@@ -303,13 +305,11 @@ export const ShoppingListApp = clientEntry(
 			fd.set("_action", "rejig")
 			for (const id of ids) fd.append("selected", id)
 			fd.set("partitionNumber", String(partitionNumber))
-			fd.set("partitionCount", String(rejigN))
-			articles = moveArticles({
-				idsToRejig: ids,
-				partitionNumber,
-				partitionCount: rejigN,
-				articles,
-			})
+			articles = sortArticles(
+				articles.map((a) =>
+					ids.includes(a.id) ? { ...a, sortKey: partitionNumber } : a,
+				),
+			)
 			selected = new Set()
 			handle.update()
 			await patch(fd)
@@ -506,6 +506,20 @@ export const ShoppingListApp = clientEntry(
 															(e.currentTarget as HTMLSelectElement).value,
 														)
 														localStorage.setItem("rejigN", String(rejigN))
+														const hasClamped = articles.some(
+															(a) => a.sortKey > rejigN,
+														)
+														if (hasClamped) {
+															articles = sortArticles(
+																articles.map((a) =>
+																	a.sortKey > rejigN
+																		? { ...a, sortKey: rejigN }
+																		: a,
+																),
+															)
+															markDirty()
+															void drainDirty().catch(() => {})
+														}
 														handle.update()
 													},
 													{ signal: handle.signal },

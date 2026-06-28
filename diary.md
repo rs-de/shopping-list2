@@ -216,3 +216,6 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 68. Server: addArticle stores sortKey+createdAt; rejig sets sortKey; remove moveArticles
    `(edit controller.tsx: addArticle+rejig use sortKey, drop moveArticles)`
+
+69. Client: new articles get sortKey=rejigN+createdAt; display sorted; rejig sets sortKey; rejigN change clamps
+   `(edit shopping-list.tsx: sortKey integration throughout)`
