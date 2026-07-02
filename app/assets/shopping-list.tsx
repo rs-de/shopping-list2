@@ -549,17 +549,13 @@ export const ShoppingListApp = clientEntry(
 											type="button"
 											aria-label="What is rejig?"
 											mix={on("click", () => {
-												helpOpen = !helpOpen
+												if (helpOpen) return
+												helpOpen = true
 												handle.update()
 											})}
 										>
 											?
 										</button>
-										{helpOpen && (
-											<div class="sl-rejig-help-panel" key="help-panel">
-												{t.rejig_description}
-											</div>
-										)}
 										<select
 											class="sl-rejig-select"
 											mix={ref((node) => {
@@ -759,6 +755,20 @@ export const ShoppingListApp = clientEntry(
 						</div>
 					</dialog>
 
+					{helpOpen && (
+						<div
+							class="sl-rejig-backdrop"
+							mix={on("click", () => {
+								helpOpen = false
+								handle.update()
+							})}
+						/>
+					)}
+					{helpOpen && (
+						<div class="sl-rejig-help-panel">
+							{t.rejig_description}
+						</div>
+					)}
 					{toast.render()}
 				</div>
 			)

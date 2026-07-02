@@ -744,8 +744,8 @@ a {
 }
 
 .sl-rejig-column {
-	position: absolute;
-	right: var(--checkbox-w, 3.75rem);
+	position: fixed;
+	right: calc(var(--checkbox-w, 3.75rem) + 1.5rem);
 	top: 50%;
 	width: var(--rejig-w, 5.5rem);
 	display: flex;
@@ -800,11 +800,20 @@ a {
 	padding: 0;
 }
 
+.sl-rejig-backdrop {
+	position: fixed;
+	inset: 0;
+	background: hsl(0 0% 0% / 0.4);
+	z-index: 20;
+}
+
 .sl-rejig-help-panel {
-	position: absolute;
-	bottom: calc(100% + 0.5rem);
-	right: 0;
-	width: 85vw;
+	position: fixed;
+	top: 50%;
+	right: calc(var(--checkbox-w, 3.75rem) + 0.5rem);
+	z-index: 21;
+	transform: translateY(-50%);
+	width: calc(100vw - var(--checkbox-w, 3.75rem) - 1rem);
 	max-width: 20rem;
 	background: hsl(var(--primary-3));
 	padding: 0.75rem;
@@ -812,7 +821,6 @@ a {
 	box-shadow: 0 4px 20px hsl(0 0% 0% / 0.25);
 	font-size: 0.875rem;
 	color: hsl(var(--slate-12));
-	z-index: 21;
 	line-height: 1.5;
 }
 
