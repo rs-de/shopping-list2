@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.9.0 2026-07-02
+
+- Local-first: list data stored in IndexedDB; works fully offline after first visit
+- Background server sync picks up changes from other devices
+- Service Worker: stale-while-revalidate for instant PWA startup (no black screen on iOS)
+- Rejig column sticky to viewport — stays visible while scrolling long lists
+- Rejig help panel: backdrop overlay, closes on outside click
+- PWA homescreen name fixed ("Shopping List" instead of "List")
+- Fix SW cache pollution that caused incorrect URL on iOS homescreen install
+
 ## 1.8.0 2026-06-28
 
 - Complete rewrite on Remix 3
