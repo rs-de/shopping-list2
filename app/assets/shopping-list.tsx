@@ -122,19 +122,19 @@ export const ShoppingListApp = clientEntry(
 			const savedRejigN = Number(localStorage.getItem("rejigN"))
 			if ([3, 5, 7].includes(savedRejigN)) rejigN = savedRejigN
 
-			// IDB init: if dirty, restore local state and start retry; else seed IDB
+			// IDB init: only unsynced (dirty) local edits take priority over fresh
+			// SSR props — a non-dirty IDB snapshot can be arbitrarily stale (e.g.
+			// another device changed the list since), so it must never replace
+			// the server current state. pullFromServer() still corrects for
+			// SW-cached stale HTML on navigation.
 			void (async () => {
 				if (handle.signal.aborted) return
 				try {
 					const saved = await readRecord(listId)
-					if (saved && !handle.signal.aborted) {
+					if (saved?.dirty && !handle.signal.aborted) {
 						articles = saved.articles
-						if (saved.dirty) {
-							markDirty()
-							scheduleRetry()
-						} else {
-							void pullFromServer()
-						}
+						markDirty()
+						scheduleRetry()
 					} else if (!handle.signal.aborted) {
 						await writeRecord(listId, articles, false)
 						void pullFromServer()

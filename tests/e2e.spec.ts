@@ -162,6 +162,124 @@ test.describe
 		})
 	})
 
+// Regression test for a real data-loss path: a non-dirty IndexedDB snapshot
+// from a previous visit must never be resurrected onto the server. The old
+// bug let a stale snapshot become the live working state on reload; if two
+// mutations then raced (a common client hiccup), the client marked itself
+// "dirty" with that stale base and later flushed it whole via replaceArticles
+// — silently reviving items another device had removed. This test forces
+// that exact race and checks the *server's* final state, not a UI flash,
+// since a transient flash self-corrects and isn't the real loss. See the IDB
+// init block in app/assets/shopping-list.tsx.
+test.describe
+	.serial("local-first sync", () => {
+		// The Service Worker's own fetch() calls aren't visible to page.route()
+		// (Playwright can't intercept requests a SW handles internally), which
+		// would silently defeat the delays below. Block it for this test.
+		test.use({ serviceWorkers: "block" })
+
+		test("stale IDB snapshot cannot resurrect data removed by another device", async ({
+			page,
+			request,
+		}) => {
+			const listPath = new URL(listUrl).pathname
+
+			// First visit in this browser context seeds IndexedDB with the
+			// current (non-dirty) server state — this becomes the "stale"
+			// snapshot once another device changes the list underneath it.
+			await page.goto(listUrl, { waitUntil: "networkidle" })
+			if ((await page.locator("input.sl-item-input").count()) === 0) {
+				await page.fill("input.sl-add-input", "Cheese")
+				const done = page.waitForResponse(
+					(r) => r.request().method() === "PATCH",
+				)
+				await page.keyboard.press("Enter")
+				await done
+			}
+			const staleTexts = await page
+				.locator("input.sl-item-input")
+				.evaluateAll((els) => els.map((el) => (el as HTMLInputElement).value))
+			expect(staleTexts.length).toBeGreaterThan(0)
+
+			// Simulate another device clearing the list directly on the server —
+			// this browser's IndexedDB is left holding the stale, non-dirty copy.
+			await request.patch(listPath, { form: { _action: "clearList" } })
+
+			// Delay both the background reconciliation fetch (pullFromServer)
+			// and PATCH responses, so: (a) the stale IDB snapshot has time to
+			// become the live state before the server correction lands, and
+			// (b) two rapid adds are forced to overlap in flight, which marks
+			// the client dirty using that stale base as its snapshot.
+			await page.route("**", async (route) => {
+				const req = route.request()
+				if (req.method() === "PATCH") {
+					await new Promise((r) => setTimeout(r, 1000))
+				} else if (
+					req.method() === "GET" &&
+					req.headers().accept?.includes("application/json")
+				) {
+					await new Promise((r) => setTimeout(r, 5000))
+				}
+				// The first patch is aborted client-side once the second starts,
+				// which can resolve this route before we get here — ignore that.
+				await route.continue().catch(() => {})
+			})
+
+			await page.reload()
+			// The localStorage write happens synchronously at the top of
+			// queueTask, before the *async* IDB read that decides whether to
+			// adopt the stale snapshot — so this only proves hydration started,
+			// not that it finished. Give that fast (non-network) IDB round trip
+			// a moment to land before acting, well inside the delays above.
+			await page.waitForFunction(
+				() => localStorage.getItem("shoppingListId") !== null,
+			)
+			await page.waitForTimeout(300)
+			await page.fill("input.sl-add-input", "Bread")
+			await page.keyboard.press("Enter")
+			await page.fill("input.sl-add-input", "Butter")
+			await page.keyboard.press("Enter")
+			await page.unrouteAll()
+
+			// Wait for the resulting dirty-flush (replaceArticles) to land.
+			await page
+				.waitForResponse(
+					(r) =>
+						r.request().method() === "PATCH" &&
+						(r.request().postData() ?? "").includes("replaceArticles"),
+					{ timeout: 15_000 },
+				)
+				.catch(() => {})
+
+			const finalState = await request.get(listPath, {
+				headers: { accept: "application/json" },
+			})
+			const { articles } = (await finalState.json()) as {
+				articles: { text: string }[]
+			}
+			const finalTexts = articles.map((a) => a.text)
+			// None of the items removed by "the other device" may reappear.
+			for (const text of staleTexts) {
+				expect(finalTexts).not.toContain(text)
+			}
+
+			// Restore original contents for subsequent tests sharing this list.
+			await request.patch(listPath, {
+				form: {
+					_action: "replaceArticles",
+					articles: JSON.stringify(
+						staleTexts.map((text, i) => ({
+							id: `restore-${i}`,
+							text,
+							sortKey: 3,
+							createdAt: Date.now(),
+						})),
+					),
+				},
+			})
+		})
+	})
+
 // POST→redirect helper: waitForURL detects navigation even when URL stays the same
 async function submitAndWait(page: Page, click: () => Promise<void>) {
 	await Promise.all([

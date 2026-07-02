@@ -261,3 +261,6 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 83. Fix list manifest short_name: "List" → "Shopping List" for homescreen label
    `(edit app/actions/list/controller.tsx: short_name "List" → "Shopping List")`
+
+84. Fix + test: non-dirty IDB snapshot must never override fresher server data
+   `(edit shopping-list.tsx+e2e.spec.ts: trust IDB only when dirty; add regression test)`
