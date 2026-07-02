@@ -83,7 +83,8 @@ async function networkFirst(request: Request): Promise<Response> {
 	const cache = await caches.open(CACHE)
 	try {
 		const response = await fetch(request)
-		if (response.ok) cache.put(request, response.clone())
+		const ct = response.headers.get("content-type") ?? ""
+		if (response.ok && ct.includes("text/html")) cache.put(request, response.clone())
 		return response
 	} catch {
 		return (

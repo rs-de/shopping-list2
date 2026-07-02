@@ -252,3 +252,9 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 80. SW: drop PRECACHE_URLS; stale-while-revalidate for navigation (fix iOS black screen)
    `(edit app/assets/sw.ts: remove precache list; add staleWhileRevalidate for navigate)`
+
+81. Local-first: IDB as source of truth; background server pull for remote changes
+   `(edit shopping-list.tsx + list/controller.tsx: IDB primary; JSON GET; pullFromServer)`
+
+82. Fix SW cache pollution: networkFirst only caches text/html (JSON must not overwrite nav cache)
+   `(edit app/assets/sw.ts: guard cache.put with content-type check)`

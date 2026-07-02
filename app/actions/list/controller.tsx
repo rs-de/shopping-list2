@@ -174,6 +174,10 @@ export default createController(routes.list, {
 					return redirect(`/${listId}`)
 				}
 
+				if (request.headers.get("accept")?.includes("application/json")) {
+					return Response.json({ articles })
+				}
+
 				const { lang, t } = await getTranslations(request)
 
 				return render(

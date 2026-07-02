@@ -127,12 +127,17 @@ export const ShoppingListApp = clientEntry(
 				if (handle.signal.aborted) return
 				try {
 					const saved = await readRecord(listId)
-					if (saved?.dirty && !handle.signal.aborted) {
-						markDirty()
+					if (saved && !handle.signal.aborted) {
 						articles = saved.articles
-						scheduleRetry()
-					} else {
+						if (saved.dirty) {
+							markDirty()
+							scheduleRetry()
+						} else {
+							void pullFromServer()
+						}
+					} else if (!handle.signal.aborted) {
 						await writeRecord(listId, articles, false)
+						void pullFromServer()
 					}
 				} catch {
 					// IDB unavailable — server state is fine
@@ -198,6 +203,26 @@ export const ShoppingListApp = clientEntry(
 				{ signal: handle.signal },
 			)
 		})
+
+		async function pullFromServer(): Promise<void> {
+			if (dirty || handle.signal.aborted) return
+			try {
+				const res = await fetch(`/${listId}`, {
+					headers: { accept: "application/json" },
+					signal: AbortSignal.any([handle.signal, AbortSignal.timeout(8_000)]),
+				})
+				if (!res.ok || dirty || handle.signal.aborted) return
+				const data = (await res.json()) as { articles: Article[] }
+				if (dirty || handle.signal.aborted) return
+				if (JSON.stringify(data.articles) !== JSON.stringify(articles)) {
+					articles = data.articles
+					void writeRecord(listId, articles, false).catch(() => {})
+					handle.update()
+				}
+			} catch {
+				// network unavailable — IDB is the source of truth
+			}
+		}
 
 		async function drainDirty(): Promise<void> {
 			if (!dirty) return
