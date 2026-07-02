@@ -258,3 +258,6 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 82. Fix SW cache pollution: networkFirst only caches text/html (JSON must not overwrite nav cache)
    `(edit app/assets/sw.ts: guard cache.put with content-type check)`
+
+83. Fix list manifest short_name: "List" → "Shopping List" for homescreen label
+   `(edit app/actions/list/controller.tsx: short_name "List" → "Shopping List")`

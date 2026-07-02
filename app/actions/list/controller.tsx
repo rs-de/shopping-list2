@@ -56,7 +56,7 @@ export default createController(routes.list, {
 			const { listId } = params
 			return Response.json({
 				name: "Shopping List",
-				short_name: "List",
+				short_name: "Shopping List",
 				description: "An offline-first shopping list",
 				start_url: `/${listId}`,
 				display: "standalone",
