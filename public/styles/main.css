@@ -757,6 +757,10 @@ a {
 	visibility: hidden;
 	transform: translateY(-50%) perspective(300px) rotateY(90deg);
 	transform-origin: right center;
+	/* iOS Safari can fail to keep a fixed element pinned to the viewport if it
+	   only gets its compositing layer once toggled visible; keeping it on its
+	   own layer from the start avoids it drifting to a document-relative spot */
+	will-change: transform;
 	/* no-JS: reveal after 400 ms if JS hasn't taken over */
 	animation: sl-rejig-reveal 0s 400ms forwards;
 	transition:
@@ -840,10 +844,6 @@ a {
 	width: 5rem;
 	min-height: 2.5rem;
 	padding: 0.25rem 0.5rem;
-}
-
-.sl-rejig-btn--dot {
-	opacity: 0.4;
 }
 
 /* Delete bar (fixed bottom) */

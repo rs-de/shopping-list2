@@ -264,3 +264,9 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 84. Fix + test: non-dirty IDB snapshot must never override fresher server data
    `(edit shopping-list.tsx+e2e.spec.ts: trust IDB only when dirty; add regression test)`
+
+85. Rejig dot buttons match labeled buttons — drop opacity-only modifier
+   `(edit main.css+shopping-list.tsx: remove sl-rejig-btn--dot opacity + class)`
+
+86. Fix iOS: force persistent compositing layer so fixed rejig column doesn't
+   drift to document position `(edit main.css: will-change: transform on .sl-rejig-column)`

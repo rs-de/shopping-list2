@@ -429,7 +429,7 @@ export const ShoppingListApp = clientEntry(
 				return (
 					<button
 						key={String(partition)}
-						class={`btn btn-secondary sl-rejig-btn${labelKey ? "" : " sl-rejig-btn--dot"}`}
+						class="btn btn-secondary sl-rejig-btn"
 						type="submit"
 						form="articles-form"
 						name="partitionNumber"
