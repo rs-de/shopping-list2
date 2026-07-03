@@ -409,3 +409,19 @@ test("/api/version returns version string", async ({ request }) => {
 	expect(typeof body.version).toBe("string")
 	expect(body.version.length).toBeGreaterThan(0)
 })
+
+// Regression test: iOS Safari has served a stale cached /sw.js for its own
+// update-comparison fetch, so a new worker was never detected (only fixed by
+// wiping site data). Registering with a per-deploy query string forces that
+// fetch to be a new URL each time — verify the registration actually carries
+// one, since it's easy to "clean up" as dead-looking code later.
+test("service worker registers with a cache-busting version query", async ({
+	page,
+}) => {
+	await page.goto("/")
+	const scriptURL = await page.evaluate(async () => {
+		const reg = await navigator.serviceWorker.ready
+		return reg.active?.scriptURL ?? null
+	})
+	expect(scriptURL).toMatch(/\/sw\.js\?v=.+/)
+})

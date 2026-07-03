@@ -1,5 +1,7 @@
 import { run } from "remix/ui"
 
+declare const BUILD_STAMP: string
+
 run({
 	async loadModule(moduleUrl, exportName) {
 		const mod = await import(moduleUrl)
@@ -16,7 +18,12 @@ run({
 })
 
 if ("serviceWorker" in navigator) {
-	navigator.serviceWorker.register("/sw.js", { type: "module" })
+	// iOS Safari can serve a stale cached copy of /sw.js for its own update
+	// comparison fetch, silently never detecting a new worker. A per-deploy
+	// query string forces that fetch to be a genuinely new URL each time.
+	navigator.serviceWorker.register(`/sw.js?v=${BUILD_STAMP}`, {
+		type: "module",
+	})
 }
 
 // Version check: show reload banner when a new deployment is detected

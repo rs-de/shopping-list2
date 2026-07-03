@@ -270,3 +270,6 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 86. Fix iOS: force persistent compositing layer so fixed rejig column doesn't
    drift to document position `(edit main.css: will-change: transform on .sl-rejig-column)`
+
+87. Fix iOS: SW update check compared against a stale cached sw.js copy
+   `(edit entry.ts+e2e.spec.ts: register /sw.js?v=BUILD_STAMP; add regression test)`
