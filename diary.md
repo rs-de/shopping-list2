@@ -279,3 +279,6 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 89. Split shopping list into articles/plan/shopping modes (fix rejig bug)
    `(add app/assets/list/*; edit routes.ts+controller; rm shopping-list.tsx)`
+
+90. Keep header title centered across mode pages regardless of link widths
+   `(edit main.css: .sl-heading-row flex -> grid, justify-self on mode links)`
