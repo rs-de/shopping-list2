@@ -425,3 +425,50 @@ test("service worker registers with a cache-busting version query", async ({
 	})
 	expect(scriptURL).toMatch(/\/sw\.js\?v=.+/)
 })
+
+// Regression test: soft navigations (client router's resolveFrame fetch, used
+// for e.g. the navbar logo link) went through networkFirst, which ignores the
+// cache and always waits on the network — so a slow/cold origin made the link
+// feel unresponsive. Static pages are now precached on install and served via
+// staleWhileRevalidate for these fetches too, so this must resolve instantly
+// even when the network is slow.
+test("precached pages make soft navigation instant even on a slow network", async ({
+	page,
+}) => {
+	await page.goto("/")
+	await page.waitForFunction(async () => {
+		const reg = await navigator.serviceWorker.getRegistration()
+		return reg?.active?.state === "activated"
+	})
+	await expect
+		.poll(
+			() =>
+				page.evaluate(async () => {
+					const keys = await caches.keys()
+					if (keys.length === 0) return []
+					const cache = await caches.open(keys[0])
+					const reqs = await cache.keys()
+					return reqs.map((r) => new URL(r.url).pathname).sort()
+				}),
+			{ timeout: 5000 },
+		)
+		.toEqual(["/about", "/changelog", "/"].sort())
+
+	await page.goto("/about", { waitUntil: "networkidle" })
+	await page.route("**", async (route) => {
+		const req = route.request()
+		if (
+			new URL(req.url()).pathname === "/" &&
+			req.headers().accept?.includes("text/html")
+		) {
+			await new Promise((r) => setTimeout(r, 3000))
+		}
+		await route.continue().catch(() => {})
+	})
+
+	await page.click('a[href="/"]')
+	await expect(page.locator("button.home-menu__create-btn")).toBeVisible({
+		timeout: 1000,
+	})
+	await page.unrouteAll()
+})

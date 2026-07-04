@@ -273,3 +273,6 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 87. Fix iOS: SW update check compared against a stale cached sw.js copy
    `(edit entry.ts+e2e.spec.ts: register /sw.js?v=BUILD_STAMP; add regression test)`
+
+88. Precache static pages non-blockingly; soft-nav fetches use stale-while-revalidate
+   `(edit sw.ts+e2e.spec.ts: precache /, /about, /changelog; add regression test)`

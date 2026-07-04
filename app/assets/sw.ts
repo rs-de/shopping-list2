@@ -8,9 +8,21 @@ declare const process: { env: { NODE_ENV: string } }
 
 const IS_DEV = process.env.NODE_ENV === "development"
 const CACHE = `sl-v${BUILD_STAMP}`
+const PRECACHE_URLS = ["/", "/about", "/changelog"]
 
-self.addEventListener("install", () => {
+self.addEventListener("install", (event) => {
 	self.skipWaiting()
+	// Best-effort warm-up so the first soft-navigation to a static page feels
+	// instant. Each URL is caught individually — unlike cache.addAll(), one
+	// slow/failed fetch (e.g. a cold origin) can't fail the whole install,
+	// which is what previously caused a black screen on iOS cold-start.
+	event.waitUntil(
+		caches
+			.open(CACHE)
+			.then((cache) =>
+				Promise.all(PRECACHE_URLS.map((url) => cache.add(url).catch(() => {}))),
+			),
+	)
 })
 
 self.addEventListener("activate", (event) => {
@@ -43,12 +55,18 @@ self.addEventListener("fetch", (event) => {
 		url.pathname === "/bg1.webp" ||
 		url.pathname === "/manifest.webmanifest"
 
-	const isNavigation = request.mode === "navigate"
+	// True browser navigations AND the client router's resolveFrame() fetch
+	// (soft page transitions, requested with "accept: text/html") both want
+	// cached HTML instantly while revalidating in the background — a link
+	// click shouldn't have to wait on the network to feel like it worked.
+	const wantsHtml =
+		request.mode === "navigate" ||
+		(request.headers.get("accept")?.includes("text/html") ?? false)
 
 	event.respondWith(
 		IS_DEV
 			? networkFirst(request)
-			: isNavigation
+			: wantsHtml
 				? staleWhileRevalidate(request)
 				: isStaticAsset
 					? cacheFirst(request)
