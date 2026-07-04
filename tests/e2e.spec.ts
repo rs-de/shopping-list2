@@ -577,3 +577,41 @@ test("precached pages make soft navigation instant even on a slow network", asyn
 	})
 	await page.unrouteAll()
 })
+
+// Regression test: networkFirst() used to only cache responses with
+// content-type text/html. JS/CSS modules served under /assets/ aren't
+// "static assets" per the SW's own isStaticAsset check, so they went
+// through networkFirst too — meaning they were never cached at all. The app
+// worked fine online (always fresh network) but broke completely offline,
+// since the JS that hydrates the list never loaded. Only the specific
+// pullFromServer JSON GET (which shares its URL with the HTML page and
+// would otherwise clobber that page's cached HTML) should be excluded.
+test("list stays usable offline: shows existing articles and queues new ones", async ({
+	page,
+	context,
+}) => {
+	await page.goto(listUrl, { waitUntil: "networkidle" })
+	await page.waitForFunction(async () => {
+		const reg = await navigator.serviceWorker.getRegistration()
+		return reg?.active?.state === "activated"
+	})
+	// Reload once so the (already-active) SW actually intercepts and caches
+	// this page's JS/CSS — matching a real "used the app before" visit.
+	await page.reload({ waitUntil: "networkidle" })
+	const before = await page.locator("input.sl-item-input").count()
+	expect(before).toBeGreaterThan(0)
+
+	await context.setOffline(true)
+	await page.reload()
+	await expect(page.locator("input.sl-item-input")).toHaveCount(before, {
+		timeout: 5000,
+	})
+
+	await page.fill("input.sl-add-input", "Offline item")
+	await page.keyboard.press("Enter")
+	await expect(page.locator("input.sl-item-input").last()).toHaveValue(
+		"Offline item",
+	)
+
+	await context.setOffline(false)
+})

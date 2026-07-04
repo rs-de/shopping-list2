@@ -101,8 +101,16 @@ async function networkFirst(request: Request): Promise<Response> {
 	const cache = await caches.open(CACHE)
 	try {
 		const response = await fetch(request)
-		const ct = response.headers.get("content-type") ?? ""
-		if (response.ok && ct.includes("text/html")) cache.put(request, response.clone())
+		// pullFromServer()'s JSON GET shares its URL with the HTML page at the
+		// same path — caching it here would clobber that page's cached HTML
+		// with JSON on next load. Static assets (JS/CSS modules under
+		// /assets/) never share a URL with an HTML page, so they're safe and
+		// need to be cached here too — this is what keeps the app usable
+		// offline at all, since the JS that hydrates it lives under /assets/.
+		const wantsJson = request.headers
+			.get("accept")
+			?.includes("application/json")
+		if (response.ok && !wantsJson) cache.put(request, response.clone())
 		return response
 	} catch {
 		return (
