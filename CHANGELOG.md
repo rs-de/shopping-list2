@@ -3,16 +3,10 @@
 ## 1.10.0 2026-07-05
 
 - Split shopping list into three focused screens: Articles (add/edit),
-  Plan (reorder for pickup), Shopping (check off in-store) — fixes the
-  rejig column briefly flashing on screen with nothing checked
-- Fix offline mode: app JS/CSS were never cached, breaking offline use
-  entirely (not just adding — even viewing an existing list failed)
-- Faster navigation from the homescreen via page precaching
-- Fix iOS Safari never picking up the new app version after a deploy
-- Fix stale local data reviving items already removed on another device
-- Fix rejig button styling inconsistency and iOS drift of the sticky
-  rejig column
-- Keep the page title centered when switching between screens
+  Plan (reorder for pickup), Shopping (check off in-store) — resolves
+  the rejig column briefly flashing on screen with nothing checked
+- Consistent rejig button styling; sticky rejig column no longer
+  drifts on iOS
 
 ## 1.9.0 2026-07-02
 
