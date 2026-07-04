@@ -276,3 +276,6 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 88. Precache static pages non-blockingly; soft-nav fetches use stale-while-revalidate
    `(edit sw.ts+e2e.spec.ts: precache /, /about, /changelog; add regression test)`
+
+89. Split shopping list into articles/plan/shopping modes (fix rejig bug)
+   `(add app/assets/list/*; edit routes.ts+controller; rm shopping-list.tsx)`

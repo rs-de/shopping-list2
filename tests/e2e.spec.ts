@@ -39,6 +39,54 @@ test.describe
 				"Milk",
 			)
 		})
+
+		test("articles mode has no rejig UI even with a long list", async ({
+			page,
+		}) => {
+			await page.goto(listUrl, { waitUntil: "networkidle" })
+			for (let i = 0; i < 6; i++) {
+				await page.fill("input.sl-add-input", `Extra ${i}`)
+				const done = page.waitForResponse(
+					(r) => r.request().method() === "PATCH",
+				)
+				await page.keyboard.press("Enter")
+				await done
+			}
+			await expect(page.locator(".sl-rejig-column")).toHaveCount(0)
+		})
+
+		// Smoke test for the mode-split routing/controller plumbing (routes.ts +
+		// controller.tsx's loadAndMutateList helper), added before any
+		// mode-specific client UI exists — both still render the same
+		// (temporary) component as /:listId.
+		test("plan and shopping routes exist and render", async ({
+			page,
+			request,
+		}) => {
+			const planRes = await request.get(`${listUrl}/plan`)
+			expect(planRes.status()).toBe(200)
+			const shoppingRes = await request.get(`${listUrl}/shopping`)
+			expect(shoppingRes.status()).toBe(200)
+
+			await page.goto(`${listUrl}/plan`)
+			await expect(page.locator("h1.sl-heading")).toBeVisible()
+			await page.goto(`${listUrl}/shopping`)
+			await expect(page.locator("h1.sl-heading")).toBeVisible()
+		})
+
+		test("mode switcher navigates prev/next between all three modes", async ({
+			page,
+		}) => {
+			await page.goto(listUrl, { waitUntil: "networkidle" })
+			await page.click("a.sl-mode-link--next") // articles -> plan
+			await page.waitForURL(`${listUrl}/plan`)
+			await page.click("a.sl-mode-link--next") // plan -> shopping
+			await page.waitForURL(`${listUrl}/shopping`)
+			await page.click("a.sl-mode-link--next") // shopping -> articles (wraps)
+			await page.waitForURL(listUrl)
+			await page.click("a.sl-mode-link--prev") // articles -> shopping (wraps)
+			await page.waitForURL(`${listUrl}/shopping`)
+		})
 	})
 
 // Each test delays PATCH responses by 2 s via page.route(), then asserts the
@@ -126,15 +174,18 @@ test.describe
 		})
 
 		test("rejig moves article before server responds", async ({ page }) => {
+			// Adding is articles-mode only; rejig lives on /plan.
 			await page.goto(listUrl, { waitUntil: "networkidle" })
 			const existing = await page.locator("input.sl-item-input").count()
 			for (let i = existing; i < 6; i++) await addAndWait(page, `Item ${i + 1}`)
-			// All items default to the last sortKey bucket; select the last item and
-			// move it to the first bucket (Early) — it should appear first immediately.
 			const lastText = await page
 				.locator("input.sl-item-input")
 				.last()
 				.inputValue()
+
+			await page.goto(`${listUrl}/plan`, { waitUntil: "networkidle" })
+			// All items default to the last sortKey bucket; select the last item and
+			// move it to the first bucket (Early) — it should appear first immediately.
 			await page
 				.locator('input[type="checkbox"][aria-label="Select article"]')
 				.last()
@@ -150,15 +201,39 @@ test.describe
 		})
 
 		test("rejigN selection persists across page reload", async ({ page }) => {
-			await page.goto(listUrl, { waitUntil: "networkidle" })
-			await page
-				.locator('input[type="checkbox"][aria-label="Select article"]')
-				.first()
-				.check()
+			await page.goto(`${listUrl}/plan`, { waitUntil: "networkidle" })
+			// Rejig column is unconditionally visible in plan mode — no
+			// checkbox needed to reveal it.
 			await expect(page.locator(".sl-rejig-column")).toBeVisible()
 			await page.selectOption("select.sl-rejig-select", "5")
 			await page.reload({ waitUntil: "networkidle" })
 			await expect(page.locator("select.sl-rejig-select")).toHaveValue("5")
+		})
+
+		test("delete still works from plan mode", async ({ page }) => {
+			await page.goto(`${listUrl}/plan`, { waitUntil: "networkidle" })
+			const before = await page.locator("input.sl-item-input").count()
+			await page
+				.locator('input[type="checkbox"][aria-label="Select article"]')
+				.first()
+				.check()
+			await page.click("button.sl-delete-btn")
+			await expect(page.locator("input.sl-item-input")).toHaveCount(before - 1)
+		})
+
+		test("shopping mode has no editable inputs and delete works", async ({
+			page,
+		}) => {
+			await page.goto(`${listUrl}/shopping`, { waitUntil: "networkidle" })
+			await expect(page.locator("input.sl-item-input")).toHaveCount(0)
+			const before = await page.locator(".sl-item-text").count()
+			expect(before).toBeGreaterThan(0)
+			await page
+				.locator('input[type="checkbox"][aria-label="Select article"]')
+				.first()
+				.check()
+			await page.click("button.sl-delete-btn")
+			await expect(page.locator(".sl-item-text")).toHaveCount(before - 1)
 		})
 	})
 
@@ -170,7 +245,7 @@ test.describe
 // — silently reviving items another device had removed. This test forces
 // that exact race and checks the *server's* final state, not a UI flash,
 // since a transient flash self-corrects and isn't the real loss. See the IDB
-// init block in app/assets/shopping-list.tsx.
+// init block in app/assets/list/utils/sync.ts.
 test.describe
 	.serial("local-first sync", () => {
 		// The Service Worker's own fetch() calls aren't visible to page.route()
@@ -225,16 +300,22 @@ test.describe
 				await route.continue().catch(() => {})
 			})
 
+			// Capture the engine's "sl:sync-ready" signal (fired once the IDB-init
+			// decision has been applied) before it can possibly fire, so we can
+			// deterministically await it instead of guessing a fixed delay for
+			// what is otherwise a fast but async IDB round trip.
+			await page.addInitScript(() => {
+				;(window as unknown as { __syncReady: Promise<void> }).__syncReady =
+					new Promise((resolve) => {
+						window.addEventListener("sl:sync-ready", () => resolve(), {
+							once: true,
+						})
+					})
+			})
 			await page.reload()
-			// The localStorage write happens synchronously at the top of
-			// queueTask, before the *async* IDB read that decides whether to
-			// adopt the stale snapshot — so this only proves hydration started,
-			// not that it finished. Give that fast (non-network) IDB round trip
-			// a moment to land before acting, well inside the delays above.
-			await page.waitForFunction(
-				() => localStorage.getItem("shoppingListId") !== null,
+			await page.evaluate(
+				() => (window as unknown as { __syncReady: Promise<void> }).__syncReady,
 			)
-			await page.waitForTimeout(300)
 			await page.fill("input.sl-add-input", "Bread")
 			await page.keyboard.press("Enter")
 			await page.fill("input.sl-add-input", "Butter")
@@ -305,12 +386,10 @@ test.describe
 			)
 		})
 
-		test("rejig column hidden initially then visible after 400 ms", async ({
+		test("plan mode shows rejig column immediately, no reveal delay", async ({
 			page,
 		}) => {
-			await page.goto(listUrl)
-			// column starts with visibility:hidden — should be hidden before animation
-			await expect(page.locator(".sl-rejig-column")).toBeHidden()
+			await page.goto(`${listUrl}/plan`)
 			await expect(page.locator(".sl-rejig-column")).toBeVisible()
 		})
 
@@ -364,18 +443,44 @@ test.describe
 				.locator("input.sl-item-input")
 				.last()
 				.inputValue()
+			// Rejig UI lives on /plan, not the articles route.
+			await page.goto(`${listUrl}/plan`)
 			await expect(page.locator(".sl-rejig-column")).toBeVisible()
 			await page
 				.locator('input[type="checkbox"][aria-label="Select article"]')
 				.last()
 				.check()
 			// first rejig button = partition 1 = "Early" = lowest sortKey
-			await submitAndWait(page, () =>
+			const planUrl = `${listUrl}/plan`
+			await Promise.all([
+				page.waitForURL((url) => url.href === planUrl, { waitUntil: "load" }),
 				page.locator("button.sl-rejig-btn").first().click(),
-			)
+			])
 			await expect(page.locator("input.sl-item-input").first()).toHaveValue(
 				lastText,
 			)
+		})
+
+		test("shopping mode delete works via POST, no JS", async ({ page }) => {
+			const shoppingUrl = `${listUrl}/shopping`
+			await page.goto(shoppingUrl)
+			await expect(page.locator("input.sl-item-input")).toHaveCount(0)
+			const before = await page.locator(".sl-item-text").count()
+			expect(before).toBeGreaterThan(0)
+			await page
+				.locator('input[type="checkbox"][aria-label="Select article"]')
+				.first()
+				.check()
+			// Delete bar slides in with a 300ms CSS transition; wait for the
+			// button itself to reach the viewport before submitting
+			await expect(page.locator("button.sl-delete-btn")).toBeInViewport()
+			await Promise.all([
+				page.waitForURL((url) => url.href === shoppingUrl, {
+					waitUntil: "load",
+				}),
+				page.locator("button.sl-delete-btn").click({ force: true }),
+			])
+			await expect(page.locator(".sl-item-text")).toHaveCount(before - 1)
 		})
 	})
 

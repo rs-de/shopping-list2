@@ -36,5 +36,8 @@
 	"recreate-list": "Recreate list",
 	"install_prompt": "Add to your homescreen for quick access",
 	"install_action": "Install",
-	"install_ios": "Tap Share ⬆ then \"Add to Home Screen\""
+	"install_ios": "Tap Share ⬆ then \"Add to Home Screen\"",
+	"mode_articles": "Articles",
+	"mode_plan": "Plan",
+	"mode_shopping": "Shopping"
 }

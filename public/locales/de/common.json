@@ -36,5 +36,8 @@
 	"recreate-list": "Liste wiederherstellen",
 	"install_prompt": "Zur Startseite hinzufügen für schnellen Zugriff",
 	"install_action": "Installieren",
-	"install_ios": "Tippe Teilen ⬆ dann \"Zum Home-Bildschirm\""
+	"install_ios": "Tippe Teilen ⬆ dann \"Zum Home-Bildschirm\"",
+	"mode_articles": "Artikel",
+	"mode_plan": "Plan",
+	"mode_shopping": "Einkauf"
 }

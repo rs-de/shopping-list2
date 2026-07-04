@@ -10,6 +10,8 @@ export const routes = route({
 	changelog: get("/changelog"),
 	list: {
 		show: "/:listId",
+		plan: "/:listId/plan",
+		shopping: "/:listId/shopping",
 		manifest: get("/:listId/manifest"),
 	},
 	notFound: get("/*path"),
