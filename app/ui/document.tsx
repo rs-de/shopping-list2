@@ -51,6 +51,9 @@ export function Document(handle: Handle<DocumentProps>) {
 						<main class="app-main">{children}</main>
 						<Footer t={t} />
 					</div>
+					<div id="sl-nav-overlay" class="sl-nav-overlay" aria-hidden="true">
+						<div class="spinner" />
+					</div>
 					<script
 						type="module"
 						src={routes.assets.href({ path: "app/assets/entry.ts" })}

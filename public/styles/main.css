@@ -933,6 +933,32 @@ dialog.sl-dialog::backdrop {
 	}
 }
 
+/* ── Navigation overlay ──────────────────────────────────── */
+
+.sl-nav-overlay {
+	position: fixed;
+	inset: 0;
+	z-index: 30;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: hsl(0 0% 0% / 0.4);
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity 0.15s ease;
+}
+
+.sl-nav-overlay--visible {
+	opacity: 1;
+	pointer-events: auto;
+}
+
+.sl-nav-overlay .spinner {
+	width: 2.5rem;
+	height: 2.5rem;
+	border-width: 3px;
+}
+
 /* ── Error pages ─────────────────────────────────────────── */
 
 .error-page {

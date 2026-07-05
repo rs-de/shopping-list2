@@ -285,3 +285,6 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 91. Content-hash main.css URL; cache it immutable, forever (dev+prod alike)
    `(edit assets.ts+document.tsx+server.ts: cssVersion sha1, immutable Cache-Control)`
+
+92. Show spinner overlay on slow soft-navigation (Fly.io cold-start feedback)
+   `(edit entry.ts+document.tsx+main.css: delayed sl-nav-overlay around resolveFrame)`

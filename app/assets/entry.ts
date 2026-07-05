@@ -2,18 +2,42 @@ import { run } from "remix/ui"
 
 declare const BUILD_STAMP: string
 
+// A soft navigation suppresses the browser's own loading UI, so on a slow
+// network (e.g. a Fly.io cold start) a click can look completely frozen for
+// several seconds with zero feedback. Show a spinner overlay, but only after
+// a short delay, so fast navigations on a warm connection don't flicker.
+const NAV_OVERLAY_DELAY_MS = 200
+
+function showNavOverlay(): void {
+	document
+		.getElementById("sl-nav-overlay")
+		?.classList.add("sl-nav-overlay--visible")
+}
+
+function hideNavOverlay(): void {
+	document
+		.getElementById("sl-nav-overlay")
+		?.classList.remove("sl-nav-overlay--visible")
+}
+
 run({
 	async loadModule(moduleUrl, exportName) {
 		const mod = await import(moduleUrl)
 		return mod[exportName]
 	},
 	async resolveFrame(src, signal, target) {
-		const headers = new Headers({ accept: "text/html" })
-		const lang = document.documentElement.lang
-		if (lang) headers.set("accept-language", lang)
-		if (target) headers.set("x-remix-target", target)
-		const response = await fetch(src, { headers, signal })
-		return response.body ?? (await response.text())
+		const overlayTimer = setTimeout(showNavOverlay, NAV_OVERLAY_DELAY_MS)
+		try {
+			const headers = new Headers({ accept: "text/html" })
+			const lang = document.documentElement.lang
+			if (lang) headers.set("accept-language", lang)
+			if (target) headers.set("x-remix-target", target)
+			const response = await fetch(src, { headers, signal })
+			return response.body ?? (await response.text())
+		} finally {
+			clearTimeout(overlayTimer)
+			hideNavOverlay()
+		}
 	},
 })
 
@@ -56,7 +80,9 @@ function showUpdateBanner(newVersion: string): void {
 	span.textContent = "A new version is available."
 	const btn = document.createElement("button")
 	btn.textContent = "Reload"
-	btn.addEventListener("click", () => window.location.assign(window.location.href))
+	btn.addEventListener("click", () =>
+		window.location.assign(window.location.href),
+	)
 	el.append(span, btn)
 	document.body.prepend(el)
 }
