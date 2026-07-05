@@ -1,5 +1,6 @@
 import type { Handle, RemixNode } from "remix/ui"
 
+import { cssVersion } from "../assets.ts"
 import type { Lang, Translations } from "../i18n.ts"
 import { routes } from "../routes.ts"
 import { Footer } from "./footer.tsx"
@@ -40,7 +41,7 @@ export function Document(handle: Handle<DocumentProps>) {
 					<link rel="manifest" href={manifestHref} />
 					<link rel="apple-touch-icon" href="/icons/apple-icon-180.png" />
 					<link rel="icon" type="image/x-icon" href="/favicon.ico" />
-					<link rel="stylesheet" href="/styles/main.css" />
+					<link rel="stylesheet" href={`/styles/main.css?v=${cssVersion}`} />
 					<title>{title}</title>
 					{head}
 				</head>

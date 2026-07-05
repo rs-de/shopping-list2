@@ -1,4 +1,7 @@
 import { execSync } from "node:child_process"
+import { createHash } from "node:crypto"
+import { readFileSync } from "node:fs"
+import path from "node:path"
 
 import { createAssetServer } from "remix/assets"
 import pkg from "../package.json" with { type: "json" }
@@ -15,7 +18,18 @@ function getBuildStamp(): string {
 	}
 }
 
-const buildStamp = getBuildStamp()
+export const buildStamp = getBuildStamp()
+
+// Content hash, not buildStamp: a Docker rebuild or uncommitted local edit
+// both need to bust the cache the moment the bytes actually change, in dev
+// and prod alike, independent of git commits or file mtimes (which Docker's
+// `COPY . .` resets on every build regardless of real content changes).
+function hashFile(relPath: string): string {
+	const bytes = readFileSync(path.join(rootDir, relPath))
+	return createHash("sha1").update(bytes).digest("hex").slice(0, 8)
+}
+
+export const cssVersion = hashFile("public/styles/main.css")
 
 export const assetServer = createAssetServer({
 	basePath: "/assets",

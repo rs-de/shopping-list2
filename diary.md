@@ -282,3 +282,6 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 90. Keep header title centered across mode pages regardless of link widths
    `(edit main.css: .sl-heading-row flex -> grid, justify-self on mode links)`
+
+91. Content-hash main.css URL; cache it immutable, forever (dev+prod alike)
+   `(edit assets.ts+document.tsx+server.ts: cssVersion sha1, immutable Cache-Control)`
