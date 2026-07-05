@@ -288,3 +288,6 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 92. Show spinner overlay on slow soft-navigation (Fly.io cold-start feedback)
    `(edit entry.ts+document.tsx+main.css: delayed sl-nav-overlay around resolveFrame)`
+
+93. Bump remix 3.0.0-beta.3 → beta.5; no breaking APIs used, tests pass
+   `pnpm add remix@3.0.0-beta.5 && pnpm typecheck && pnpm check && pnpm test:e2e`

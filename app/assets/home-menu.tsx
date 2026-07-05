@@ -14,7 +14,8 @@ export const HomeMenu = clientEntry(
 
 		handle.queueTask(() => {
 			listId = localStorage.getItem(LOCAL_STORAGE_KEY)
-			if (recreateId) toast.show(t["list-cleaned-up"], "success", { duration: 5000 })
+			if (recreateId)
+				toast.show(t["list-cleaned-up"], "success", { duration: 5000 })
 			handle.update()
 		})
 
@@ -25,7 +26,10 @@ export const HomeMenu = clientEntry(
 						{toast.render()}
 						<form method="post" class="home-menu__form">
 							<input type="hidden" name="id" value={recreateId} />
-							<button type="submit" class="btn btn-primary home-menu__create-btn">
+							<button
+								type="submit"
+								class="btn btn-primary home-menu__create-btn"
+							>
 								{t["recreate-list"]}
 							</button>
 						</form>
@@ -41,7 +45,10 @@ export const HomeMenu = clientEntry(
 						</a>
 					) : (
 						<form method="post" class="home-menu__form">
-							<button type="submit" class="btn btn-primary home-menu__create-btn">
+							<button
+								type="submit"
+								class="btn btn-primary home-menu__create-btn"
+							>
 								{t.create_shoppingList}
 							</button>
 						</form>
