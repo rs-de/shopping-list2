@@ -366,6 +366,10 @@ export function createSyncEngine(
 						label: t.sw_reload,
 						onClick: () => {
 							toast.dismiss()
+							navigator.serviceWorker?.controller?.postMessage({
+								type: "SL_FORCE_FRESH",
+								url: window.location.href,
+							})
 							window.location.assign(window.location.href)
 						},
 					},

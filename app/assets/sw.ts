@@ -26,6 +26,13 @@ function recordCacheHit(url: string): void {
 	recentCacheHits.set(url, now)
 }
 
+// A page that just told the user "a new version is available" and is about
+// to navigate to reload wants that one navigation to actually be fresh —
+// staleWhileRevalidate would otherwise happily hand back the copy it already
+// has and only pick up the new one on the *following* request. Set right
+// before the deliberate reload navigation and consumed (deleted) by it.
+const forceFreshUrls = new Set<string>()
+
 self.addEventListener("install", (event) => {
 	self.skipWaiting()
 	// Best-effort warm-up so the first soft-navigation to a static page feels
@@ -57,6 +64,10 @@ self.addEventListener("activate", (event) => {
 })
 
 self.addEventListener("message", (event) => {
+	if (event.data?.type === "SL_FORCE_FRESH") {
+		forceFreshUrls.add(event.data.url as string)
+		return
+	}
 	if (event.data?.type !== "SL_WAS_CACHE_HIT") return
 	const url = event.data.url as string
 	const hitAt = recentCacheHits.get(url)
@@ -108,6 +119,7 @@ async function staleWhileRevalidate(request: Request): Promise<Response> {
 			return response
 		})
 		.catch(() => cached ?? new Response("Offline", { status: 503 }))
+	if (forceFreshUrls.delete(request.url)) return fetchPromise
 	if (cached) recordCacheHit(request.url)
 	return cached ?? fetchPromise
 }

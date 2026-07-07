@@ -294,3 +294,6 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 94. Block+spinner on first-load freshness check when SW served from cache
    `(edit sw.ts+sync.ts+articles/plan/shopping.tsx+main.css: SL_WAS_CACHE_HIT)`
+
+95. Force network-fresh HTML on manual reload; SWR was serving stale cache
+   `(edit sw.ts+entry.ts+sync.ts: SL_FORCE_FRESH message bypasses cache once)`

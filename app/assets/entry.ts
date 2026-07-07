@@ -80,9 +80,13 @@ function showUpdateBanner(newVersion: string): void {
 	span.textContent = "A new version is available."
 	const btn = document.createElement("button")
 	btn.textContent = "Reload"
-	btn.addEventListener("click", () =>
-		window.location.assign(window.location.href),
-	)
+	btn.addEventListener("click", () => {
+		navigator.serviceWorker?.controller?.postMessage({
+			type: "SL_FORCE_FRESH",
+			url: window.location.href,
+		})
+		window.location.assign(window.location.href)
+	})
 	el.append(span, btn)
 	document.body.prepend(el)
 }
