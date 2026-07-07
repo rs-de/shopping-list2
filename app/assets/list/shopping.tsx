@@ -40,6 +40,15 @@ export const Shopping = clientEntry(
 			return (
 				<div class="sl-app">
 					<ModeSwitcher listId={listId} active="shopping" t={t} />
+					{sync.isChecking() && (
+						<div
+							class="sl-verify-indicator"
+							role="status"
+							aria-label="Verifying"
+						>
+							<div class="spinner" />
+						</div>
+					)}
 
 					<div class="sl-card">
 						<form

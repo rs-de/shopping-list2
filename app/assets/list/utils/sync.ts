@@ -54,9 +54,36 @@ interface BeforeInstallPromptEvent extends Event {
 	prompt(): Promise<void>
 }
 
+const CACHE_HIT_MESSAGE_TIMEOUT_MS = 200
+
+/**
+ * Asks the controlling service worker whether it just served this exact page
+ * from cache rather than the network — the one signal that actually tells us
+ * whether the currently-shown articles could be stale (a live network hit is
+ * always fresh; a cache hit might not be). No controller (no SW yet, e.g. the
+ * very first visit) means nothing could have been cached, so it's not a hit.
+ */
+function wasServedFromCache(): Promise<boolean> {
+	const controller = navigator.serviceWorker?.controller
+	if (!controller) return Promise.resolve(false)
+	return new Promise((resolve) => {
+		const channel = new MessageChannel()
+		const timer = setTimeout(() => resolve(false), CACHE_HIT_MESSAGE_TIMEOUT_MS)
+		channel.port1.onmessage = (event) => {
+			clearTimeout(timer)
+			resolve(Boolean((event.data as { wasCacheHit?: boolean })?.wasCacheHit))
+		}
+		controller.postMessage({ type: "SL_WAS_CACHE_HIT", url: location.href }, [
+			channel.port2,
+		])
+	})
+}
+
 export interface SyncEngine {
 	getArticles(): Article[]
 	isDirty(): boolean
+	/** True while the mandatory first-load freshness check (see `init`) is in flight. */
+	isChecking(): boolean
 	/**
 	 * Generic optimistic PATCH primitive. `apply` computes the next optimistic
 	 * `articles` array from the current one and the FormData body to PATCH to
@@ -66,8 +93,8 @@ export interface SyncEngine {
 	patch(
 		apply: (current: Article[]) => { articles: Article[]; body: FormData },
 	): Promise<void>
-	/** Background reconciliation GET — no-op while dirty. */
-	pullFromServer(): Promise<void>
+	/** Background reconciliation GET — no-op while dirty. Resolves false on failure. */
+	pullFromServer(): Promise<boolean>
 	/** Wires IDB-init, online listener, SW-update toast, install prompt. Call once from handle.queueTask(). */
 	init(): void
 	getRejigN(): number
@@ -81,8 +108,14 @@ export function createSyncEngine(
 	toast: ReturnType<typeof createToast>,
 ): SyncEngine {
 	const listId = handle.props.listId
+	// Set once a session has confirmed the true server state (a successful
+	// verify, patch, or dirty-drain round trip) — gates the mandatory,
+	// blocking freshness check in init() so it only ever runs once per tab
+	// per list, not on every mode-switch navigation.
+	const CHECKED_KEY = `sl-checked:${listId}`
 	let articles: Article[] = [...handle.props.articles]
 	let rejigN = 3
+	let checking = false
 
 	// dirty: true when local articles diverge from server state
 	// dirtyGen: incremented on every dirty write — lets drainDirty detect
@@ -99,6 +132,10 @@ export function createSyncEngine(
 	function markDirty() {
 		dirty = true
 		dirtyGen++
+	}
+
+	function markChecked() {
+		sessionStorage.setItem(CHECKED_KEY, "1")
 	}
 
 	function scheduleRetry() {
@@ -119,23 +156,27 @@ export function createSyncEngine(
 		retryDelay = 3_000
 	}
 
-	async function pullFromServer(): Promise<void> {
-		if (dirty || handle.signal.aborted) return
+	async function pullFromServer(): Promise<boolean> {
+		if (dirty || handle.signal.aborted) return true
 		try {
 			const res = await fetch(`/${listId}`, {
 				headers: { accept: "application/json" },
 				signal: AbortSignal.any([handle.signal, AbortSignal.timeout(8_000)]),
 			})
-			if (!res.ok || dirty || handle.signal.aborted) return
+			if (dirty || handle.signal.aborted) return true
+			if (!res.ok) return false
 			const data = (await res.json()) as { articles: Article[] }
-			if (dirty || handle.signal.aborted) return
+			if (dirty || handle.signal.aborted) return true
 			if (JSON.stringify(data.articles) !== JSON.stringify(articles)) {
 				articles = data.articles
 				void writeRecord(listId, articles, false).catch(() => {})
 				handle.update()
 			}
+			markChecked()
+			return true
 		} catch {
 			// network unavailable — IDB is the source of truth
+			return false
 		}
 	}
 
@@ -162,6 +203,7 @@ export function createSyncEngine(
 			dirty = false
 			articles = snapshot
 			clearRetry()
+			markChecked()
 			void writeRecord(listId, articles, false).catch(() => {})
 		} catch {
 			scheduleRetry()
@@ -200,6 +242,7 @@ export function createSyncEngine(
 				) {
 					dirty = false
 					clearRetry()
+					markChecked()
 					articles = updated.articles
 					void writeRecord(listId, articles, false).catch(() => {})
 				} else {
@@ -243,7 +286,25 @@ export function createSyncEngine(
 					scheduleRetry()
 				} else if (!handle.signal.aborted) {
 					await writeRecord(listId, articles, false)
-					void pullFromServer()
+					// This exact page might have been served from a stale SW cache —
+					// the only way to know is to ask. If so, and no check has already
+					// confirmed the true server state this session, the shown articles
+					// are unverified: block on a real check instead of silently
+					// reconciling in the background, so the user never acts on data
+					// that might already be wrong.
+					const mustVerify =
+						!sessionStorage.getItem(CHECKED_KEY) && (await wasServedFromCache())
+					if (mustVerify && !handle.signal.aborted) {
+						checking = true
+						handle.update()
+						const ok = await pullFromServer()
+						checking = false
+						if (!ok && !handle.signal.aborted) {
+							toast.show(t.service_error, "error", { duration: 5000 })
+						}
+					} else {
+						void pullFromServer()
+					}
 				}
 			} catch {
 				// IDB unavailable — server state is fine
@@ -317,6 +378,7 @@ export function createSyncEngine(
 	return {
 		getArticles: () => articles,
 		isDirty: () => dirty,
+		isChecking: () => checking,
 		patch,
 		pullFromServer,
 		init,

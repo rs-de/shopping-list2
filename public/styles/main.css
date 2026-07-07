@@ -959,6 +959,15 @@ dialog.sl-dialog::backdrop {
 	border-width: 3px;
 }
 
+/* ── Verify indicator ────────────────────────────────────── */
+
+.sl-verify-indicator {
+	display: flex;
+	justify-content: center;
+	padding: 0.25rem 0 0;
+	font-size: 0.75rem;
+}
+
 /* ── Error pages ─────────────────────────────────────────── */
 
 .error-page {
