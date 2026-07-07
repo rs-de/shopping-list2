@@ -300,3 +300,6 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 96. Replace layout-shifting verify indicator with overlay on .sl-card
    `(edit main.css+articles.tsx+plan.tsx+shopping.tsx: sl-verify-overlay)`
+
+97. Articles page shows original add order, ignoring Plan's sortKey grouping
+   `(edit utils/articles.ts+articles.tsx: sortByCreatedAt for Articles-page render)`

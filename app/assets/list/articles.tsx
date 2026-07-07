@@ -1,7 +1,11 @@
 import { clientEntry, type Handle, on, ref } from "remix/ui"
 
 import type { Translations } from "../../i18n.ts"
-import { type Article, sortArticles } from "../../utils/articles.ts"
+import {
+	type Article,
+	sortArticles,
+	sortByCreatedAt,
+} from "../../utils/articles.ts"
 import { generateId } from "../../utils/id.ts"
 import { createToast } from "../../utils/toast.tsx"
 import { ModeSwitcher } from "./ui/mode-switcher.tsx"
@@ -110,7 +114,7 @@ export const Articles = clientEntry(
 		}
 
 		return () => {
-			const articles = sync.getArticles()
+			const articles = sortByCreatedAt(sync.getArticles())
 			const rejigN = sync.getRejigN()
 			const showDelete = selected.size > 0
 
