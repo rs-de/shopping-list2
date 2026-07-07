@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.11.0 2026-07-08
+
+- Articles page now keeps items in the order they were added, regardless of
+  Plan mode's pickup-time grouping
+- Fixed occasional stale content after reload or on slow connections
+- Verify indicator no longer shifts the page layout when it appears
+
 ## 1.10.0 2026-07-05
 
 - Split shopping list into three focused screens: Articles (add/edit),
