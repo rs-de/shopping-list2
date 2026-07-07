@@ -297,3 +297,6 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 95. Force network-fresh HTML on manual reload; SWR was serving stale cache
    `(edit sw.ts+entry.ts+sync.ts: SL_FORCE_FRESH message bypasses cache once)`
+
+96. Replace layout-shifting verify indicator with overlay on .sl-card
+   `(edit main.css+articles.tsx+plan.tsx+shopping.tsx: sl-verify-overlay)`

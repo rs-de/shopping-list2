@@ -117,17 +117,17 @@ export const Articles = clientEntry(
 			return (
 				<div class="sl-app">
 					<ModeSwitcher listId={listId} active="articles" t={t} />
-					{sync.isChecking() && (
-						<div
-							class="sl-verify-indicator"
-							role="status"
-							aria-label="Verifying"
-						>
-							<div class="spinner" />
-						</div>
-					)}
 
 					<div class="sl-card">
+						{sync.isChecking() && (
+							<div
+								class="sl-verify-overlay"
+								role="status"
+								aria-label="Verifying"
+							>
+								<div class="spinner" />
+							</div>
+						)}
 						<form
 							id="articles-form"
 							method="post"

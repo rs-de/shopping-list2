@@ -570,6 +570,7 @@ a {
 }
 
 .sl-card {
+	position: relative;
 	background: hsl(var(--primary-2) / 0.8);
 	padding: 0.5rem;
 	border-radius: 0.75rem;
@@ -959,13 +960,23 @@ dialog.sl-dialog::backdrop {
 	border-width: 3px;
 }
 
-/* ── Verify indicator ────────────────────────────────────── */
+/* ── Verify overlay ──────────────────────────────────────── */
 
-.sl-verify-indicator {
+.sl-verify-overlay {
+	position: absolute;
+	inset: 0;
+	z-index: 5;
 	display: flex;
+	align-items: center;
 	justify-content: center;
-	padding: 0.25rem 0 0;
-	font-size: 0.75rem;
+	background: hsl(0 0% 0% / 0.4);
+	border-radius: 0.75rem;
+}
+
+.sl-verify-overlay .spinner {
+	width: 2rem;
+	height: 2rem;
+	border-width: 3px;
 }
 
 /* ── Error pages ─────────────────────────────────────────── */
