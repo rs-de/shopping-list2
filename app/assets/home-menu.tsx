@@ -8,12 +8,17 @@ const LOCAL_STORAGE_KEY = "shoppingListId"
 export const HomeMenu = clientEntry(
 	import.meta.url,
 	function HomeMenu(handle: Handle<{ t: Translations; recreateId?: string }>) {
-		let listId: string | null = null
+		// `null` = not checked yet; localStorage is only readable client-side,
+		// so until the queued task below runs we don't know if a list exists.
+		// Rendering "create list" as the default here would be wrong whenever
+		// that task doesn't land in time (e.g. a soft navigation) and risks the
+		// user spawning a duplicate list, orphaning their real one.
+		let listId: string | null | undefined = null
 		const { t, recreateId } = handle.props
 		const toast = createToast(() => handle.update(), handle.signal)
 
 		handle.queueTask(() => {
-			listId = localStorage.getItem(LOCAL_STORAGE_KEY)
+			listId = localStorage.getItem(LOCAL_STORAGE_KEY) ?? undefined
 			if (recreateId)
 				toast.show(t["list-cleaned-up"], "success", { duration: 5000 })
 			handle.update()
@@ -33,6 +38,16 @@ export const HomeMenu = clientEntry(
 								{t["recreate-list"]}
 							</button>
 						</form>
+					</>
+				)
+			}
+			if (listId === null) {
+				return (
+					<>
+						{toast.render()}
+						<div class="home-menu__loading" aria-busy="true">
+							<div class="spinner" />
+						</div>
 					</>
 				)
 			}

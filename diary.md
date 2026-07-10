@@ -303,3 +303,6 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 97. Articles page shows original add order, ignoring Plan's sortKey grouping
    `(edit utils/articles.ts+articles.tsx: sortByCreatedAt for Articles-page render)`
+
+98. HomeMenu: never show "create list" before localStorage check resolves
+   `(edit home-menu.tsx+main.css: tri-state loading spinner; add e2e.spec.ts regression test)`

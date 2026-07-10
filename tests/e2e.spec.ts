@@ -578,6 +578,52 @@ test("precached pages make soft navigation instant even on a slow network", asyn
 	await page.unrouteAll()
 })
 
+// Regression test: HomeMenu decides "create list" vs. "show my list" from
+// localStorage, read inside handle.queueTask (it isn't available in the
+// server-run setup phase). A soft navigation back to "/" — e.g. clicking the
+// navbar logo from the list page — remounts HomeMenu, and a returning user
+// briefly saw the "create list" CTA before the queued task corrected it; in
+// one observed case that correction never landed, leaving "create list"
+// stuck until a full reload. Tapping it there would silently orphan the
+// user's real list (new list created, localStorage overwritten). A
+// MutationObserver records every state HomeMenu's DOM passes through so this
+// asserts the invariant directly instead of trying to catch a live race.
+test("home menu never shows create-list CTA for a returning user during soft nav", async ({
+	page,
+}) => {
+	await page.goto(listUrl, { waitUntil: "networkidle" })
+	await page.waitForFunction(
+		() => localStorage.getItem("shoppingListId") !== null,
+	)
+
+	await page.evaluate(() => {
+		const seen = new Set<string>()
+		const record = () => {
+			const el = document.querySelector(".home-menu")
+			if (!el) return
+			if (el.querySelector(".home-menu__create-btn")) seen.add("create")
+			if (el.querySelector(".home-menu__show-link")) seen.add("show")
+		}
+		new MutationObserver(record).observe(document.body, {
+			childList: true,
+			subtree: true,
+		})
+		;(window as unknown as { __homeMenuStates: Set<string> }).__homeMenuStates =
+			seen
+	})
+
+	await page.click('a[href="/"]')
+	await expect(page.locator(".home-menu__show-link")).toBeVisible()
+
+	const states = await page.evaluate(() =>
+		Array.from(
+			(window as unknown as { __homeMenuStates: Set<string> }).__homeMenuStates,
+		),
+	)
+	expect(states).not.toContain("create")
+	expect(states).toContain("show")
+})
+
 // Regression test: networkFirst() used to only cache responses with
 // content-type text/html. JS/CSS modules served under /assets/ aren't
 // "static assets" per the SW's own isStaticAsset check, so they went
