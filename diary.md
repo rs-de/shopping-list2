@@ -306,3 +306,6 @@ Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
 
 98. HomeMenu: never show "create list" before localStorage check resolves
    `(edit home-menu.tsx+main.css: tri-state loading spinner; add e2e.spec.ts regression test)`
+
+99. Auto-scroll Add button into view after adding an article (keyboard covers it)
+   `(edit articles.tsx+main.css: scrollIntoView({block:"nearest"}) + scroll-margin-bottom)`

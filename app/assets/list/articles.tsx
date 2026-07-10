@@ -30,6 +30,7 @@ export const Articles = clientEntry(
 		let selected = new Set<string>()
 		let clearDialogEl: HTMLDialogElement | null = null
 		let addInputEl: HTMLInputElement | null = null
+		let addBtnEl: Element | null = null
 		let nextId = handle.props.nextId
 		const hasShare = Boolean(navigator.share)
 
@@ -62,6 +63,16 @@ export const Articles = clientEntry(
 				body: fd,
 			}))
 			addInputEl?.focus()
+			// .focus() is a no-op here (element never lost focus), so it won't
+			// trigger the browser's native scroll-into-view — the newly added
+			// row above pushes the input and the Add button down, potentially
+			// under the on-screen keyboard. Wait a frame for handle.update()'s
+			// re-render to land, then scroll explicitly. Target the Add button
+			// (not the input): it sits just below the input, so bringing it
+			// into view keeps both visible without a second scroll target.
+			requestAnimationFrame(() => {
+				addBtnEl?.scrollIntoView({ block: "nearest", behavior: "smooth" })
+			})
 			await patched
 		}
 
@@ -224,6 +235,9 @@ export const Articles = clientEntry(
 								form="form-add-article"
 								name="_action"
 								value="addArticle"
+								mix={ref((node) => {
+									addBtnEl = node
+								})}
 							>
 								{t.Add}
 							</button>

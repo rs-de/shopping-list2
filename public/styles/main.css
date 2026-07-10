@@ -734,6 +734,7 @@ a {
 
 .sl-add-btn {
 	flex: 1;
+	scroll-margin-bottom: 0.75rem;
 }
 
 /* Toast */
