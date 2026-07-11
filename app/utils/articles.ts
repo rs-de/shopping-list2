@@ -5,6 +5,8 @@ export type Article = {
 	createdAt: number
 }
 
+export const MAX_ARTICLES_PER_LIST = 500
+
 export function sortArticles(articles: Article[]): Article[] {
 	return [...articles].sort((a, b) => {
 		if (a.sortKey !== b.sortKey) return a.sortKey - b.sortKey

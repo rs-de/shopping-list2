@@ -320,3 +320,6 @@ Pre-diary (retroactive): register scaffolded Remix skill for Claude Code
 
 102. Add unit tests for pure utils (articles, id, rateLimit) via node:test
    `(add app/utils/*.test.ts; add test:unit script, wire into pnpm test)`
+
+103. Harden against DB abuse: article cap, per-IP + per-list rate limits
+   `(edit rateLimit.ts+controller.tsx+list/controller.tsx: 500 cap, counter limiter)`

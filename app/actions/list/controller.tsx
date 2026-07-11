@@ -10,8 +10,13 @@ import { getTranslations, type Lang, type Translations } from "../../i18n.ts"
 import { routes } from "../../routes.ts"
 import { Document } from "../../ui/document.tsx"
 import { ErrorPage } from "../../ui/error-page.tsx"
-import { type Article, sortArticles } from "../../utils/articles.ts"
+import {
+	type Article,
+	MAX_ARTICLES_PER_LIST,
+	sortArticles,
+} from "../../utils/articles.ts"
 import { generateId } from "../../utils/id.ts"
+import { clientIp, isRateLimited } from "../../utils/rateLimit.ts"
 
 type Render = (
 	node: RemixNode,
@@ -31,6 +36,7 @@ function mutateArticles(
 			const sortKey = Number(form.get("sortKey"))
 			const createdAt = Number(form.get("createdAt")) || Date.now()
 			if (!id || !text || text.length > 256 || !sortKey) return badRequest()
+			if (articles.length >= MAX_ARTICLES_PER_LIST) return badRequest()
 			return sortArticles([...articles, { id, text, sortKey, createdAt }])
 		}
 		case "changeArticle": {
@@ -117,6 +123,12 @@ async function loadAndMutateList({
 		const articles = list.articles as Article[]
 
 		if (request.method === "POST" || request.method === "PATCH") {
+			if (isRateLimited(`${clientIp(request)}:${listId}`, 1_000, 20)) {
+				return {
+					kind: "response",
+					response: new Response("Too Many Requests", { status: 429 }),
+				}
+			}
 			const form = await request.formData()
 
 			// POST rejig (no-JS fallback)
@@ -169,6 +181,7 @@ async function loadAndMutateList({
 						String(form.get("articles") ?? "[]"),
 					) as Article[]
 					if (
+						newArticles.length > MAX_ARTICLES_PER_LIST ||
 						newArticles.some(
 							(a) => typeof a.text !== "string" || a.text.length > 256,
 						)
