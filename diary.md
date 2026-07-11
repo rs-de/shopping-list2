@@ -326,3 +326,6 @@ Pre-diary (retroactive): register scaffolded Remix skill for Claude Code
 
 104. Drop redundant per-IP layer — global/per-list caps already suffice
    `(edit controller.tsx + list/controller.tsx: rm clientIp usage + tests)`
+
+105. Gate tagged deploys on typecheck+lint+unit (no DB-dependent e2e in CI)
+   `(edit deploy.yml: add test job, needs: test on deploy; verified on clean clone)`
