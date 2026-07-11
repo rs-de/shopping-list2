@@ -311,3 +311,6 @@ Pre-diary (retroactive): register scaffolded Remix skill for Claude Code
 
 99. Auto-scroll Add button into view after adding an article (keyboard covers it)
    `(edit articles.tsx+main.css: scrollIntoView({block:"nearest"}) + scroll-margin-bottom)`
+
+100. Wire up unused legacy apple-touch-startup-image assets (fix iOS launch black screen)
+   `(edit document.tsx: add 15 splash links (light+dark) + apple-mobile-web-app-capable)`
