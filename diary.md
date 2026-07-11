@@ -1,6 +1,8 @@
 # Build Diary — shopping-list2
 
 Pre-diary: `npx remix@next new shopping-list2`, pnpm, pnpm install (baseline)
+Pre-diary (retroactive): register scaffolded Remix skill for Claude Code
+   `ln -s ../../.agents/skills/remix .claude/skills/remix`
 
 ---
 
