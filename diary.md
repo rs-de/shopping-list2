@@ -314,3 +314,9 @@ Pre-diary (retroactive): register scaffolded Remix skill for Claude Code
 
 100. Wire up unused legacy apple-touch-startup-image assets (fix iOS launch black screen)
    `(edit document.tsx: add 15 splash links (light+dark) + apple-mobile-web-app-capable)`
+
+101. Analyze diary+git history+code to catalog realized good-web-app paradigms
+   `(create paradigms.md: 12 categories, offline-first through diary-as-process)`
+
+102. Add unit tests for pure utils (articles, id, rateLimit) via node:test
+   `(add app/utils/*.test.ts; add test:unit script, wire into pnpm test)`
