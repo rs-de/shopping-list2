@@ -16,7 +16,7 @@ import {
 	sortArticles,
 } from "../../utils/articles.ts"
 import { generateId } from "../../utils/id.ts"
-import { clientIp, isRateLimited } from "../../utils/rateLimit.ts"
+import { isRateLimited } from "../../utils/rateLimit.ts"
 
 type Render = (
 	node: RemixNode,
@@ -123,7 +123,9 @@ async function loadAndMutateList({
 		const articles = list.articles as Article[]
 
 		if (request.method === "POST" || request.method === "PATCH") {
-			if (isRateLimited(`${clientIp(request)}:${listId}`, 1_000, 20)) {
+			// Keyed by list, not by IP: bounds this list's total write rate
+			// regardless of how many distinct clients (or spoofed IPs) hit it.
+			if (isRateLimited(`list:${listId}`, 1_000, 15)) {
 				return {
 					kind: "response",
 					response: new Response("Too Many Requests", { status: 429 }),

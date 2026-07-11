@@ -14,7 +14,7 @@ import { routes } from "../routes.ts"
 import { Document } from "../ui/document.tsx"
 import { ErrorPage } from "../ui/error-page.tsx"
 import { generateId } from "../utils/id.ts"
-import { clientIp, isRateLimited } from "../utils/rateLimit.ts"
+import { isRateLimited } from "../utils/rateLimit.ts"
 
 const DIR = path.dirname(url.fileURLToPath(import.meta.url))
 const ROOT = path.resolve(DIR, "../..")
@@ -69,7 +69,11 @@ export default createController(routes, {
 		async home({ request, render }) {
 			const VALID_ID = /^[A-Za-z0-9_-]{10}$/
 			if (request.method === "POST") {
-				if (isRateLimited(clientIp(request))) {
+				// Global, not per-IP: a per-IP cap here would only matter if it
+				// were tighter than this one, which would just make it the real
+				// limit. This one cap is what actually bounds total list-creation
+				// throughput against a distributed (many-IP) attacker.
+				if (isRateLimited("create-list")) {
 					return new Response("Too Many Requests", { status: 429 })
 				}
 				const form = await request.formData()
