@@ -81,7 +81,7 @@ function wasServedFromCache(): Promise<boolean> {
 export interface SyncEngine {
 	getArticles(): Article[]
 	isDirty(): boolean
-	/** True while the mandatory first-load freshness check (see `init`) is in flight. */
+	/** True while a blocking freshness check (first load or stale resume, see `init`) is in flight. */
 	isChecking(): boolean
 	/**
 	 * Generic optimistic PATCH primitive. `apply` computes the next optimistic
@@ -107,11 +107,13 @@ export function createSyncEngine(
 	toast: ReturnType<typeof createToast>,
 ): SyncEngine {
 	const listId = handle.props.listId
-	// Set once a session has confirmed the true server state (a successful
-	// verify, patch, or dirty-drain round trip) — gates the mandatory,
-	// blocking freshness check in init() so it only ever runs once per tab
-	// per list, not on every mode-switch navigation.
+	// Timestamp (ms) of the last confirmed server round trip (a successful
+	// verify, patch, or dirty-drain) — persisted in localStorage so it
+	// survives the app being killed and relaunched, not just a tab session.
+	// Gates how loud a freshness check needs to be: recently confirmed →
+	// silent background pull; stale → blocking spinner until confirmed.
 	const CHECKED_KEY = `sl-checked:${listId}`
+	const STALE_MS = 24 * 60 * 60 * 1000
 	let articles: Article[] = [...handle.props.articles]
 	let rejigN = 3
 	let checking = false
@@ -134,7 +136,12 @@ export function createSyncEngine(
 	}
 
 	function markChecked() {
-		sessionStorage.setItem(CHECKED_KEY, "1")
+		localStorage.setItem(CHECKED_KEY, String(Date.now()))
+	}
+
+	function isStale(): boolean {
+		const last = Number(localStorage.getItem(CHECKED_KEY))
+		return !last || Date.now() - last > STALE_MS
 	}
 
 	function scheduleRetry() {
@@ -286,13 +293,12 @@ export function createSyncEngine(
 				} else if (!handle.signal.aborted) {
 					await writeRecord(listId, articles, false)
 					// This exact page might have been served from a stale SW cache —
-					// the only way to know is to ask. If so, and no check has already
-					// confirmed the true server state this session, the shown articles
-					// are unverified: block on a real check instead of silently
+					// the only way to know is to ask. If so, and it's been a while
+					// since the last confirmed check, the shown articles are
+					// unverified: block on a real check instead of silently
 					// reconciling in the background, so the user never acts on data
 					// that might already be wrong.
-					const mustVerify =
-						!sessionStorage.getItem(CHECKED_KEY) && (await wasServedFromCache())
+					const mustVerify = isStale() && (await wasServedFromCache())
 					if (mustVerify && !handle.signal.aborted) {
 						checking = true
 						handle.update()
@@ -364,6 +370,28 @@ export function createSyncEngine(
 			() => {
 				clearRetry() // reset backoff on genuine reconnect
 				void drainDirty().catch(() => {})
+			},
+			{ signal: handle.signal },
+		)
+
+		// App resumed (e.g. reopened from the home screen). Dirty edits are
+		// already covered by the online listener/retry loop; otherwise
+		// re-verify against the server — loudly if stale, silently if we
+		// checked recently.
+		document.addEventListener(
+			"visibilitychange",
+			() => {
+				if (document.visibilityState !== "visible" || dirty) return
+				if (isStale()) {
+					checking = true
+					handle.update()
+					void pullFromServer().finally(() => {
+						checking = false
+						handle.update()
+					})
+				} else {
+					void pullFromServer()
+				}
 			},
 			{ signal: handle.signal },
 		)

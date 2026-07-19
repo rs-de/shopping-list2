@@ -329,3 +329,6 @@ Pre-diary (retroactive): register scaffolded Remix skill for Claude Code
 
 105. Gate tagged deploys on typecheck+lint+unit (no DB-dependent e2e in CI)
    `(edit deploy.yml: add test job, needs: test on deploy; verified on clean clone)`
+
+106. Stale-timestamp verify: blocking spinner only if >24h since last check
+   `(edit sync.ts: localStorage timestamp CHECKED_KEY, isStale(), resume listener)`
