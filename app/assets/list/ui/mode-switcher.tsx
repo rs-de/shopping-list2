@@ -1,6 +1,6 @@
 import { type Handle, on } from "remix/ui"
 
-import type { Translations } from "../../../i18n.ts"
+import type { T } from "../../../i18n.ts"
 
 export type Mode = "articles" | "plan" | "shopping"
 
@@ -10,15 +10,15 @@ function hrefFor(listId: string, mode: Mode): string {
 	return mode === "articles" ? `/${listId}` : `/${listId}/${mode}`
 }
 
-function labelFor(t: Translations, mode: Mode): string {
+function labelFor(t: T, mode: Mode): string {
 	return mode === "articles"
-		? t.mode_articles
+		? t("Articles")
 		: mode === "plan"
-			? t.mode_plan
-			: t.mode_shopping
+			? t("Plan")
+			: t("Shopping")
 }
 
-type Props = { listId: string; active: Mode; t: Translations }
+type Props = { listId: string; active: Mode; t: T }
 
 /**
  * Plain nav, no hydration needed — flanks the centered heading with
@@ -53,7 +53,7 @@ export function ModeSwitcher(handle: Handle<Props>) {
 				>
 					‹ {labelFor(t, prev)}
 				</a>
-				<h1 class="sl-heading">{t.ShoppingList}</h1>
+				<h1 class="sl-heading">{t("Shopping List")}</h1>
 				<a
 					href={nextHref}
 					class="sl-mode-link sl-mode-link--next"

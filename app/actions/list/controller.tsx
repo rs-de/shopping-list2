@@ -6,7 +6,7 @@ import { Articles } from "../../assets/list/articles.tsx"
 import { Plan } from "../../assets/list/plan.tsx"
 import { Shopping } from "../../assets/list/shopping.tsx"
 import { db } from "../../db.ts"
-import { getTranslations, type Lang, type Translations } from "../../i18n.ts"
+import { getTranslations, type Lang, type T } from "../../i18n.ts"
 import { routes } from "../../routes.ts"
 import { Document } from "../../ui/document.tsx"
 import { ErrorPage } from "../../ui/error-page.tsx"
@@ -70,7 +70,7 @@ type ListLoadResult =
 			kind: "render"
 			listId: string
 			articles: Article[]
-			t: Translations
+			t: T
 			lang: Lang
 	  }
 
@@ -97,16 +97,16 @@ async function loadAndMutateList({
 
 		const VALID_ID = /^[A-Za-z0-9_-]{10}$/
 		if (!VALID_ID.test(listId)) {
-			const { lang, t } = await getTranslations(request)
+			const { lang, t } = getTranslations(request)
 			return {
 				kind: "response",
 				response: await render(
 					<Document title="400 — Shopping List" lang={lang} t={t}>
 						<ErrorPage
 							code={400}
-							message="Invalid list ID."
+							message={t("Invalid list ID.")}
 							href="/"
-							label="Go home"
+							label={t("Go home")}
 						/>
 					</Document>,
 					{ status: 400 },
@@ -219,7 +219,7 @@ async function loadAndMutateList({
 			return { kind: "response", response: Response.json({ articles }) }
 		}
 
-		const { lang, t } = await getTranslations(request)
+		const { lang, t } = getTranslations(request)
 		return { kind: "render", listId, articles, t, lang }
 	} catch {
 		if (request.method !== "GET") {
@@ -228,19 +228,16 @@ async function loadAndMutateList({
 				response: new Response("Internal Server Error", { status: 500 }),
 			}
 		}
-		const { lang, t } = await getTranslations(request).catch(() => ({
-			lang: "en" as const,
-			t: {} as Translations,
-		}))
+		const { lang, t } = getTranslations(request)
 		return {
 			kind: "response",
 			response: await render(
 				<Document title="Error — Shopping List" lang={lang} t={t}>
 					<ErrorPage
 						code={500}
-						message="Something went wrong."
+						message={t("Something went wrong.")}
 						href={`/${params.listId}`}
-						label="Retry"
+						label={t("Retry")}
 					/>
 				</Document>,
 				{ status: 500 },
@@ -251,12 +248,13 @@ async function loadAndMutateList({
 
 export default createController(routes.list, {
 	actions: {
-		async manifest({ params }) {
+		async manifest({ request, params }) {
 			const { listId } = params
+			const { t } = getTranslations(request)
 			return Response.json({
-				name: "Shopping List",
-				short_name: "Shopping List",
-				description: "An offline-first shopping list",
+				name: t("Shopping List"),
+				short_name: t("Shopping List"),
+				description: t("An offline-first shopping list"),
 				start_url: `/${listId}`,
 				display: "standalone",
 				background_color: "#eaf4ff",
@@ -282,7 +280,7 @@ export default createController(routes.list, {
 			if (result.kind === "response") return result.response
 			return render(
 				<Document
-					title={result.t.ShoppingList}
+					title={result.t("Shopping List")}
 					lang={result.lang}
 					t={result.t}
 					manifestHref={`/${result.listId}/manifest`}
@@ -290,7 +288,7 @@ export default createController(routes.list, {
 					<Articles
 						listId={result.listId}
 						articles={result.articles}
-						t={result.t}
+						lang={result.lang}
 						nextId={generateId()}
 					/>
 				</Document>,
@@ -301,7 +299,7 @@ export default createController(routes.list, {
 			if (result.kind === "response") return result.response
 			return render(
 				<Document
-					title={result.t.ShoppingList}
+					title={result.t("Shopping List")}
 					lang={result.lang}
 					t={result.t}
 					manifestHref={`/${result.listId}/manifest`}
@@ -309,7 +307,7 @@ export default createController(routes.list, {
 					<Plan
 						listId={result.listId}
 						articles={result.articles}
-						t={result.t}
+						lang={result.lang}
 					/>
 				</Document>,
 			)
@@ -319,7 +317,7 @@ export default createController(routes.list, {
 			if (result.kind === "response") return result.response
 			return render(
 				<Document
-					title={result.t.ShoppingList}
+					title={result.t("Shopping List")}
 					lang={result.lang}
 					t={result.t}
 					manifestHref={`/${result.listId}/manifest`}
@@ -327,7 +325,7 @@ export default createController(routes.list, {
 					<Shopping
 						listId={result.listId}
 						articles={result.articles}
-						t={result.t}
+						lang={result.lang}
 					/>
 				</Document>,
 			)

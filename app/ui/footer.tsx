@@ -1,9 +1,9 @@
 import type { Handle } from "remix/ui"
 
 import pkg from "../../package.json" with { type: "json" }
-import type { Translations } from "../i18n.ts"
+import type { T } from "../i18n.ts"
 
-export function Footer(handle: Handle<{ t: Translations }>) {
+export function Footer(handle: Handle<{ t: T }>) {
 	return () => {
 		const { t } = handle.props
 		return (
@@ -12,13 +12,13 @@ export function Footer(handle: Handle<{ t: Translations }>) {
 					&copy;{new Date().getFullYear()} Dipl.-Math. (FH) Jochen Probst
 				</div>
 				<div class="app-footer__links">
-					<a href="/about">{t.about}</a>|
+					<a href="/about">{t("About")}</a>|
 					<a
 						href="https://www.rushsoft.de/privacy"
 						target="_blank"
 						rel="noreferrer"
 					>
-						{t.privacy}
+						{t("Privacy")}
 					</a>
 					|
 					<a
@@ -26,7 +26,7 @@ export function Footer(handle: Handle<{ t: Translations }>) {
 						target="_blank"
 						rel="noreferrer"
 					>
-						{t.imprint}
+						{t("Imprint")}
 					</a>
 					|
 					{/* biome-ignore lint/a11y/useAnchorContent: aria-label provides the accessible name */}
@@ -34,7 +34,7 @@ export function Footer(handle: Handle<{ t: Translations }>) {
 						href="https://github.com/rs-de/shopping-list2"
 						target="_blank"
 						rel="noreferrer"
-						aria-label="View on GitHub"
+						aria-label={t("View on Github")}
 					>
 						<svg
 							viewBox="0 0 24 24"

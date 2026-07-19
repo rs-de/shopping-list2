@@ -1,8 +1,9 @@
 import { clientEntry, type Handle, on } from "remix/ui"
 
-import type { Translations } from "../../i18n.ts"
+import type { Lang } from "../../i18n.ts"
 import type { Article } from "../../utils/articles.ts"
 import { createToast } from "../../utils/toast.tsx"
+import { createT } from "../../utils/translate.ts"
 import { ModeSwitcher } from "./ui/mode-switcher.tsx"
 import { CheckoffArticleRow } from "./ui/rows.tsx"
 import { createDeleteHandler, createSyncEngine } from "./utils/sync.ts"
@@ -13,10 +14,11 @@ export const Shopping = clientEntry(
 		handle: Handle<{
 			listId: string
 			articles: Article[]
-			t: Translations
+			lang: Lang
 		}>,
 	) {
-		const { listId, t } = handle.props
+		const { listId, lang } = handle.props
+		const t = createT(lang)
 		let selected = new Set<string>()
 
 		const toast = createToast(() => handle.update(), handle.signal)
@@ -46,7 +48,7 @@ export const Shopping = clientEntry(
 							<div
 								class="sl-verify-overlay"
 								role="status"
-								aria-label="Verifying"
+								aria-label={t("Verifying")}
 							>
 								<div class="spinner" />
 							</div>
@@ -72,6 +74,7 @@ export const Shopping = clientEntry(
 											key={article.id}
 											article={article}
 											checked={selected.has(article.id)}
+											t={t}
 											onToggle={(id, checked) => {
 												if (checked) {
 													selected = new Set([...selected, id])
@@ -112,7 +115,7 @@ export const Shopping = clientEntry(
 									clip-rule="evenodd"
 								/>
 							</svg>
-							{t.delete_selected_articles} ({selected.size})
+							{t("Delete selected articles")} ({selected.size})
 						</button>
 					</div>
 

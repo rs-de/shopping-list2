@@ -1,8 +1,9 @@
 import { clientEntry, type Handle, on } from "remix/ui"
 
-import type { Translations } from "../../i18n.ts"
+import type { Lang } from "../../i18n.ts"
 import { type Article, sortArticles } from "../../utils/articles.ts"
 import { createToast } from "../../utils/toast.tsx"
+import { createT } from "../../utils/translate.ts"
 import { ModeSwitcher } from "./ui/mode-switcher.tsx"
 import { EditableArticleRow } from "./ui/rows.tsx"
 import {
@@ -17,10 +18,11 @@ export const Plan = clientEntry(
 		handle: Handle<{
 			listId: string
 			articles: Article[]
-			t: Translations
+			lang: Lang
 		}>,
 	) {
-		const { listId, t } = handle.props
+		const { listId, lang } = handle.props
+		const t = createT(lang)
 		let selected = new Set<string>()
 		let helpOpen = false
 
@@ -65,14 +67,6 @@ export const Plan = clientEntry(
 			const rejigMid = Math.ceil(rejigN / 2)
 			const rejigButtons = Array.from({ length: rejigN }, (_, i) => {
 				const partition = i + 1
-				const labelKey =
-					partition === 1
-						? "pickupTime_early"
-						: partition === rejigMid
-							? "pickupTime_medium"
-							: partition === rejigN
-								? "pickupTime_late"
-								: null
 				return (
 					<button
 						key={String(partition)}
@@ -82,7 +76,13 @@ export const Plan = clientEntry(
 						name="partitionNumber"
 						value={String(partition)}
 					>
-						{labelKey ? t[labelKey] : ""}
+						{partition === 1
+							? t("Early")
+							: partition === rejigMid
+								? t("Mid")
+								: partition === rejigN
+									? t("Late")
+									: ""}
 					</button>
 				)
 			})
@@ -96,7 +96,7 @@ export const Plan = clientEntry(
 							<div
 								class="sl-verify-overlay"
 								role="status"
-								aria-label="Verifying"
+								aria-label={t("Verifying")}
 							>
 								<div class="spinner" />
 							</div>
@@ -124,6 +124,7 @@ export const Plan = clientEntry(
 											key={article.id}
 											article={article}
 											checked={selected.has(article.id)}
+											t={t}
 											onToggle={(id, checked) => {
 												if (checked) {
 													selected = new Set([...selected, id])
@@ -147,7 +148,7 @@ export const Plan = clientEntry(
 									<button
 										class="sl-rejig-help"
 										type="button"
-										aria-label="What is rejig?"
+										aria-label={t("What is rejig?")}
 										mix={on("click", () => {
 											if (helpOpen) return
 											helpOpen = true
@@ -221,7 +222,7 @@ export const Plan = clientEntry(
 									clip-rule="evenodd"
 								/>
 							</svg>
-							{t.delete_selected_articles} ({selected.size})
+							{t("Delete selected articles")} ({selected.size})
 						</button>
 					</div>
 
@@ -235,7 +236,11 @@ export const Plan = clientEntry(
 						/>
 					)}
 					{helpOpen && (
-						<div class="sl-rejig-help-panel">{t.rejig_description}</div>
+						<div class="sl-rejig-help-panel">
+							{t(
+								"The list is unsorted and each supermarket is divided differently. While shopping you can change the order of your list and move the items accordingly - depending on where they can be found in the supermarket: next, a little later or at the very end on your way through the shelves 🛒😀",
+							)}
+						</div>
 					)}
 					{toast.render()}
 				</div>

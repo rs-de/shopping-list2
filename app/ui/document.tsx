@@ -1,7 +1,7 @@
 import type { Handle, RemixNode } from "remix/ui"
 
 import { cssVersion } from "../assets.ts"
-import type { Lang, Translations } from "../i18n.ts"
+import type { Lang, T } from "../i18n.ts"
 import { routes } from "../routes.ts"
 import { Footer } from "./footer.tsx"
 import { Navbar } from "./navbar.tsx"
@@ -11,7 +11,7 @@ export interface DocumentProps {
 	head?: RemixNode
 	title?: string
 	lang?: Lang
-	t: Translations
+	t: T
 	manifestHref?: string
 }
 
@@ -63,7 +63,9 @@ export function Document(handle: Handle<DocumentProps>) {
 					<meta name="theme-color" content="hsl(206, 100%, 50%)" />
 					<meta
 						name="description"
-						content="A fast, offline-first shopping list. No login or account needed."
+						content={t(
+							"Free, simple and secure shopping list web app, shareable with others and without registration.",
+						)}
 					/>
 					<link rel="manifest" href={manifestHref} />
 					<link rel="apple-touch-icon" href="/icons/apple-icon-180.png" />

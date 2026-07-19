@@ -28,12 +28,14 @@ export default createController(routes, {
 			)
 		},
 		async manifest({ request }) {
-			const { t } = await getTranslations(request)
+			const { t } = getTranslations(request)
 			return new Response(
 				JSON.stringify({
-					name: t.ShoppingList,
-					short_name: t.ShoppingList,
-					description: t["page-meta-description"],
+					name: t("Shopping List"),
+					short_name: t("Shopping List"),
+					description: t(
+						"Simple and secure shopping list webapp for free, shareable with others and without registration.",
+					),
 					start_url: "/",
 					display: "standalone",
 					background_color: "#eaf4ff",
@@ -68,6 +70,7 @@ export default createController(routes, {
 		},
 		async home({ request, render }) {
 			const VALID_ID = /^[A-Za-z0-9_-]{10}$/
+			const { lang, t } = getTranslations(request)
 			if (request.method === "POST") {
 				// Global, not per-IP: a per-IP cap here would only matter if it
 				// were tighter than this one, which would just make it the real
@@ -91,16 +94,15 @@ export default createController(routes, {
 			const recreateId = url.searchParams.get("recreate") ?? undefined
 			const validRecreateId =
 				recreateId && VALID_ID.test(recreateId) ? recreateId : undefined
-			const { lang, t } = await getTranslations(request)
 			return render(
-				<Document title={t["page-title"]} lang={lang} t={t}>
+				<Document title={t("Free shopping list web app")} lang={lang} t={t}>
 					<div class="content-box home-page">
 						<div class="home-page__header">
-							<h1>{t.ShoppingList}</h1>
-							<h2>{t["app-teaser-text"]}</h2>
+							<h1>{t("Shopping List")}</h1>
+							<h2>{t("Simple - Secure - Free - Shareable - No login")}</h2>
 						</div>
 						<div class="home-menu">
-							<HomeMenu t={t} recreateId={validRecreateId} />
+							<HomeMenu lang={lang} recreateId={validRecreateId} />
 						</div>
 						<span aria-hidden="true" />
 					</div>
@@ -108,7 +110,7 @@ export default createController(routes, {
 			)
 		},
 		async changelog({ request, render }) {
-			const { lang, t } = await getTranslations(request)
+			const { lang, t } = getTranslations(request)
 			const file = path.join(ROOT, "CHANGELOG.md")
 			const markdown = await fs.readFile(file, "utf-8")
 			const html = await marked(markdown)
@@ -119,7 +121,7 @@ export default createController(routes, {
 			)
 		},
 		async about({ request, render }) {
-			const { lang, t } = await getTranslations(request)
+			const { lang, t } = getTranslations(request)
 			const file = path.join(DIR, "about", `about.${lang}.md`)
 			const markdown = await fs.readFile(file, "utf-8")
 			const html = await marked(markdown)
@@ -127,8 +129,8 @@ export default createController(routes, {
 				<Document title="About — Shopping List" lang={lang} t={t}>
 					<div class="about-page">
 						<div class="about-page__header">
-							<h1>{t.ShoppingList}</h1>
-							<h2>{t["app-teaser-text"]}</h2>
+							<h1>{t("Shopping List")}</h1>
+							<h2>{t("Simple - Secure - Free - Shareable - No login")}</h2>
 						</div>
 						<article class="prose" innerHTML={html} />
 					</div>
@@ -136,14 +138,14 @@ export default createController(routes, {
 			)
 		},
 		async notFound({ request, render }) {
-			const { lang, t } = await getTranslations(request)
+			const { lang, t } = getTranslations(request)
 			return render(
 				<Document title="404 — Shopping List" lang={lang} t={t}>
 					<ErrorPage
 						code={404}
-						message="Page not found."
+						message={t("Page not found.")}
 						href="/"
-						label="Go home"
+						label={t("Go home")}
 					/>
 				</Document>,
 				{ status: 404 },

@@ -1,6 +1,6 @@
 import { clientEntry, type Handle, on, ref } from "remix/ui"
 
-import type { Translations } from "../../i18n.ts"
+import type { Lang } from "../../i18n.ts"
 import {
 	type Article,
 	sortArticles,
@@ -8,6 +8,7 @@ import {
 } from "../../utils/articles.ts"
 import { generateId } from "../../utils/id.ts"
 import { createToast } from "../../utils/toast.tsx"
+import { createT } from "../../utils/translate.ts"
 import { ModeSwitcher } from "./ui/mode-switcher.tsx"
 import { EditableArticleRow } from "./ui/rows.tsx"
 import {
@@ -22,11 +23,12 @@ export const Articles = clientEntry(
 		handle: Handle<{
 			listId: string
 			articles: Article[]
-			t: Translations
+			lang: Lang
 			nextId: string
 		}>,
 	) {
-		const { listId, t } = handle.props
+		const { listId, lang } = handle.props
+		const t = createT(lang)
 		let selected = new Set<string>()
 		let clearDialogEl: HTMLDialogElement | null = null
 		let addInputEl: HTMLInputElement | null = null
@@ -96,7 +98,7 @@ export const Articles = clientEntry(
 			const url = location.href
 			if (hasShare) {
 				try {
-					await navigator.share({ url, title: t.ShoppingList })
+					await navigator.share({ url, title: t("Shopping List") })
 				} catch {
 					/* cancelled */
 				}
@@ -121,7 +123,7 @@ export const Articles = clientEntry(
 				copied = document.execCommand("copy")
 				document.body.removeChild(el)
 			}
-			if (copied) toast.show(t.copied)
+			if (copied) toast.show(t("Link copied!"))
 		}
 
 		return () => {
@@ -138,7 +140,7 @@ export const Articles = clientEntry(
 							<div
 								class="sl-verify-overlay"
 								role="status"
-								aria-label="Verifying"
+								aria-label={t("Verifying")}
 							>
 								<div class="spinner" />
 							</div>
@@ -164,6 +166,7 @@ export const Articles = clientEntry(
 											key={article.id}
 											article={article}
 											checked={selected.has(article.id)}
+											t={t}
 											onToggle={(id, checked) => {
 												if (checked) {
 													selected = new Set([...selected, id])
@@ -216,11 +219,11 @@ export const Articles = clientEntry(
 									type="text"
 									name="new"
 									class="sl-add-input"
-									placeholder={t.input_article_to_add}
+									placeholder={t("Input article to add")}
 									maxLength={75}
 									autoComplete="off"
 									enterKeyHint="go"
-									aria-label="New article"
+									aria-label={t("New article")}
 									mix={ref((node) => {
 										addInputEl = node as HTMLInputElement
 									})}
@@ -239,7 +242,7 @@ export const Articles = clientEntry(
 									addBtnEl = node
 								})}
 							>
-								{t.Add}
+								{t("Add")}
 							</button>
 							{articles.length > 0 && (
 								<form
@@ -255,7 +258,7 @@ export const Articles = clientEntry(
 										name="_action"
 										value="clearList"
 									>
-										{t.clearList}
+										{t("Clear list")}
 									</button>
 								</form>
 							)}
@@ -276,7 +279,7 @@ export const Articles = clientEntry(
 									<path d="M24 7h2v21h-2z" />
 									<path d="M35 40H15c-1.7 0-3-1.3-3-3V19c0-1.7 1.3-3 3-3h7v2h-7c-.6 0-1 .4-1 1v18c0 .6.4 1 1 1h20c.6 0 1-.4 1-1V19c0-.6-.4-1-1-1h-7v-2h7c1.7 0 3 1.3 3 3v18c0 1.7-1.3 3-3 3z" />
 								</svg>
-								{t.share}
+								{t("Share this list")}
 							</button>
 						</div>
 					</div>
@@ -304,7 +307,7 @@ export const Articles = clientEntry(
 									clip-rule="evenodd"
 								/>
 							</svg>
-							{t.delete_selected_articles} ({selected.size})
+							{t("Delete selected articles")} ({selected.size})
 						</button>
 					</div>
 
@@ -314,12 +317,12 @@ export const Articles = clientEntry(
 							clearDialogEl = node as HTMLDialogElement
 						})}
 					>
-						<h2 class="sl-dialog-title">{t.clearList}</h2>
-						<p>{t["clearList-confirm"]}</p>
+						<h2 class="sl-dialog-title">{t("Clear list")}</h2>
+						<p>{t("Do you really want to clear the list?")}</p>
 						<div class="sl-dialog-actions">
 							<form method="dialog">
 								<button class="btn btn-secondary" type="submit">
-									{t.cancel}
+									{t("Cancel")}
 								</button>
 							</form>
 							<form
@@ -336,7 +339,7 @@ export const Articles = clientEntry(
 									name="_action"
 									value="clearList"
 								>
-									{t.clearList}
+									{t("Clear list")}
 								</button>
 							</form>
 						</div>

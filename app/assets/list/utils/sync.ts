@@ -1,6 +1,6 @@
 import type { Handle } from "remix/ui"
 
-import type { Translations } from "../../../i18n.ts"
+import type { T } from "../../../i18n.ts"
 import type { Article } from "../../../utils/articles.ts"
 import type { createToast } from "../../../utils/toast.tsx"
 
@@ -104,7 +104,7 @@ export interface SyncEngine {
 
 export function createSyncEngine(
 	handle: Handle<{ listId: string; articles: Article[] }>,
-	t: Translations,
+	t: T,
 	toast: ReturnType<typeof createToast>,
 ): SyncEngine {
 	const listId = handle.props.listId
@@ -300,7 +300,13 @@ export function createSyncEngine(
 						const ok = await pullFromServer()
 						checking = false
 						if (!ok && !handle.signal.aborted) {
-							toast.show(t.service_error, "error", { duration: 5000 })
+							toast.show(
+								t(
+									"An error occurred while loading the data. Please try again in a few seconds. If the problem persists, please contact us.",
+								),
+								"error",
+								{ duration: 5000 },
+							)
 						}
 					} else {
 						void pullFromServer()
@@ -325,22 +331,28 @@ export function createSyncEngine(
 			if (!isStandalone) {
 				if (isIOS) {
 					localStorage.setItem("sl-install-prompted", "1")
-					toast.show(t.install_ios, "success", { duration: 8000 })
+					toast.show(t('Tap Share ⬆ then "Add to Home Screen"'), "success", {
+						duration: 8000,
+					})
 				} else {
 					window.addEventListener(
 						"beforeinstallprompt",
 						(e) => {
 							e.preventDefault()
 							localStorage.setItem("sl-install-prompted", "1")
-							toast.show(t.install_prompt, "success", {
-								action: {
-									label: t.install_action,
-									onClick: () => {
-										;(e as BeforeInstallPromptEvent).prompt()
-										toast.dismiss()
+							toast.show(
+								t("Add to your homescreen for quick access"),
+								"success",
+								{
+									action: {
+										label: t("Install"),
+										onClick: () => {
+											;(e as BeforeInstallPromptEvent).prompt()
+											toast.dismiss()
+										},
 									},
 								},
-							})
+							)
 						},
 						{ once: true, signal: handle.signal },
 					)
@@ -361,9 +373,9 @@ export function createSyncEngine(
 			"message",
 			(event: MessageEvent) => {
 				if (event.data?.type !== "SW_UPDATED") return
-				toast.show(t.sw_updated, "success", {
+				toast.show(t("New version available"), "success", {
 					action: {
-						label: t.sw_reload,
+						label: t("Refresh"),
 						onClick: () => {
 							toast.dismiss()
 							navigator.serviceWorker?.controller?.postMessage({
