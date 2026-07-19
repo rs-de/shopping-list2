@@ -1,7 +1,6 @@
 import type { Handle } from "remix/ui"
-
-import type { T } from "../../../i18n.ts"
 import type { Article } from "../../../utils/articles.ts"
+import type { Translator } from "../../../utils/i18n.ts"
 import type { createToast } from "../../../utils/toast.tsx"
 
 type ListRecord = { id: string; articles: Article[]; dirty: boolean }
@@ -104,7 +103,7 @@ export interface SyncEngine {
 
 export function createSyncEngine(
 	handle: Handle<{ listId: string; articles: Article[] }>,
-	t: T,
+	t: Translator,
 	toast: ReturnType<typeof createToast>,
 ): SyncEngine {
 	const listId = handle.props.listId

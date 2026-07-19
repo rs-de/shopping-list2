@@ -6,7 +6,6 @@ import { Articles } from "../../assets/list/articles.tsx"
 import { Plan } from "../../assets/list/plan.tsx"
 import { Shopping } from "../../assets/list/shopping.tsx"
 import { db } from "../../db.ts"
-import { getTranslations, type Lang, type T } from "../../i18n.ts"
 import { routes } from "../../routes.ts"
 import { Document } from "../../ui/document.tsx"
 import { ErrorPage } from "../../ui/error-page.tsx"
@@ -15,6 +14,12 @@ import {
 	MAX_ARTICLES_PER_LIST,
 	sortArticles,
 } from "../../utils/articles.ts"
+import {
+	createTranslator,
+	type Lang,
+	resolveLang,
+	type Translator,
+} from "../../utils/i18n.ts"
 import { generateId } from "../../utils/id.ts"
 import { isRateLimited } from "../../utils/rateLimit.ts"
 
@@ -70,7 +75,7 @@ type ListLoadResult =
 			kind: "render"
 			listId: string
 			articles: Article[]
-			t: T
+			t: Translator
 			lang: Lang
 	  }
 
@@ -97,11 +102,12 @@ async function loadAndMutateList({
 
 		const VALID_ID = /^[A-Za-z0-9_-]{10}$/
 		if (!VALID_ID.test(listId)) {
-			const { lang, t } = getTranslations(request)
+			const lang = resolveLang(request.headers.get("accept-language"))
+			const t = createTranslator(lang)
 			return {
 				kind: "response",
 				response: await render(
-					<Document title="400 — Shopping List" lang={lang} t={t}>
+					<Document title="400 — Shopping List" lang={lang}>
 						<ErrorPage
 							code={400}
 							message={t("Invalid list ID.")}
@@ -219,7 +225,8 @@ async function loadAndMutateList({
 			return { kind: "response", response: Response.json({ articles }) }
 		}
 
-		const { lang, t } = getTranslations(request)
+		const lang = resolveLang(request.headers.get("accept-language"))
+		const t = createTranslator(lang)
 		return { kind: "render", listId, articles, t, lang }
 	} catch {
 		if (request.method !== "GET") {
@@ -228,11 +235,12 @@ async function loadAndMutateList({
 				response: new Response("Internal Server Error", { status: 500 }),
 			}
 		}
-		const { lang, t } = getTranslations(request)
+		const lang = resolveLang(request.headers.get("accept-language"))
+		const t = createTranslator(lang)
 		return {
 			kind: "response",
 			response: await render(
-				<Document title="Error — Shopping List" lang={lang} t={t}>
+				<Document title="Error — Shopping List" lang={lang}>
 					<ErrorPage
 						code={500}
 						message={t("Something went wrong.")}
@@ -250,7 +258,9 @@ export default createController(routes.list, {
 	actions: {
 		async manifest({ request, params }) {
 			const { listId } = params
-			const { t } = getTranslations(request)
+			const t = createTranslator(
+				resolveLang(request.headers.get("accept-language")),
+			)
 			return Response.json({
 				name: t("Shopping List"),
 				short_name: t("Shopping List"),
@@ -282,7 +292,6 @@ export default createController(routes.list, {
 				<Document
 					title={result.t("Shopping List")}
 					lang={result.lang}
-					t={result.t}
 					manifestHref={`/${result.listId}/manifest`}
 				>
 					<Articles
@@ -301,7 +310,6 @@ export default createController(routes.list, {
 				<Document
 					title={result.t("Shopping List")}
 					lang={result.lang}
-					t={result.t}
 					manifestHref={`/${result.listId}/manifest`}
 				>
 					<Plan
@@ -319,7 +327,6 @@ export default createController(routes.list, {
 				<Document
 					title={result.t("Shopping List")}
 					lang={result.lang}
-					t={result.t}
 					manifestHref={`/${result.listId}/manifest`}
 				>
 					<Shopping

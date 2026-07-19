@@ -1,8 +1,8 @@
 import type { Handle, RemixNode } from "remix/ui"
 
 import { cssVersion } from "../assets.ts"
-import type { Lang, T } from "../i18n.ts"
 import { routes } from "../routes.ts"
+import { createTranslator, DEFAULT_LANG, type Lang } from "../utils/i18n.ts"
 import { Footer } from "./footer.tsx"
 import { Navbar } from "./navbar.tsx"
 
@@ -11,7 +11,6 @@ export interface DocumentProps {
 	head?: RemixNode
 	title?: string
 	lang?: Lang
-	t: T
 	manifestHref?: string
 }
 
@@ -50,10 +49,10 @@ export function Document(handle: Handle<DocumentProps>) {
 			children,
 			head,
 			title = DEFAULT_TITLE,
-			lang = "en",
-			t,
+			lang = DEFAULT_LANG,
 			manifestHref = "/manifest.webmanifest",
 		} = handle.props
+		const t = createTranslator(lang)
 
 		return (
 			<html lang={lang}>

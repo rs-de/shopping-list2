@@ -1,14 +1,13 @@
 import { clientEntry, type Handle, on, ref } from "remix/ui"
 
-import type { Lang } from "../../i18n.ts"
 import {
 	type Article,
 	sortArticles,
 	sortByCreatedAt,
 } from "../../utils/articles.ts"
+import { createTranslator, type Lang } from "../../utils/i18n.ts"
 import { generateId } from "../../utils/id.ts"
 import { createToast } from "../../utils/toast.tsx"
-import { createT } from "../../utils/translate.ts"
 import { ModeSwitcher } from "./ui/mode-switcher.tsx"
 import { EditableArticleRow } from "./ui/rows.tsx"
 import {
@@ -28,7 +27,7 @@ export const Articles = clientEntry(
 		}>,
 	) {
 		const { listId, lang } = handle.props
-		const t = createT(lang)
+		const t = createTranslator(lang)
 		let selected = new Set<string>()
 		let clearDialogEl: HTMLDialogElement | null = null
 		let addInputEl: HTMLInputElement | null = null

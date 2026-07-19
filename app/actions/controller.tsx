@@ -9,10 +9,10 @@ import { createController } from "remix/router"
 import { HomeMenu } from "../assets/home-menu.tsx"
 import { appVersion, assetServer } from "../assets.ts"
 import { db } from "../db.ts"
-import { getTranslations } from "../i18n.ts"
 import { routes } from "../routes.ts"
 import { Document } from "../ui/document.tsx"
 import { ErrorPage } from "../ui/error-page.tsx"
+import { createTranslator, resolveLang } from "../utils/i18n.ts"
 import { generateId } from "../utils/id.ts"
 import { isRateLimited } from "../utils/rateLimit.ts"
 
@@ -28,7 +28,9 @@ export default createController(routes, {
 			)
 		},
 		async manifest({ request }) {
-			const { t } = getTranslations(request)
+			const t = createTranslator(
+				resolveLang(request.headers.get("accept-language")),
+			)
 			return new Response(
 				JSON.stringify({
 					name: t("Shopping List"),
@@ -70,7 +72,8 @@ export default createController(routes, {
 		},
 		async home({ request, render }) {
 			const VALID_ID = /^[A-Za-z0-9_-]{10}$/
-			const { lang, t } = getTranslations(request)
+			const lang = resolveLang(request.headers.get("accept-language"))
+			const t = createTranslator(lang)
 			if (request.method === "POST") {
 				// Global, not per-IP: a per-IP cap here would only matter if it
 				// were tighter than this one, which would just make it the real
@@ -95,7 +98,7 @@ export default createController(routes, {
 			const validRecreateId =
 				recreateId && VALID_ID.test(recreateId) ? recreateId : undefined
 			return render(
-				<Document title={t("Free shopping list web app")} lang={lang} t={t}>
+				<Document title={t("Free shopping list web app")} lang={lang}>
 					<div class="content-box home-page">
 						<div class="home-page__header">
 							<h1>{t("Shopping List")}</h1>
@@ -110,23 +113,24 @@ export default createController(routes, {
 			)
 		},
 		async changelog({ request, render }) {
-			const { lang, t } = getTranslations(request)
+			const lang = resolveLang(request.headers.get("accept-language"))
 			const file = path.join(ROOT, "CHANGELOG.md")
 			const markdown = await fs.readFile(file, "utf-8")
 			const html = await marked(markdown)
 			return render(
-				<Document title="Changelog — Shopping List" lang={lang} t={t}>
+				<Document title="Changelog — Shopping List" lang={lang}>
 					<article class="content-box prose changelog-page" innerHTML={html} />
 				</Document>,
 			)
 		},
 		async about({ request, render }) {
-			const { lang, t } = getTranslations(request)
+			const lang = resolveLang(request.headers.get("accept-language"))
+			const t = createTranslator(lang)
 			const file = path.join(DIR, "about", `about.${lang}.md`)
 			const markdown = await fs.readFile(file, "utf-8")
 			const html = await marked(markdown)
 			return render(
-				<Document title="About — Shopping List" lang={lang} t={t}>
+				<Document title="About — Shopping List" lang={lang}>
 					<div class="about-page">
 						<div class="about-page__header">
 							<h1>{t("Shopping List")}</h1>
@@ -138,9 +142,10 @@ export default createController(routes, {
 			)
 		},
 		async notFound({ request, render }) {
-			const { lang, t } = getTranslations(request)
+			const lang = resolveLang(request.headers.get("accept-language"))
+			const t = createTranslator(lang)
 			return render(
-				<Document title="404 — Shopping List" lang={lang} t={t}>
+				<Document title="404 — Shopping List" lang={lang}>
 					<ErrorPage
 						code={404}
 						message={t("Page not found.")}

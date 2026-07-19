@@ -1,9 +1,9 @@
 import type { Handle } from "remix/ui"
 
 import pkg from "../../package.json" with { type: "json" }
-import type { T } from "../i18n.ts"
+import type { Translator } from "../utils/i18n.ts"
 
-export function Footer(handle: Handle<{ t: T }>) {
+export function Footer(handle: Handle<{ t: Translator }>) {
 	return () => {
 		const { t } = handle.props
 		return (

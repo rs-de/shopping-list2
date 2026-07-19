@@ -48,12 +48,26 @@ by default, so a new route can't accidentally ship without them. Mutating
 endpoints validate input server-side regardless of client-side checks, and
 abusive request bursts are rate-limited.
 
-## 7. Server-resolved internationalization
+## 7. Text-keyed internationalization
 
-The user's language is determined once, server-side, from their browser's
-language preference, and delivered as typed, pre-resolved strings — no
-i18n runtime ships to the browser, and the type system enforces that every
-locale defines the same set of keys.
+The user's language is determined once per request, server-side, from
+`Accept-Language` (`app/utils/i18n.ts`'s `resolveLang`). UI strings are
+called inline as `t('English source text')` — the English text is both
+the template and the dictionary key, so there's no separate key to invent
+or keep in sync. Non-default languages live in one generated file each
+under `app/i18n/<lang>.ts`; `pnpm i18n:sync` scans source (via the
+TypeScript compiler API, not regex) for `t(` calls with a string-literal
+argument and appends newly-discovered keys, and `pnpm i18n:check` (wired
+into `pnpm check` and CI) fails the build if a string ships untranslated.
+Since this app re-renders client-side independent of the server
+(optimistic sync, toasts), `createTranslator(lang)` and the target
+language's dictionary ship to the client too — every `clientEntry`
+component receives the serializable `lang` and builds its own `t`, since a
+function can't cross the props-serialization boundary. This replaced an
+earlier typed-manual-key dictionary (`type TranslationKey = keyof typeof
+en`) to match the file layout and pattern proven in clockout, documented
+in the (global, not project-local) `webapp-paradigms` skill's
+`reference/i18n.md`.
 
 ## 8. Minimal, reproducible deployment
 

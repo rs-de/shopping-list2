@@ -3,15 +3,14 @@ import * as path from "node:path"
 import * as url from "node:url"
 import ts from "typescript"
 
-import { SUPPORTED_LANGS } from "../app/utils/translate.ts"
+import { CONFIGURED_LANGUAGES } from "../app/utils/i18n.ts"
 
 const ROOT = path.resolve(
 	path.dirname(url.fileURLToPath(import.meta.url)),
 	"..",
 )
 const SCAN_DIR = path.join(ROOT, "app")
-const LOCALES_DIR = path.join(ROOT, "app/utils/locales")
-const TARGET_LANGS = SUPPORTED_LANGS.filter((lang) => lang !== "en")
+const I18N_DIR = path.join(ROOT, "app/i18n")
 
 const CHECK = process.argv.includes("--check")
 
@@ -20,12 +19,9 @@ function listSourceFiles(dir: string): string[] {
 	for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
 		const full = path.join(dir, entry.name)
 		if (entry.isDirectory()) {
+			if (full === I18N_DIR) continue
 			out.push(...listSourceFiles(full))
-		} else if (
-			/\.tsx?$/.test(entry.name) &&
-			!entry.name.endsWith(".test.ts") &&
-			!full.startsWith(LOCALES_DIR)
-		) {
+		} else if (/\.tsx?$/.test(entry.name) && !entry.name.endsWith(".test.ts")) {
 			out.push(full)
 		}
 	}
@@ -60,30 +56,27 @@ function findTranslationCalls(file: string): string[] {
 }
 
 async function loadDictionary(lang: string): Promise<Record<string, string>> {
-	const file = path.join(LOCALES_DIR, `${lang}.ts`)
+	const file = path.join(I18N_DIR, `${lang}.ts`)
 	if (!fs.existsSync(file)) return {}
-	const mod = (await import(url.pathToFileURL(file).href)) as {
-		default: Record<string, string>
-	}
-	return mod.default
+	const mod = (await import(url.pathToFileURL(file).href)) as Record<
+		string,
+		Record<string, string>
+	>
+	return mod[lang] ?? {}
 }
 
-function serializeDictionary(dict: Record<string, string>): string {
-	const entries = Object.entries(dict)
-		.map(
-			([key, value]) => `\t${JSON.stringify(key)}: ${JSON.stringify(value)},`,
-		)
+function serializeDictionary(
+	lang: string,
+	dict: Record<string, string>,
+): string {
+	const sortedKeys = Object.keys(dict).sort()
+	const body = sortedKeys
+		.map((key) => `\t${JSON.stringify(key)}: ${JSON.stringify(dict[key])},`)
 		.join("\n")
-	return `/**
- * Translations, keyed by the exact English source text passed to \`t()\`.
- * Maintained by \`pnpm i18n:sync\` — new keys discovered in source are
- * appended here stubbed with the English text; translate by hand
- * afterward. Run \`pnpm i18n:check\` to fail if a \`t()\` call has no entry.
- */
-export default {
-${entries}
-} satisfies Record<string, string>
-`
+	return (
+		"// Generated/maintained by `pnpm i18n:sync` — do not hand-edit keys, only values.\n" +
+		`export const ${lang}: Record<string, string> = {\n${body}\n}\n`
+	)
 }
 
 async function main() {
@@ -95,7 +88,7 @@ async function main() {
 
 	let failed = false
 
-	for (const lang of TARGET_LANGS) {
+	for (const lang of CONFIGURED_LANGUAGES) {
 		const dict = await loadDictionary(lang)
 		const missing = [...used].filter((key) => !(key in dict))
 		const stale = Object.keys(dict).filter((key) => !used.has(key))
@@ -111,25 +104,39 @@ async function main() {
 				)
 				for (const key of missing) console.error(`  - ${JSON.stringify(key)}`)
 			}
-		} else if (missing.length > 0) {
+			if (stale.length > 0) {
+				failed = true
+				console.error(
+					`[${lang}] ${stale.length} key(s) no longer used in source — run \`pnpm i18n:sync\` to remove them:`,
+				)
+				for (const key of stale) console.error(`  - ${JSON.stringify(key)}`)
+			}
+			if (!failed) {
+				console.log(`[${lang}] up to date (${used.size} strings).`)
+			}
+		} else {
 			const next = { ...dict }
 			for (const key of missing) next[key] = key
-			fs.writeFileSync(
-				path.join(LOCALES_DIR, `${lang}.ts`),
-				serializeDictionary(next),
-			)
-			console.log(`[${lang}] added ${missing.length} new key(s):`)
-			for (const key of missing) console.log(`  - ${JSON.stringify(key)}`)
-		} else {
-			console.log(`[${lang}] up to date (${used.size} strings).`)
+			for (const key of stale) delete next[key]
+			if (missing.length > 0 || stale.length > 0) {
+				fs.writeFileSync(
+					path.join(I18N_DIR, `${lang}.ts`),
+					serializeDictionary(lang, next),
+				)
+			}
+			if (missing.length === 0 && stale.length === 0) {
+				console.log(`[${lang}] up to date (${used.size} strings).`)
+			}
+			if (missing.length > 0) {
+				console.log(`[${lang}] added ${missing.length} new key(s):`)
+				for (const key of missing) console.log(`  - ${JSON.stringify(key)}`)
+			}
+			if (stale.length > 0) {
+				console.log(`[${lang}] removed ${stale.length} unused key(s):`)
+				for (const key of stale) console.log(`  - ${JSON.stringify(key)}`)
+			}
 		}
 
-		if (stale.length > 0) {
-			console.warn(
-				`[${lang}] ${stale.length} unused translation(s) (no longer in source):`,
-			)
-			for (const key of stale) console.warn(`  - ${JSON.stringify(key)}`)
-		}
 		if (stubs.length > 0) {
 			console.warn(
 				`[${lang}] ${stubs.length} translation(s) still match the English source (unfinished stub?):`,

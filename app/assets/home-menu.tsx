@@ -1,8 +1,6 @@
 import { clientEntry, type Handle } from "remix/ui"
-
-import type { Lang } from "../i18n.ts"
+import { createTranslator, type Lang } from "../utils/i18n.ts"
 import { createToast } from "../utils/toast.tsx"
-import { createT } from "../utils/translate.ts"
 
 const LOCAL_STORAGE_KEY = "shoppingListId"
 
@@ -16,7 +14,7 @@ export const HomeMenu = clientEntry(
 		// user spawning a duplicate list, orphaning their real one.
 		let listId: string | null | undefined = null
 		const { lang, recreateId } = handle.props
-		const t = createT(lang)
+		const t = createTranslator(lang)
 		const toast = createToast(() => handle.update(), handle.signal)
 
 		handle.queueTask(() => {

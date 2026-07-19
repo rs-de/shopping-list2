@@ -1,12 +1,11 @@
 import { type Handle, on, ref } from "remix/ui"
-
-import type { T } from "../../../i18n.ts"
 import type { Article } from "../../../utils/articles.ts"
+import type { Translator } from "../../../utils/i18n.ts"
 
 type EditableArticleRowProps = {
 	article: Article
 	checked: boolean
-	t: T
+	t: Translator
 	onToggle: (id: string, checked: boolean) => void
 	onTextInput: (id: string, text: string) => void
 	onTextSubmit: (id: string, text: string) => void
@@ -77,7 +76,7 @@ export function EditableArticleRow(handle: Handle<EditableArticleRowProps>) {
 type CheckoffArticleRowProps = {
 	article: Article
 	checked: boolean
-	t: T
+	t: Translator
 	onToggle: (id: string, checked: boolean) => void
 }
 

@@ -1,9 +1,8 @@
 import { clientEntry, type Handle, on } from "remix/ui"
 
-import type { Lang } from "../../i18n.ts"
 import type { Article } from "../../utils/articles.ts"
+import { createTranslator, type Lang } from "../../utils/i18n.ts"
 import { createToast } from "../../utils/toast.tsx"
-import { createT } from "../../utils/translate.ts"
 import { ModeSwitcher } from "./ui/mode-switcher.tsx"
 import { CheckoffArticleRow } from "./ui/rows.tsx"
 import { createDeleteHandler, createSyncEngine } from "./utils/sync.ts"
@@ -18,7 +17,7 @@ export const Shopping = clientEntry(
 		}>,
 	) {
 		const { listId, lang } = handle.props
-		const t = createT(lang)
+		const t = createTranslator(lang)
 		let selected = new Set<string>()
 
 		const toast = createToast(() => handle.update(), handle.signal)

@@ -1,9 +1,8 @@
 import { clientEntry, type Handle, on } from "remix/ui"
 
-import type { Lang } from "../../i18n.ts"
 import { type Article, sortArticles } from "../../utils/articles.ts"
+import { createTranslator, type Lang } from "../../utils/i18n.ts"
 import { createToast } from "../../utils/toast.tsx"
-import { createT } from "../../utils/translate.ts"
 import { ModeSwitcher } from "./ui/mode-switcher.tsx"
 import { EditableArticleRow } from "./ui/rows.tsx"
 import {
@@ -22,7 +21,7 @@ export const Plan = clientEntry(
 		}>,
 	) {
 		const { listId, lang } = handle.props
-		const t = createT(lang)
+		const t = createTranslator(lang)
 		let selected = new Set<string>()
 		let helpOpen = false
 
