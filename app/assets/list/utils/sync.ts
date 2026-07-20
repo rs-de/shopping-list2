@@ -113,7 +113,7 @@ export function createSyncEngine(
 	// Gates how loud a freshness check needs to be: recently confirmed →
 	// silent background pull; stale → blocking spinner until confirmed.
 	const CHECKED_KEY = `sl-checked:${listId}`
-	const STALE_MS = 24 * 60 * 60 * 1000
+	const STALE_MS = 8 * 60 * 60 * 1000
 	let articles: Article[] = [...handle.props.articles]
 	let rejigN = 3
 	let checking = false
