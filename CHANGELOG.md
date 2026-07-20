@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.12.0 2026-07-20
+
+- Fixed rejig not moving an item to "Late" when it already defaulted
+  to that position
+- Verify spinner now blocks the UI only if the list hasn't been
+  confirmed fresh in over 8 hours
+- Fixed iOS "Add to Home Screen" showing a blank splash screen instead
+  of the app
+- Fixed several untranslated strings (error pages, meta description,
+  aria-labels)
+
 ## 1.11.0 2026-07-08
 
 - Articles page now keeps items in the order they were added, regardless of
