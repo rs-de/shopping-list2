@@ -2,6 +2,7 @@ import { clientEntry, type Handle, on, ref } from "remix/ui"
 
 import {
 	type Article,
+	defaultSortKey,
 	sortArticles,
 	sortByCreatedAt,
 } from "../../utils/articles.ts"
@@ -48,19 +49,16 @@ export const Articles = clientEntry(
 			const id = nextId
 			nextId = generateId()
 			const createdAt = Date.now()
-			const rejigN = sync.getRejigN()
+			const sortKey = defaultSortKey(sync.getRejigN())
 			const fd = new FormData()
 			fd.set("_action", "addArticle")
 			fd.set("id", id)
 			fd.set("new", text)
-			fd.set("sortKey", String(rejigN))
+			fd.set("sortKey", String(sortKey))
 			fd.set("createdAt", String(createdAt))
 			if (addInputEl) addInputEl.value = ""
 			const patched = sync.patch((current) => ({
-				articles: sortArticles([
-					...current,
-					{ id, text, sortKey: rejigN, createdAt },
-				]),
+				articles: sortArticles([...current, { id, text, sortKey, createdAt }]),
 				body: fd,
 			}))
 			addInputEl?.focus()
@@ -127,7 +125,7 @@ export const Articles = clientEntry(
 
 		return () => {
 			const articles = sortByCreatedAt(sync.getArticles())
-			const rejigN = sync.getRejigN()
+			const sortKey = defaultSortKey(sync.getRejigN())
 			const showDelete = selected.size > 0
 
 			return (
@@ -198,7 +196,7 @@ export const Articles = clientEntry(
 						>
 							<div class="sl-add-form">
 								<input type="hidden" name="id" value={nextId} />
-								<input type="hidden" name="sortKey" value={rejigN} />
+								<input type="hidden" name="sortKey" value={sortKey} />
 								<span class="sl-add-icon" aria-hidden="true">
 									<svg
 										viewBox="0 0 20 20"

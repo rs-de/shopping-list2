@@ -12,6 +12,7 @@ import { ErrorPage } from "../../ui/error-page.tsx"
 import {
 	type Article,
 	MAX_ARTICLES_PER_LIST,
+	rejigSortKey,
 	sortArticles,
 } from "../../utils/articles.ts"
 import {
@@ -148,7 +149,9 @@ async function loadAndMutateList({
 				}
 				const next = sortArticles(
 					articles.map((a) =>
-						ids.includes(a.id) ? { ...a, sortKey: partitionNumber } : a,
+						ids.includes(a.id)
+							? { ...a, sortKey: rejigSortKey(partitionNumber) }
+							: a,
 					),
 				)
 				await db.shoppingList.update({
@@ -177,7 +180,7 @@ async function loadAndMutateList({
 							sortArticles(
 								articles.map((a) =>
 									selected.includes(a.id)
-										? { ...a, sortKey: partitionNumber }
+										? { ...a, sortKey: rejigSortKey(partitionNumber) }
 										: a,
 								),
 							),

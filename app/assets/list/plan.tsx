@@ -1,6 +1,10 @@
 import { clientEntry, type Handle, on } from "remix/ui"
 
-import { type Article, sortArticles } from "../../utils/articles.ts"
+import {
+	type Article,
+	rejigSortKey,
+	sortArticles,
+} from "../../utils/articles.ts"
 import { createTranslator, type Lang } from "../../utils/i18n.ts"
 import { createToast } from "../../utils/toast.tsx"
 import { ModeSwitcher } from "./ui/mode-switcher.tsx"
@@ -52,7 +56,9 @@ export const Plan = clientEntry(
 			await sync.patch((current) => ({
 				articles: sortArticles(
 					current.map((a) =>
-						ids.includes(a.id) ? { ...a, sortKey: partitionNumber } : a,
+						ids.includes(a.id)
+							? { ...a, sortKey: rejigSortKey(partitionNumber) }
+							: a,
 					),
 				),
 				body: fd,
@@ -163,14 +169,15 @@ export const Plan = clientEntry(
 												(e.currentTarget as HTMLSelectElement).value,
 											)
 											sync.setRejigN(n)
+											const max = rejigSortKey(n)
 											const hasClamped = sync
 												.getArticles()
-												.some((a) => a.sortKey > n)
+												.some((a) => a.sortKey > max)
 											if (hasClamped) {
 												void sync.patch((current) => {
 													const next = sortArticles(
 														current.map((a) =>
-															a.sortKey > n ? { ...a, sortKey: n } : a,
+															a.sortKey > max ? { ...a, sortKey: max } : a,
 														),
 													)
 													const fd = new FormData()
