@@ -10,22 +10,6 @@ const IS_DEV = process.env.NODE_ENV === "development"
 const CACHE = `sl-v${BUILD_STAMP}`
 const PRECACHE_URLS = ["/", "/about", "/changelog"]
 
-// Lets a page ask "was my own navigation just served from cache?" so it knows
-// whether to verify with the server before trusting what it's showing. Keyed
-// by URL and consumed on read since each page asks at most once, right after
-// load; the age check + prune-on-write below just guards against a client
-// that never asks (e.g. an old bundle mid-deploy) leaking entries forever.
-const CACHE_HIT_TTL_MS = 10_000
-const recentCacheHits = new Map<string, number>()
-
-function recordCacheHit(url: string): void {
-	const now = Date.now()
-	for (const [key, ts] of recentCacheHits) {
-		if (now - ts > CACHE_HIT_TTL_MS) recentCacheHits.delete(key)
-	}
-	recentCacheHits.set(url, now)
-}
-
 // A page that just told the user "a new version is available" and is about
 // to navigate to reload wants that one navigation to actually be fresh —
 // staleWhileRevalidate would otherwise happily hand back the copy it already
@@ -64,16 +48,8 @@ self.addEventListener("activate", (event) => {
 })
 
 self.addEventListener("message", (event) => {
-	if (event.data?.type === "SL_FORCE_FRESH") {
-		forceFreshUrls.add(event.data.url as string)
-		return
-	}
-	if (event.data?.type !== "SL_WAS_CACHE_HIT") return
-	const url = event.data.url as string
-	const hitAt = recentCacheHits.get(url)
-	recentCacheHits.delete(url)
-	const wasHit = hitAt !== undefined && Date.now() - hitAt < CACHE_HIT_TTL_MS
-	event.ports[0]?.postMessage({ wasCacheHit: wasHit })
+	if (event.data?.type !== "SL_FORCE_FRESH") return
+	forceFreshUrls.add(event.data.url as string)
 })
 
 self.addEventListener("fetch", (event) => {
@@ -120,7 +96,6 @@ async function staleWhileRevalidate(request: Request): Promise<Response> {
 		})
 		.catch(() => cached ?? new Response("Offline", { status: 503 }))
 	if (forceFreshUrls.delete(request.url)) return fetchPromise
-	if (cached) recordCacheHit(request.url)
 	return cached ?? fetchPromise
 }
 

@@ -53,31 +53,6 @@ interface BeforeInstallPromptEvent extends Event {
 	prompt(): Promise<void>
 }
 
-const CACHE_HIT_MESSAGE_TIMEOUT_MS = 200
-
-/**
- * Asks the controlling service worker whether it just served this exact page
- * from cache rather than the network — the one signal that actually tells us
- * whether the currently-shown articles could be stale (a live network hit is
- * always fresh; a cache hit might not be). No controller (no SW yet, e.g. the
- * very first visit) means nothing could have been cached, so it's not a hit.
- */
-function wasServedFromCache(): Promise<boolean> {
-	const controller = navigator.serviceWorker?.controller
-	if (!controller) return Promise.resolve(false)
-	return new Promise((resolve) => {
-		const channel = new MessageChannel()
-		const timer = setTimeout(() => resolve(false), CACHE_HIT_MESSAGE_TIMEOUT_MS)
-		channel.port1.onmessage = (event) => {
-			clearTimeout(timer)
-			resolve(Boolean((event.data as { wasCacheHit?: boolean })?.wasCacheHit))
-		}
-		controller.postMessage({ type: "SL_WAS_CACHE_HIT", url: location.href }, [
-			channel.port2,
-		])
-	})
-}
-
 export interface SyncEngine {
 	getArticles(): Article[]
 	isDirty(): boolean
@@ -292,13 +267,13 @@ export function createSyncEngine(
 					scheduleRetry()
 				} else if (!handle.signal.aborted) {
 					await writeRecord(listId, articles, false)
-					// This exact page might have been served from a stale SW cache —
-					// the only way to know is to ask. If so, and it's been a while
-					// since the last confirmed check, the shown articles are
-					// unverified: block on a real check instead of silently
-					// reconciling in the background, so the user never acts on data
-					// that might already be wrong.
-					const mustVerify = isStale() && (await wasServedFromCache())
+					// Regardless of whether this exact page came from network or a
+					// stale SW cache, a first load more than STALE_MS since the last
+					// confirmed check means the shown articles are unverified: block
+					// on a real check instead of silently reconciling in the
+					// background, so the user always sees that a wait is happening
+					// (matches the visibilitychange resume check below).
+					const mustVerify = isStale()
 					if (mustVerify && !handle.signal.aborted) {
 						checking = true
 						handle.update()
