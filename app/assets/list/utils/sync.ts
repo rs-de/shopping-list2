@@ -67,8 +67,13 @@ export interface SyncEngine {
 	patch(
 		apply: (current: Article[]) => { articles: Article[]; body: FormData },
 	): Promise<void>
-	/** Background reconciliation GET — no-op while dirty. Resolves false on failure. */
-	pullFromServer(): Promise<boolean>
+	/**
+	 * Background reconciliation GET — no-op while dirty. "offline" covers any
+	 * failure to reach the server at all (no connection, timeout) — expected
+	 * and silent, since IDB stays the source of truth; "error" is a real
+	 * response from the server signaling failure, worth telling the user.
+	 */
+	pullFromServer(): Promise<"ok" | "offline" | "error">
 	/** Wires IDB-init, online listener, SW-update toast, install prompt. Call once from handle.queueTask(). */
 	init(): void
 	getRejigN(): number
@@ -119,6 +124,16 @@ export function createSyncEngine(
 		return !last || Date.now() - last > STALE_MS
 	}
 
+	function notifyVerifyFailed() {
+		toast.show(
+			t(
+				"An error occurred while loading the data. Please try again in a few seconds. If the problem persists, please contact us.",
+			),
+			"error",
+			{ duration: 5000 },
+		)
+	}
+
 	function scheduleRetry() {
 		if (retryTimer !== null || handle.signal.aborted) return
 		if (!navigator.onLine) return // online event will trigger drainDirty
@@ -137,27 +152,27 @@ export function createSyncEngine(
 		retryDelay = 3_000
 	}
 
-	async function pullFromServer(): Promise<boolean> {
-		if (dirty || handle.signal.aborted) return true
+	async function pullFromServer(): Promise<"ok" | "offline" | "error"> {
+		if (dirty || handle.signal.aborted) return "ok"
 		try {
 			const res = await fetch(`/${listId}`, {
 				headers: { accept: "application/json" },
 				signal: AbortSignal.any([handle.signal, AbortSignal.timeout(8_000)]),
 			})
-			if (dirty || handle.signal.aborted) return true
-			if (!res.ok) return false
+			if (dirty || handle.signal.aborted) return "ok"
+			if (!res.ok) return "error"
 			const data = (await res.json()) as { articles: Article[] }
-			if (dirty || handle.signal.aborted) return true
+			if (dirty || handle.signal.aborted) return "ok"
 			if (JSON.stringify(data.articles) !== JSON.stringify(articles)) {
 				articles = data.articles
 				void writeRecord(listId, articles, false).catch(() => {})
 				handle.update()
 			}
 			markChecked()
-			return true
+			return "ok"
 		} catch {
-			// network unavailable — IDB is the source of truth
-			return false
+			// no connection or timed out reaching the server — IDB is the source of truth
+			return "offline"
 		}
 	}
 
@@ -277,17 +292,10 @@ export function createSyncEngine(
 					if (mustVerify && !handle.signal.aborted) {
 						checking = true
 						handle.update()
-						const ok = await pullFromServer()
+						const result = await pullFromServer()
 						checking = false
-						if (!ok && !handle.signal.aborted) {
-							toast.show(
-								t(
-									"An error occurred while loading the data. Please try again in a few seconds. If the problem persists, please contact us.",
-								),
-								"error",
-								{ duration: 5000 },
-							)
-						}
+						if (result === "error" && !handle.signal.aborted)
+							notifyVerifyFailed()
 					} else {
 						void pullFromServer()
 					}
@@ -360,9 +368,11 @@ export function createSyncEngine(
 				if (isStale()) {
 					checking = true
 					handle.update()
-					void pullFromServer().finally(() => {
+					void pullFromServer().then((result) => {
 						checking = false
 						handle.update()
+						if (result === "error" && !handle.signal.aborted)
+							notifyVerifyFailed()
 					})
 				} else {
 					void pullFromServer()

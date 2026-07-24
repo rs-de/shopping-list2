@@ -332,3 +332,9 @@ Pre-diary (retroactive): register scaffolded Remix skill for Claude Code
 
 106. Stale-timestamp verify (8h): blocking on stale resume/first load
    `(edit sync.ts+sw.ts: CHECKED_KEY+isStale(8h), drop cache-hit gate)`
+
+107. Resume verify failure now shows same error toast as first-load
+   `(edit sync.ts: extract notifyVerifyFailed(), reuse on resume path)`
+
+108. Verify toast only for real server errors, not net issues
+   `(edit sync.ts: pullFromServer returns ok/offline/error variant)`
