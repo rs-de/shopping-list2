@@ -338,3 +338,6 @@ Pre-diary (retroactive): register scaffolded Remix skill for Claude Code
 
 108. Verify toast only for real server errors, not net issues
    `(edit sync.ts: pullFromServer returns ok/offline/error variant)`
+
+109. Hide stale list during blocking verify — spinner only, no old rows
+   `(edit articles.tsx+shopping.tsx+plan.tsx: gate list render on !isChecking())`

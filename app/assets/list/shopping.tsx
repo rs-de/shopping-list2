@@ -65,7 +65,7 @@ export const Shopping = clientEntry(
 							})}
 						/>
 
-						{articles.length > 0 && (
+						{!sync.isChecking() && articles.length > 0 && (
 							<div class="sl-list-outer">
 								<ul class="sl-list">
 									{articles.map((article) => (
