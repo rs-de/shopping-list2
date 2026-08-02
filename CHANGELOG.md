@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.13.0 2026-08-02
+
+- Verify spinner now also appears on a genuine cold start, not just on resume
+- Verify-failure toast no longer shows for offline/timeout — only for real
+  server errors
+- Fixed verify spinner icon appearing off-screen on long lists
+- Returning to the app after a while now shows a spinner instead of a
+  stale list
+- App updates apply silently in the background — no more "new version"
+  prompt to click
+
 ## 1.12.0 2026-07-20
 
 - Fixed rejig not moving an item to "Late" when it already defaulted
