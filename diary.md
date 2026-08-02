@@ -341,3 +341,6 @@ Pre-diary (retroactive): register scaffolded Remix skill for Claude Code
 
 109. Hide stale list during blocking verify — spinner only, no old rows
    `(edit articles.tsx+shopping.tsx+plan.tsx: gate list render on !isChecking())`
+
+110. Silent update-apply on resume; drop dead /api/version banner
+   `(edit entry.ts+sync.ts+main.css: rm banner+toast, reload on next visible if pending; pnpm i18n:sync)`

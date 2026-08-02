@@ -41,6 +41,12 @@ run({
 	},
 })
 
+// Whether the SW has told us a new version activated behind the scenes.
+// In-memory only: a real reload picks up the new version directly via the
+// SW's own precache, and a bfcache restore (the case this exists for)
+// keeps JS state intact, so nothing needs to survive a fresh script load.
+let updatePending = false
+
 if ("serviceWorker" in navigator) {
 	// iOS Safari can serve a stale cached copy of /sw.js for its own update
 	// comparison fetch, silently never detecting a new worker. A per-deploy
@@ -48,50 +54,20 @@ if ("serviceWorker" in navigator) {
 	navigator.serviceWorker.register(`/sw.js?v=${BUILD_STAMP}`, {
 		type: "module",
 	})
-}
-
-// Version check: show reload banner when a new deployment is detected
-const VERSION_KEY = "sl-version"
-let _knownVersion: string | null = localStorage.getItem(VERSION_KEY)
-
-async function checkVersion(): Promise<void> {
-	try {
-		const res = await fetch("/api/version")
-		if (!res.ok) return
-		const { version } = (await res.json()) as { version: string }
-		if (_knownVersion === null) {
-			_knownVersion = version
-			localStorage.setItem(VERSION_KEY, version)
-		} else if (_knownVersion !== version) {
-			showUpdateBanner(version)
-		}
-	} catch {
-		// network unavailable — ignore
-	}
-}
-
-function showUpdateBanner(newVersion: string): void {
-	if (document.getElementById("sl-update-banner")) return
-	localStorage.setItem(VERSION_KEY, newVersion)
-	const el = document.createElement("div")
-	el.id = "sl-update-banner"
-	el.className = "sl-update-banner"
-	const span = document.createElement("span")
-	span.textContent = "A new version is available."
-	const btn = document.createElement("button")
-	btn.textContent = "Reload"
-	btn.addEventListener("click", () => {
-		navigator.serviceWorker?.controller?.postMessage({
-			type: "SL_FORCE_FRESH",
-			url: window.location.href,
-		})
-		window.location.assign(window.location.href)
+	navigator.serviceWorker.addEventListener("message", (event) => {
+		if (event.data?.type === "SW_UPDATED") updatePending = true
 	})
-	el.append(span, btn)
-	document.body.prepend(el)
 }
 
-void checkVersion()
+// Apply a pending update only once the user comes back to the app — never
+// mid-session, so it never interrupts an active edit or navigation. Users
+// are wary of an explicit "Refresh" prompt; this makes the update invisible.
 document.addEventListener("visibilitychange", () => {
-	if (document.visibilityState === "visible") void checkVersion()
+	if (document.visibilityState !== "visible" || !updatePending) return
+	updatePending = false
+	navigator.serviceWorker?.controller?.postMessage({
+		type: "SL_FORCE_FRESH",
+		url: window.location.href,
+	})
+	window.location.reload()
 })

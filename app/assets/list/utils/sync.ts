@@ -380,27 +380,6 @@ export function createSyncEngine(
 			},
 			{ signal: handle.signal },
 		)
-
-		navigator.serviceWorker?.addEventListener(
-			"message",
-			(event: MessageEvent) => {
-				if (event.data?.type !== "SW_UPDATED") return
-				toast.show(t("New version available"), "success", {
-					action: {
-						label: t("Refresh"),
-						onClick: () => {
-							toast.dismiss()
-							navigator.serviceWorker?.controller?.postMessage({
-								type: "SL_FORCE_FRESH",
-								url: window.location.href,
-							})
-							window.location.assign(window.location.href)
-						},
-					},
-				})
-			},
-			{ signal: handle.signal },
-		)
 	}
 
 	return {
