@@ -69,6 +69,7 @@ export function Document(handle: Handle<DocumentProps>) {
 					<link rel="manifest" href={manifestHref} />
 					<link rel="apple-touch-icon" href="/icons/apple-icon-180.png" />
 					<link rel="icon" type="image/x-icon" href="/favicon.ico" />
+					<meta name="mobile-web-app-capable" content="yes" />
 					<meta name="apple-mobile-web-app-capable" content="yes" />
 					{APPLE_SPLASH_SCREENS.map(({ href, media }) => (
 						<link rel="apple-touch-startup-image" href={href} media={media} />
