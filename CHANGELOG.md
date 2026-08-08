@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.14.0 2026-08-08
+
+- Add endpoint for quick-adding articles from external triggers
+  (e.g. Siri Shortcuts)
+- Fixed rejig column drifting away from the checkbox column on wide
+  screens
+
 ## 1.13.0 2026-08-02
 
 - Verify spinner now also appears on a genuine cold start, not just on resume
