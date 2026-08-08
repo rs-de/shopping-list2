@@ -786,7 +786,11 @@ a {
    reveal it; the whole page is already "reorder mode") */
 .sl-rejig-column {
 	position: fixed;
-	right: calc(var(--checkbox-w, 3.75rem) + 1.5rem);
+	right: calc(
+		var(--checkbox-w, 3.75rem) +
+		1.5rem +
+		max(0rem, (100vw - 41rem) / 2)
+	);
 	top: 50%;
 	width: var(--rejig-w, 5.5rem);
 	display: flex;
@@ -830,7 +834,11 @@ a {
 .sl-rejig-help-panel {
 	position: fixed;
 	top: 50%;
-	right: calc(var(--checkbox-w, 3.75rem) + 0.5rem);
+	right: calc(
+		var(--checkbox-w, 3.75rem) +
+		0.5rem +
+		max(0rem, (100vw - 41rem) / 2)
+	);
 	z-index: 21;
 	transform: translateY(-50%);
 	width: calc(100vw - var(--checkbox-w, 3.75rem) - 1rem);
