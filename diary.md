@@ -183,3 +183,6 @@ Pre-diary (retroactive): register scaffolded Remix skill for Claude Code
 
 59. Resume never blocks; only first load verifies, 8h→30min threshold
    `(edit sync.ts: visibilitychange always silent; STALE_MS = 30 * 60 * 1000)`
+
+60. Add quickAdd action for external triggers (e.g. Siri Shortcuts)
+   `(edit app/actions/list/controller.tsx: server-generated id/sortKey)`

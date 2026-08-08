@@ -11,6 +11,7 @@ import { Document } from "../../ui/document.tsx"
 import { ErrorPage } from "../../ui/error-page.tsx"
 import {
 	type Article,
+	defaultSortKey,
 	MAX_ARTICLES_PER_LIST,
 	rejigSortKey,
 	sortArticles,
@@ -44,6 +45,20 @@ function mutateArticles(
 			if (!id || !text || text.length > 256 || !sortKey) return badRequest()
 			if (articles.length >= MAX_ARTICLES_PER_LIST) return badRequest()
 			return sortArticles([...articles, { id, text, sortKey, createdAt }])
+		}
+		case "quickAdd": {
+			const text = String(form.get("text") ?? "").trim()
+			if (!text || text.length > 256) return badRequest()
+			if (articles.length >= MAX_ARTICLES_PER_LIST) return badRequest()
+			return sortArticles([
+				...articles,
+				{
+					id: generateId(),
+					text,
+					sortKey: defaultSortKey(3),
+					createdAt: Date.now(),
+				},
+			])
 		}
 		case "changeArticle": {
 			const id = String(form.get("id") ?? "")
