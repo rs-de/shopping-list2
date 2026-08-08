@@ -344,3 +344,6 @@ Pre-diary (retroactive): register scaffolded Remix skill for Claude Code
 
 110. Silent update-apply on resume; drop dead /api/version banner
    `(edit entry.ts+sync.ts+main.css: rm banner+toast, reload on next visible if pending; pnpm i18n:sync)`
+
+111. Resume never blocks; only first load verifies, 8h→30min threshold
+   `(edit sync.ts: visibilitychange always silent; STALE_MS = 30 * 60 * 1000)`

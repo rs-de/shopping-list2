@@ -90,10 +90,12 @@ export function createSyncEngine(
 	// Timestamp (ms) of the last confirmed server round trip (a successful
 	// verify, patch, or dirty-drain) — persisted in localStorage so it
 	// survives the app being killed and relaunched, not just a tab session.
-	// Gates how loud a freshness check needs to be: recently confirmed →
-	// silent background pull; stale → blocking spinner until confirmed.
+	// Gates only the first-load blocking check in init() (see isStale()) —
+	// resume-from-background (visibilitychange) never blocks, it always
+	// reconciles silently, so this only needs to catch "was this app truly
+	// closed for a while", not routine backgrounding while in active use.
 	const CHECKED_KEY = `sl-checked:${listId}`
-	const STALE_MS = 8 * 60 * 60 * 1000
+	const STALE_MS = 30 * 60 * 1000
 	let articles: Article[] = [...handle.props.articles]
 	let rejigN = 3
 	let checking = false
@@ -357,26 +359,17 @@ export function createSyncEngine(
 			{ signal: handle.signal },
 		)
 
-		// App resumed (e.g. reopened from the home screen). Dirty edits are
-		// already covered by the online listener/retry loop; otherwise
-		// re-verify against the server — loudly if stale, silently if we
-		// checked recently.
+		// App resumed (e.g. tab un-backgrounded while shopping). Dirty edits
+		// are already covered by the online listener/retry loop; otherwise
+		// reconcile silently — this fires far too often during normal use
+		// (screen lock, app-switch) and often on flaky in-store networks to
+		// ever block the list on it. Only a genuine first load (init(), gated
+		// on isStale()) is loud enough to show the blocking verify spinner.
 		document.addEventListener(
 			"visibilitychange",
 			() => {
 				if (document.visibilityState !== "visible" || dirty) return
-				if (isStale()) {
-					checking = true
-					handle.update()
-					void pullFromServer().then((result) => {
-						checking = false
-						handle.update()
-						if (result === "error" && !handle.signal.aborted)
-							notifyVerifyFailed()
-					})
-				} else {
-					void pullFromServer()
-				}
+				void pullFromServer()
 			},
 			{ signal: handle.signal },
 		)
