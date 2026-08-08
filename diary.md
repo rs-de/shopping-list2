@@ -347,6 +347,3 @@ Pre-diary (retroactive): register scaffolded Remix skill for Claude Code
 
 111. Resume never blocks; only first load verifies, 8h→30min threshold
    `(edit sync.ts: visibilitychange always silent; STALE_MS = 30 * 60 * 1000)`
-
-112. Add standard mobile-web-app-capable meta (silence Chrome deprecation)
-   `(edit document.tsx: add <meta name="mobile-web-app-capable">)`
