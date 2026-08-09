@@ -2,32 +2,9 @@
 
 ## Diary Workflow
 
-`diary.md` is a high-level record of *how this app was designed and built* — substantial features, architecture decisions, and meaningful behavior changes worth remembering later. It is not a commit log: don't add an entry for small fixes, corrections, typos, dependency bumps, or config tweaks — just make the change and commit.
+This project follows the discuss-then-commit diary loop and `diary.md` conventions documented in the `webapp-paradigms` skill's `reference/diary-workflow.md` (global, shared across apps — load it if the rule details are unclear, or before changing them).
 
-Every change to this project follows a discuss-then-commit loop:
-
-1. **Propose** — suggest the next step. If it's substantial (see above), include a two-line diary entry (description + command/action, max 80 chars per line) and briefly explain the motivation. If it's a small fix, just propose the change — no diary line.
-2. **Discuss** — wait for the user to approve, tweak, or reject the step.
-3. **Execute** — once approved, apply the change.
-4. **Log** — only for substantial steps: append the two-line entry to `diary.md`.
-5. **Commit** — stage only the relevant files and commit. Always ask the user before committing unless they explicitly said "do it" or "yes" to the full step. Never add `Co-Authored-By` lines to commit messages.
-
-When unsure whether something counts as substantial, default to *not* logging it — it's easier for the user to ask for an entry than to have to correct one out.
-
-### diary.md format
-
-Entries are numbered. Each step is two lines, indented command in a code span:
-
-```
-N. <short description or motivation, max 80 chars>
-   `<command or (edit <file>: description), max 80 chars>`
-```
-
-Multi-command steps: join with `&&` into a single line. File-edit-only steps: use `(edit <file>: what changed)`.
-
-### Reverting files
-
-Prefer `git restore <file>` over the Edit tool when reverting a tracked file to its last committed state.
+`diary.md` lives at the repo root. Prefer `git restore <file>` over the Edit tool when reverting a tracked file to its last committed state.
 
 ## Project Commands
 
