@@ -56,7 +56,7 @@ interface BeforeInstallPromptEvent extends Event {
 export interface SyncEngine {
 	getArticles(): Article[]
 	isDirty(): boolean
-	/** True while a blocking freshness check (first load or stale resume, see `init`) is in flight. */
+	/** True while the first-load freshness check (see `init`) is taking long enough to show a spinner. */
 	isChecking(): boolean
 	/**
 	 * Generic optimistic PATCH primitive. `apply` computes the next optimistic
@@ -87,15 +87,13 @@ export function createSyncEngine(
 	toast: ReturnType<typeof createToast>,
 ): SyncEngine {
 	const listId = handle.props.listId
-	// Timestamp (ms) of the last confirmed server round trip (a successful
-	// verify, patch, or dirty-drain) — persisted in localStorage so it
-	// survives the app being killed and relaunched, not just a tab session.
-	// Gates only the first-load blocking check in init() (see isStale()) —
-	// resume-from-background (visibilitychange) never blocks, it always
-	// reconciles silently, so this only needs to catch "was this app truly
-	// closed for a while", not routine backgrounding while in active use.
-	const CHECKED_KEY = `sl-checked:${listId}`
-	const STALE_MS = 30 * 60 * 1000
+	// Delay before the first-load verify (see init()) shows its blocking
+	// spinner — a warm server resolves well under this and the overlay never
+	// flashes; a cold one (e.g. Fly.io auto-stop machine booting) takes
+	// visibly longer and the user sees why. Mirrors NAV_OVERLAY_DELAY_MS in
+	// entry.ts for the same reason: don't guess at infra timing, just react
+	// to how long the round trip actually takes.
+	const VERIFY_OVERLAY_DELAY_MS = 200
 	let articles: Article[] = [...handle.props.articles]
 	let rejigN = 3
 	let checking = false
@@ -115,15 +113,6 @@ export function createSyncEngine(
 	function markDirty() {
 		dirty = true
 		dirtyGen++
-	}
-
-	function markChecked() {
-		localStorage.setItem(CHECKED_KEY, String(Date.now()))
-	}
-
-	function isStale(): boolean {
-		const last = Number(localStorage.getItem(CHECKED_KEY))
-		return !last || Date.now() - last > STALE_MS
 	}
 
 	function notifyVerifyFailed() {
@@ -170,7 +159,6 @@ export function createSyncEngine(
 				void writeRecord(listId, articles, false).catch(() => {})
 				handle.update()
 			}
-			markChecked()
 			return "ok"
 		} catch {
 			// no connection or timed out reaching the server — IDB is the source of truth
@@ -201,7 +189,6 @@ export function createSyncEngine(
 			dirty = false
 			articles = snapshot
 			clearRetry()
-			markChecked()
 			void writeRecord(listId, articles, false).catch(() => {})
 		} catch {
 			scheduleRetry()
@@ -240,7 +227,6 @@ export function createSyncEngine(
 				) {
 					dirty = false
 					clearRetry()
-					markChecked()
 					articles = updated.articles
 					void writeRecord(listId, articles, false).catch(() => {})
 				} else {
@@ -284,23 +270,21 @@ export function createSyncEngine(
 					scheduleRetry()
 				} else if (!handle.signal.aborted) {
 					await writeRecord(listId, articles, false)
-					// Regardless of whether this exact page came from network or a
-					// stale SW cache, a first load more than STALE_MS since the last
-					// confirmed check means the shown articles are unverified: block
-					// on a real check instead of silently reconciling in the
-					// background, so the user always sees that a wait is happening
-					// (matches the visibilitychange resume check below).
-					const mustVerify = isStale()
-					if (mustVerify && !handle.signal.aborted) {
+					// Every genuine first load verifies against the server — a
+					// non-dirty IDB/SSR snapshot can be stale (another device
+					// changed the list, or the SW served an old cached HTML page).
+					// Only show the blocking spinner if the round trip is actually
+					// slow (e.g. a Fly.io auto-stop machine cold-booting) — a warm
+					// server resolves under the delay and the list never flashes
+					// empty. Resume (visibilitychange, below) stays silent always.
+					const overlayTimer = setTimeout(() => {
 						checking = true
 						handle.update()
-						const result = await pullFromServer()
-						checking = false
-						if (result === "error" && !handle.signal.aborted)
-							notifyVerifyFailed()
-					} else {
-						void pullFromServer()
-					}
+					}, VERIFY_OVERLAY_DELAY_MS)
+					const result = await pullFromServer()
+					clearTimeout(overlayTimer)
+					checking = false
+					if (result === "error" && !handle.signal.aborted) notifyVerifyFailed()
 				}
 			} catch {
 				// IDB unavailable — server state is fine
@@ -363,8 +347,8 @@ export function createSyncEngine(
 		// are already covered by the online listener/retry loop; otherwise
 		// reconcile silently — this fires far too often during normal use
 		// (screen lock, app-switch) and often on flaky in-store networks to
-		// ever block the list on it. Only a genuine first load (init(), gated
-		// on isStale()) is loud enough to show the blocking verify spinner.
+		// ever block the list on it. Only a genuine first load (init()) ever
+		// shows the blocking verify spinner.
 		document.addEventListener(
 			"visibilitychange",
 			() => {

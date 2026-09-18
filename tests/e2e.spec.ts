@@ -361,6 +361,100 @@ test.describe
 		})
 	})
 
+// Covers the fix for a Fly.io auto-stop cold start showing a stale list with
+// no feedback: sync.ts delays the verify spinner by VERIFY_OVERLAY_DELAY_MS
+// instead of gating it on elapsed time, so it only appears when the round
+// trip is actually slow — and only on a genuine first load, never on resume
+// (visibilitychange), so an in-progress shopping trip is never interrupted.
+test.describe
+	.serial("verify spinner on slow reconnection", () => {
+		// The Service Worker's own fetch() calls aren't visible to page.route()
+		// (see "local-first sync" above) — block it here too.
+		test.use({ serviceWorkers: "block" })
+
+		test("first load shows the blocking spinner and hides the list while the server is slow", async ({
+			page,
+		}) => {
+			await page.goto(listUrl, { waitUntil: "networkidle" })
+			const itemCount = await page.locator("input.sl-item-input").count()
+			expect(itemCount).toBeGreaterThan(0)
+
+			await page.route("**", async (route) => {
+				const req = route.request()
+				if (
+					req.method() === "GET" &&
+					req.headers().accept?.includes("application/json")
+				) {
+					await new Promise((r) => setTimeout(r, 1000))
+				}
+				await route.continue().catch(() => {})
+			})
+
+			await page.reload({ waitUntil: "domcontentloaded" })
+
+			// Slow enough to outlast the delay — spinner shows, stale list hides.
+			await expect(page.locator(".sl-verify-overlay")).toBeVisible()
+			await expect(page.locator("input.sl-item-input")).toHaveCount(0)
+
+			// Once the delayed response lands, spinner clears and list is back.
+			await expect(page.locator(".sl-verify-overlay")).toBeHidden()
+			await expect(page.locator("input.sl-item-input")).toHaveCount(itemCount)
+
+			await page.unrouteAll()
+		})
+
+		test("resuming from background (visibilitychange) never shows the spinner, even when the server is slow", async ({
+			page,
+		}) => {
+			await page.goto(listUrl, { waitUntil: "networkidle" })
+			const itemCount = await page.locator("input.sl-item-input").count()
+			expect(itemCount).toBeGreaterThan(0)
+
+			await page.route("**", async (route) => {
+				const req = route.request()
+				if (
+					req.method() === "GET" &&
+					req.headers().accept?.includes("application/json")
+				) {
+					await new Promise((r) => setTimeout(r, 1200))
+				}
+				await route.continue().catch(() => {})
+			})
+
+			const pulled = page.waitForResponse(
+				(r) =>
+					r.request().method() === "GET" &&
+					(r.request().headers().accept?.includes("application/json") ?? false),
+			)
+			await page.evaluate(() =>
+				document.dispatchEvent(new Event("visibilitychange")),
+			)
+
+			// Mid-flight: still no spinner, list stays visible and editable —
+			// this is what keeps an active 30-90 min shopping trip uninterrupted.
+			await page.waitForTimeout(700)
+			await expect(page.locator(".sl-verify-overlay")).toHaveCount(0)
+			await expect(page.locator("input.sl-item-input")).toHaveCount(itemCount)
+			await page.fill("input.sl-add-input", "Mid-flight item")
+			const added = page.waitForResponse(
+				(r) => r.request().method() === "PATCH",
+			)
+			await page.keyboard.press("Enter")
+			await added
+			// New items sort last (sortByCreatedAt), matching the other
+			// optimistic-update tests' convention.
+			await expect(page.locator("input.sl-item-input").last()).toHaveValue(
+				"Mid-flight item",
+			)
+
+			await pulled
+			// And still nothing once the slow reconciliation actually lands.
+			await expect(page.locator(".sl-verify-overlay")).toHaveCount(0)
+
+			await page.unrouteAll()
+		})
+	})
+
 // POST→redirect helper: waitForURL detects navigation even when URL stays the same
 async function submitAndWait(page: Page, click: () => Promise<void>) {
 	await Promise.all([

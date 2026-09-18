@@ -186,3 +186,6 @@ Pre-diary (retroactive): register scaffolded Remix skill for Claude Code
 
 60. Add quickAdd action for external triggers (e.g. Siri Shortcuts)
    `(edit app/actions/list/controller.tsx: server-generated id/sortKey)`
+
+61. Delay-gated verify spinner replaces 30-min staleness guess (Fly cold-start)
+   `(edit sync.ts: drop isStale/CHECKED_KEY/STALE_MS; always-verify + 200ms delay)`
