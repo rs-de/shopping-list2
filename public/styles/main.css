@@ -990,10 +990,14 @@ dialog.sl-dialog::backdrop {
 }
 
 .sl-verify-overlay .spinner {
+	/* Center with margin, not `transform: translate(-50%, -50%)` — the spin
+	   keyframe's `transform: rotate(...)` would replace it outright, forcing
+	   the browser to interpolate translate→rotate via matrix decomposition:
+	   no visible spin, just a drift-then-snap-back (most visible on iOS). */
 	position: fixed;
 	top: 50%;
 	left: 50%;
-	transform: translate(-50%, -50%);
+	margin: -1rem 0 0 -1rem;
 	width: 2rem;
 	height: 2rem;
 	border-width: 3px;
