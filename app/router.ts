@@ -4,10 +4,13 @@ import { createRouter, type MiddlewareContext } from "remix/router"
 
 import controller from "./actions/controller.tsx"
 import listController from "./actions/list/controller.tsx"
+import { csp } from "./middleware/csp.ts"
 import { render } from "./middleware/render.tsx"
 import { routes } from "./routes.ts"
 
-type AppContext = MiddlewareContext<[ReturnType<typeof render>]>
+type AppContext = MiddlewareContext<
+	[ReturnType<typeof csp>, ReturnType<typeof render>]
+>
 
 declare module "remix/router" {
 	interface RouterTypes {
@@ -17,6 +20,7 @@ declare module "remix/router" {
 
 export const router = createRouter<AppContext>({
 	middleware: [
+		csp(),
 		compression(),
 		staticFiles("./public", { index: false }),
 		render(),

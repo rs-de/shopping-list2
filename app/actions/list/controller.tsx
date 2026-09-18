@@ -104,10 +104,12 @@ async function loadAndMutateList({
 	request,
 	params,
 	render,
+	cspNonce,
 }: {
 	request: Request
 	params: { listId: string }
 	render: Render
+	cspNonce: string
 }): Promise<ListLoadResult> {
 	const { listId } = params
 	try {
@@ -123,7 +125,7 @@ async function loadAndMutateList({
 			return {
 				kind: "response",
 				response: await render(
-					<Document title="400 — Shopping List" lang={lang}>
+					<Document title="400 — Shopping List" lang={lang} nonce={cspNonce}>
 						<ErrorPage
 							code={400}
 							message={t("Invalid list ID.")}
@@ -258,7 +260,7 @@ async function loadAndMutateList({
 		return {
 			kind: "response",
 			response: await render(
-				<Document title="Error — Shopping List" lang={lang}>
+				<Document title="Error — Shopping List" lang={lang} nonce={cspNonce}>
 					<ErrorPage
 						code={500}
 						message={t("Something went wrong.")}
@@ -303,14 +305,20 @@ export default createController(routes.list, {
 				],
 			})
 		},
-		async show({ request, params, render }) {
-			const result = await loadAndMutateList({ request, params, render })
+		async show({ request, params, render, cspNonce }) {
+			const result = await loadAndMutateList({
+				request,
+				params,
+				render,
+				cspNonce,
+			})
 			if (result.kind === "response") return result.response
 			return render(
 				<Document
 					title={result.t("Shopping List")}
 					lang={result.lang}
 					manifestHref={`/${result.listId}/manifest`}
+					nonce={cspNonce}
 				>
 					<Articles
 						listId={result.listId}
@@ -321,14 +329,20 @@ export default createController(routes.list, {
 				</Document>,
 			)
 		},
-		async plan({ request, params, render }) {
-			const result = await loadAndMutateList({ request, params, render })
+		async plan({ request, params, render, cspNonce }) {
+			const result = await loadAndMutateList({
+				request,
+				params,
+				render,
+				cspNonce,
+			})
 			if (result.kind === "response") return result.response
 			return render(
 				<Document
 					title={result.t("Shopping List")}
 					lang={result.lang}
 					manifestHref={`/${result.listId}/manifest`}
+					nonce={cspNonce}
 				>
 					<Plan
 						listId={result.listId}
@@ -338,14 +352,20 @@ export default createController(routes.list, {
 				</Document>,
 			)
 		},
-		async shopping({ request, params, render }) {
-			const result = await loadAndMutateList({ request, params, render })
+		async shopping({ request, params, render, cspNonce }) {
+			const result = await loadAndMutateList({
+				request,
+				params,
+				render,
+				cspNonce,
+			})
 			if (result.kind === "response") return result.response
 			return render(
 				<Document
 					title={result.t("Shopping List")}
 					lang={result.lang}
 					manifestHref={`/${result.listId}/manifest`}
+					nonce={cspNonce}
 				>
 					<Shopping
 						listId={result.listId}

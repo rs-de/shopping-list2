@@ -76,12 +76,14 @@ let stream = renderToStream(<App />, {
     }
 
     return {
-      href: await assetServer.getHref(entryId),
+      ...(await assetServer.getScriptEntry(entryId)),
       exportName,
     }
   },
 })
 ```
+
+`getScriptEntry()` returns `{ href, preloads, importMap }` together — compiled browser scripts resolve their imports through an import map rather than fully rewritten URLs. For that import map to reach the browser, the document must render exactly one `<ImportMap value={...} />` (from `remix/ui/server`) inside `<head>`; without it, hydrating a client entry fails at runtime with "Failed to resolve module specifier". See `assets-and-browser-modules.md` for the CSP-nonce implication of that inline script.
 
 If the module export name differs from the component function name, include `#ExportName` in the entry ID or return the exact export name from `resolveClientEntry`. A render helper that only supports source-owned entries can also fail fast when `entryId` is not a `file://` URL.
 
@@ -101,11 +103,19 @@ let app = run({
     let mod = await import(moduleUrl)
     return mod[exportName]
   },
-  async resolveFrame(src, signal, target) {
+  async resolveFrame(src, { signal, target, formData, method, encType } = {}) {
     let headers = new Headers({ accept: 'text/html' })
     if (target) headers.set('x-remix-target', target)
-    let response = await fetch(src, { headers, signal })
-    return response.body ?? (await response.text())
+    // `formData`/`method`/`encType` carry a form submission's payload. A
+    // custom resolver MUST build the body itself (fetch defaults to GET with
+    // no body) — dropping this silently turns every POST/PATCH form
+    // submission into a GET, which still "succeeds" with no visible error.
+    return await fetch(src, {
+      body: getRequestBody(formData, method, encType),
+      headers,
+      method,
+      signal,
+    })
   },
 })
 
@@ -116,10 +126,12 @@ app.addEventListener('error', (event) => {
 await app.ready()
 ```
 
+`getRequestBody` is not exported by the package — copy the implementation from `remix/ui`'s own README ("Frame Navigation" section) rather than reinventing form-encoding rules. It picks `URLSearchParams`, CRLF-delimited text, or a raw `FormData` body depending on `encType`, and returns `undefined` for GET.
+
 ### `run` options
 
 - **`loadModule(moduleUrl, exportName)`** (required) — return the component function for each client entry. Typically uses dynamic `import()`.
-- **`resolveFrame(src, signal, target)`** (optional) — called when a `<Frame>` loads or reloads content. `target` is available when frame targeting matters.
+- **`resolveFrame(src, options)`** (optional) — called when a `<Frame>` loads or reloads content, or a link/form navigation is intercepted. `options` is `{ target?, formData?, method?, encType?, signal? }`. May return a `Response` directly (preferred — lets the frame runtime see `redirected`/`url` and update the address bar after a 3xx) instead of extracting body/text by hand.
 
 ### `app` methods
 

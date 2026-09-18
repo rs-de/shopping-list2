@@ -189,3 +189,6 @@ Pre-diary (retroactive): register scaffolded Remix skill for Claude Code
 
 61. Delay-gated verify spinner replaces 30-min staleness guess (Fly cold-start)
    `(edit sync.ts: drop isStale/CHECKED_KEY/STALE_MS; always-verify + 200ms delay)`
+
+62. Upgrade remix 3.0.0-beta.5 → rc.2: asset server, resolveFrame, import maps
+   `(edit assets.ts+entry.ts+render.tsx+document.tsx+router.ts; add middleware/csp.ts)`

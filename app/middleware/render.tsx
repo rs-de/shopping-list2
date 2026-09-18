@@ -22,7 +22,7 @@ export function render() {
 						}
 
 						return {
-							href: await assetServer.getHref(entryId),
+							...(await assetServer.getScriptEntry(entryId)),
 							exportName:
 								entryId.split("#")[1] ||
 								component.name ||

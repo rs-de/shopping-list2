@@ -34,12 +34,14 @@ export const cssVersion = hashFile("public/styles/main.css")
 export const assetServer = createAssetServer({
 	basePath: "/assets",
 	rootDir,
-	fileMap: {
-		"app/*path": "app/*path",
-		"node_modules/*path": "node_modules/*path",
-	},
-	allow: ["app/assets/**", "app/i18n/**", "app/utils/**", "node_modules/**"],
-	deny: ["app/**/*.server.*"],
+	mounts: { app: "app", node_modules: "node_modules" },
+	allowFiles: [
+		"app/assets/**",
+		"app/i18n/**",
+		"app/utils/**",
+		"node_modules/**",
+	],
+	denyFiles: ["app/**/*.server.*"],
 	sourceMaps: process.env.NODE_ENV === "development" ? "external" : undefined,
 	scripts: {
 		define: {

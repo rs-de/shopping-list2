@@ -35,10 +35,10 @@ const STATIC_EXTS = new Set([
 
 function withSecurityHeaders(response: Response): Response {
 	const headers = new Headers(response.headers)
-	headers.set(
-		"Content-Security-Policy",
-		"default-src 'self'; frame-ancestors 'none'",
-	)
+	// Content-Security-Policy (with its per-request nonce) is set by the
+	// `csp()` router middleware, not here — it needs the same nonce value
+	// used on the <ImportMap> script tag, which this outer wrapper has no
+	// access to.
 	headers.set("X-Frame-Options", "DENY")
 	headers.set("X-Content-Type-Options", "nosniff")
 	headers.set("Referrer-Policy", "strict-origin-when-cross-origin")

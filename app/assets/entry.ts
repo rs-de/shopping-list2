@@ -20,20 +20,60 @@ function hideNavOverlay(): void {
 		?.classList.remove("sl-nav-overlay--visible")
 }
 
+function normalizeLineBreaks(value: string): string {
+	return value.replace(/\r\n|\r|\n/g, "\r\n")
+}
+
+// Mirrors remix/ui's own default resolveFrame body-encoding (see its README):
+// not exported by the package, so a custom resolver has to reimplement it to
+// keep POST/PUT/PATCH form submissions working through the frame navigator.
+function getRequestBody(
+	formData: FormData | undefined,
+	method: string | undefined,
+	encType: string | undefined,
+): BodyInit | undefined {
+	if (!formData || method?.toLowerCase() === "get") return undefined
+
+	if (encType === "text/plain") {
+		let body = ""
+		for (const [name, value] of formData) {
+			body += `${normalizeLineBreaks(name)}=${normalizeLineBreaks(
+				typeof value === "string" ? value : value.name,
+			)}\r\n`
+		}
+		return new Blob([body], { type: "text/plain" })
+	}
+
+	if (encType !== "application/x-www-form-urlencoded") return formData
+
+	const body = new URLSearchParams()
+	for (const [name, value] of formData) {
+		body.append(name, typeof value === "string" ? value : value.name)
+	}
+	return body
+}
+
 run({
 	async loadModule(moduleUrl, exportName) {
 		const mod = await import(moduleUrl)
 		return mod[exportName]
 	},
-	async resolveFrame(src, signal, target) {
+	async resolveFrame(src, { signal, target, formData, method, encType } = {}) {
 		const overlayTimer = setTimeout(showNavOverlay, NAV_OVERLAY_DELAY_MS)
 		try {
 			const headers = new Headers({ accept: "text/html" })
 			const lang = document.documentElement.lang
 			if (lang) headers.set("accept-language", lang)
 			if (target) headers.set("x-remix-target", target)
-			const response = await fetch(src, { headers, signal })
-			return response.body ?? (await response.text())
+			// Return the Response itself (not its body) so the frame runtime can
+			// see `redirected`/`url` and update the address bar after a 3xx, e.g.
+			// the create-list POST redirecting to the new list's URL.
+			return await fetch(src, {
+				body: getRequestBody(formData, method, encType),
+				headers,
+				method,
+				signal,
+			})
 		} finally {
 			clearTimeout(overlayTimer)
 			hideNavOverlay()
