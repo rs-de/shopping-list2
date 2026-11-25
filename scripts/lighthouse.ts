@@ -1,6 +1,6 @@
 import { spawn } from "node:child_process"
+import { chromium } from "@playwright/test"
 import lighthouse from "lighthouse"
-import { chromium } from "playwright"
 
 const PORT = 9_222
 const url = process.argv[2] ?? "http://localhost:44100"

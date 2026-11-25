@@ -56,7 +56,7 @@ Refer to `.agents/skills/remix/SKILL.md` for Remix 3 patterns.
 
 ## Code Principles
 
-- **No logic duplication** — shared logic lives in `app/utils/`. If the same concept (a formula, a constant, a transformation) appears in more than one place, extract it before adding a second copy. This applies across the server/client boundary: nanoid-based ID generation is a good example — one `generateId()` in `utils/id.ts`, imported by both sides.
+- **No logic duplication** — shared logic lives in `app/utils/`. If the same concept (a formula, a constant, a transformation) appears in more than one place, extract it before adding a second copy. This applies across the server/client boundary: ID generation is a good example — one `generateId()` in `utils/id.ts`, imported by both sides.
 
 ## Design Decisions
 
@@ -75,8 +75,8 @@ Refer to `.agents/skills/remix/SKILL.md` for Remix 3 patterns.
 Use Playwright (devDependency) to compare DOM and computed styles between local and live after each migration step:
 
 ```js
-// run from project root so Playwright resolves from node_modules
-import { chromium } from 'playwright'
+// run from project root so @playwright/test resolves from node_modules
+import { chromium } from '@playwright/test'
 const browser = await chromium.launch()
 async function inspect(url) {
   const page = await browser.newPage()
