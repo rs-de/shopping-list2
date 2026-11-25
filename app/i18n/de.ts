@@ -47,6 +47,8 @@ export const de: Record<string, string> = {
 		'Tippe Teilen ⬆ dann "Zum Home-Bildschirm"',
 	"The list is unsorted and each supermarket is divided differently. While shopping you can change the order of your list and move the items accordingly - depending on where they can be found in the supermarket: next, a little later or at the very end on your way through the shelves 🛒😀":
 		"Jeder Supermarkt ist unterschiedlich aufgeteilt. Während des Einkaufs kannst du die Reihenfolge deiner Liste verändern und die Artikel entsprechend verschieben - je nachdem, wo sie im Supermarkt zu finden sind: als nächstes, etwas später oder ganz zuletzt auf deinem Weg durch die Regale 🛒😀",
+	"Too many requests. Please wait a moment and try again.":
+		"Zu viele Anfragen. Bitte warte einen Moment und versuch es dann nochmal.",
 	Verifying: "Wird überprüft",
 	"View on Github": "Auf GitHub ansehen",
 	"What is rejig?": "Hilfe zum Umsortieren",

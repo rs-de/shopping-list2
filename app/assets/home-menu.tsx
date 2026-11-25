@@ -1,4 +1,6 @@
 import { clientEntry, type Handle } from "remix/component"
+
+import { routes } from "../routes.ts"
 import { createTranslator, type Lang } from "../utils/i18n.ts"
 import { createToast } from "../utils/toast.tsx"
 
@@ -57,7 +59,10 @@ export const HomeMenu = clientEntry(
 				<>
 					{toast.render()}
 					{listId ? (
-						<a href={`/${listId}`} class="home-menu__show-link">
+						<a
+							href={routes.list.show.href({ listId })}
+							class="home-menu__show-link"
+						>
 							{t("Show my list")}
 						</a>
 					) : (

@@ -778,3 +778,25 @@ test("list stays usable offline: shows existing articles and queues new ones", a
 
 	await context.setOffline(false)
 })
+
+// Last in the file: it saturates the list's 15-writes/s limiter, so nothing
+// after it may write to listUrl within the same second. A POST without an
+// _action still counts toward the limit but changes no data (400).
+test("rate-limited form POST gets an HTML 429 page; PATCH stays plain", async ({
+	request,
+}) => {
+	expect(listUrl).not.toBe("")
+	const burst = await Promise.all(
+		Array.from({ length: 20 }, () =>
+			request.post(listUrl, { form: { noop: "1" }, maxRedirects: 0 }),
+		),
+	)
+	const limited = burst.filter((r) => r.status() === 429)
+	expect(limited.length).toBeGreaterThan(0)
+	expect(limited[0].headers()["content-type"]).toContain("text/html")
+	expect(await limited[0].text()).toContain("429")
+
+	const patch = await request.patch(listUrl, { form: { noop: "1" } })
+	expect(patch.status()).toBe(429)
+	expect(patch.headers()["content-type"] ?? "").not.toContain("text/html")
+})

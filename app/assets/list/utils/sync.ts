@@ -1,4 +1,6 @@
 import type { Handle } from "remix/component"
+
+import { routes } from "../../../routes.ts"
 import type { Article } from "../../../utils/articles.ts"
 import type { Translator } from "../../../utils/i18n.ts"
 import type { createToast } from "../../../utils/toast.tsx"
@@ -87,6 +89,7 @@ export function createSyncEngine(
 	toast: ReturnType<typeof createToast>,
 ): SyncEngine {
 	const listId = handle.props.listId
+	const listUrl = routes.list.show.href({ listId })
 	// Delay before the first-load verify (see init()) shows its blocking
 	// spinner — a warm server resolves well under this and the overlay never
 	// flashes; a cold one (e.g. Fly.io auto-stop machine booting) takes
@@ -146,7 +149,7 @@ export function createSyncEngine(
 	async function pullFromServer(): Promise<"ok" | "offline" | "error"> {
 		if (dirty || handle.signal.aborted) return "ok"
 		try {
-			const res = await fetch(`/${listId}`, {
+			const res = await fetch(listUrl, {
 				headers: { accept: "application/json" },
 				signal: AbortSignal.any([handle.signal, AbortSignal.timeout(8_000)]),
 			})
@@ -175,7 +178,7 @@ export function createSyncEngine(
 			const fd = new FormData()
 			fd.set("_action", "replaceArticles")
 			fd.set("articles", JSON.stringify(snapshot))
-			const res = await fetch(`/${listId}`, { method: "PATCH", body: fd })
+			const res = await fetch(listUrl, { method: "PATCH", body: fd })
 			if (!res.ok) {
 				scheduleRetry()
 				return
@@ -212,7 +215,7 @@ export function createSyncEngine(
 		// reconciles the final state via replaceArticles.
 		if (inFlight > 1) markDirty()
 		try {
-			const res = await fetch(`/${listId}`, {
+			const res = await fetch(listUrl, {
 				method: "PATCH",
 				body,
 				signal: AbortSignal.any([handle.signal, ownSignal]),

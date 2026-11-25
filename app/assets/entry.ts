@@ -1,5 +1,7 @@
 import { defaultResolveFrame, run } from "remix/component"
 
+import { routes } from "../routes.ts"
+
 declare const BUILD_STAMP: string
 
 // A soft navigation suppresses the browser's own loading UI, so on a slow
@@ -58,9 +60,12 @@ if ("serviceWorker" in navigator) {
 	// iOS Safari can serve a stale cached copy of /sw.js for its own update
 	// comparison fetch, silently never detecting a new worker. A per-deploy
 	// query string forces that fetch to be a genuinely new URL each time.
-	navigator.serviceWorker.register(`/sw.js?v=${BUILD_STAMP}`, {
-		type: "module",
-	})
+	navigator.serviceWorker.register(
+		routes.sw.href(undefined, { searchParams: { v: BUILD_STAMP } }),
+		{
+			type: "module",
+		},
+	)
 	navigator.serviceWorker.addEventListener("message", (event) => {
 		if (event.data?.type === "SW_UPDATED") updatePending = true
 	})

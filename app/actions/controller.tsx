@@ -12,7 +12,7 @@ import { appVersion, assetServer } from "../assets.ts"
 import { db, shoppingLists } from "../db.ts"
 import { routes } from "../routes.ts"
 import { Document } from "../ui/document.tsx"
-import { ErrorPage } from "../ui/error-page.tsx"
+import { renderErrorPage } from "../ui/error-page.tsx"
 import { generateId, isValidId } from "../utils/id.ts"
 import { isRateLimited } from "../utils/rateLimit.ts"
 
@@ -35,7 +35,7 @@ export default createController(routes, {
 					description: t(
 						"Simple and secure shopping list webapp for free, shareable with others and without registration.",
 					),
-					start_url: "/",
+					start_url: routes.home.href(),
 					display: "standalone",
 					background_color: "#eaf4ff",
 					theme_color: "hsl(206, 100%, 50%)",
@@ -61,20 +61,31 @@ export default createController(routes, {
 			return Response.json({ version: appVersion })
 		},
 		async sw({ url: requestUrl }) {
-			const url = new URL("/assets/app/assets/sw.ts", requestUrl)
+			const url = new URL(
+				routes.assets.href({ path: "app/assets/sw.ts" }),
+				requestUrl,
+			)
 			return (
 				(await assetServer.fetch(new Request(url.toString()))) ??
 				new Response("Not Found", { status: 404 })
 			)
 		},
-		async home({ request, url, render, i18n: { lang, t } }) {
+		async home({ request, url, render, i18n }) {
+			const { lang, t } = i18n
 			if (request.method === "POST") {
 				// Global, not per-IP: a per-IP cap here would only matter if it
 				// were tighter than this one, which would just make it the real
 				// limit. This one cap is what actually bounds total list-creation
 				// throughput against a distributed (many-IP) attacker.
 				if (isRateLimited("create-list")) {
-					return new Response("Too Many Requests", { status: 429 })
+					return renderErrorPage(render, i18n, {
+						code: 429,
+						message: t(
+							"Too many requests. Please wait a moment and try again.",
+						),
+						href: routes.home.href(),
+						label: t("Retry"),
+					})
 				}
 				const form = await request.formData()
 				const requestedId = String(form.get("id") ?? "").trim()
@@ -89,7 +100,7 @@ export default createController(routes, {
 						{ id, articles: [], createdAt: now, updatedAt: now },
 						{ update: {}, touch: false },
 					)
-				return redirect(`/${id}`, 303)
+				return redirect(routes.list.show.href({ listId: id }), 303)
 			}
 			const recreateId = url.searchParams.get("recreate") ?? undefined
 			const validRecreateId =
@@ -138,18 +149,14 @@ export default createController(routes, {
 				</Document>,
 			)
 		},
-		async notFound({ render, i18n: { lang, t } }) {
-			return render(
-				<Document title="404 — Shopping List" lang={lang}>
-					<ErrorPage
-						code={404}
-						message={t("Page not found.")}
-						href="/"
-						label={t("Go home")}
-					/>
-				</Document>,
-				{ status: 404 },
-			)
+		async notFound({ render, i18n }) {
+			const { t } = i18n
+			return renderErrorPage(render, i18n, {
+				code: 404,
+				message: t("Page not found."),
+				href: routes.home.href(),
+				label: t("Go home"),
+			})
 		},
 	},
 })

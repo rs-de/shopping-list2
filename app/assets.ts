@@ -38,6 +38,7 @@ export const assetServer = createAssetServer({
 	rootDir,
 	mounts: { app: "app", node_modules: "node_modules" },
 	allowFiles: [
+		"app/routes.ts",
 		"app/assets/**",
 		"app/i18n/**",
 		"app/utils/**",

@@ -1,10 +1,12 @@
 import type { Handle } from "remix/component"
 
+import { routes } from "../routes.ts"
+
 export function Navbar(_handle: Handle) {
 	return () => (
 		<nav class="app-nav">
 			<div class="app-nav__brand-wrapper">
-				<a href="/">
+				<a href={routes.home.href()}>
 					<div class="app-nav__brand-row">
 						<img
 							width={80}

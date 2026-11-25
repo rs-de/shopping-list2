@@ -51,7 +51,7 @@ export function Document(handle: Handle<DocumentProps>) {
 			head,
 			title = DEFAULT_TITLE,
 			lang = DEFAULT_LANG,
-			manifestHref = "/manifest.webmanifest",
+			manifestHref = routes.manifest.href(),
 		} = handle.props
 		const t = createTranslator(lang)
 

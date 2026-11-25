@@ -1,5 +1,7 @@
 import { type Handle, on } from "remix/component"
 
+import { routes } from "../../../routes.ts"
+
 import type { Translator } from "../../../utils/i18n.ts"
 
 export type Mode = "articles" | "plan" | "shopping"
@@ -7,7 +9,8 @@ export type Mode = "articles" | "plan" | "shopping"
 const ORDER: readonly Mode[] = ["articles", "plan", "shopping"]
 
 function hrefFor(listId: string, mode: Mode): string {
-	return mode === "articles" ? `/${listId}` : `/${listId}/${mode}`
+	const route = mode === "articles" ? routes.list.show : routes.list[mode]
+	return route.href({ listId })
 }
 
 function labelFor(t: Translator, mode: Mode): string {

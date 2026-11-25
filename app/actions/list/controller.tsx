@@ -1,4 +1,3 @@
-import type { RemixNode } from "remix/component"
 import { redirect } from "remix/response/redirect"
 import { createController } from "remix/router"
 
@@ -9,7 +8,7 @@ import { db, shoppingLists } from "../../db.ts"
 import type { I18n } from "../../middleware/i18n.ts"
 import { routes } from "../../routes.ts"
 import { Document } from "../../ui/document.tsx"
-import { ErrorPage } from "../../ui/error-page.tsx"
+import { type Render, renderErrorPage } from "../../ui/error-page.tsx"
 import {
 	type Article,
 	defaultSortKey,
@@ -20,11 +19,6 @@ import {
 } from "../../utils/articles.ts"
 import { generateId, isValidId } from "../../utils/id.ts"
 import { isRateLimited } from "../../utils/rateLimit.ts"
-
-type Render = (
-	node: RemixNode,
-	init?: ResponseInit,
-) => Response | Promise<Response>
 
 const badRequest = (msg = "Bad Request") => new Response(msg, { status: 400 })
 
@@ -97,7 +91,7 @@ async function loadAndMutateList({
 	url,
 	params,
 	render,
-	i18n: { lang, t },
+	i18n,
 }: {
 	request: Request
 	url: URL
@@ -106,6 +100,7 @@ async function loadAndMutateList({
 	i18n: I18n
 }): Promise<ListLoadResult> {
 	const { listId } = params
+	const { t } = i18n
 	try {
 		if (request.method === "DELETE") {
 			await db.delete(shoppingLists, listId)
@@ -115,24 +110,22 @@ async function loadAndMutateList({
 		if (!isValidId(listId)) {
 			return {
 				kind: "response",
-				response: await render(
-					<Document title="400 — Shopping List" lang={lang}>
-						<ErrorPage
-							code={400}
-							message={t("Invalid list ID.")}
-							href="/"
-							label={t("Go home")}
-						/>
-					</Document>,
-					{ status: 400 },
-				),
+				response: await renderErrorPage(render, i18n, {
+					code: 400,
+					message: t("Invalid list ID."),
+					href: routes.home.href(),
+					label: t("Go home"),
+				}),
 			}
 		}
 		const list = await db.find(shoppingLists, listId)
 		if (!list) {
 			return {
 				kind: "response",
-				response: redirect(`/?recreate=${encodeURIComponent(listId)}`, 303),
+				response: redirect(
+					routes.home.href(undefined, { searchParams: { recreate: listId } }),
+					303,
+				),
 			}
 		}
 		const articles = list.articles as Article[]
@@ -141,9 +134,21 @@ async function loadAndMutateList({
 			// Keyed by list, not by IP: bounds this list's total write rate
 			// regardless of how many distinct clients (or spoofed IPs) hit it.
 			if (isRateLimited(`list:${listId}`, 1_000, 15)) {
+				// A no-JS form POST is a navigation and gets a page; the client's
+				// PATCH sync only checks res.ok, so keep that path cheap.
 				return {
 					kind: "response",
-					response: new Response("Too Many Requests", { status: 429 }),
+					response:
+						request.method === "POST"
+							? await renderErrorPage(render, i18n, {
+									code: 429,
+									message: t(
+										"Too many requests. Please wait a moment and try again.",
+									),
+									href: url.pathname,
+									label: t("Retry"),
+								})
+							: new Response("Too Many Requests", { status: 429 }),
 				}
 			}
 			const form = await request.formData()
@@ -242,17 +247,12 @@ async function loadAndMutateList({
 		}
 		return {
 			kind: "response",
-			response: await render(
-				<Document title="Error — Shopping List" lang={lang}>
-					<ErrorPage
-						code={500}
-						message={t("Something went wrong.")}
-						href={`/${params.listId}`}
-						label={t("Retry")}
-					/>
-				</Document>,
-				{ status: 500 },
-			),
+			response: await renderErrorPage(render, i18n, {
+				code: 500,
+				message: t("Something went wrong."),
+				href: routes.list.show.href(params),
+				label: t("Retry"),
+			}),
 		}
 	}
 }
@@ -265,7 +265,7 @@ export default createController(routes.list, {
 				name: t("Shopping List"),
 				short_name: t("Shopping List"),
 				description: t("An offline-first shopping list"),
-				start_url: `/${listId}`,
+				start_url: routes.list.show.href({ listId }),
 				display: "standalone",
 				background_color: "#eaf4ff",
 				theme_color: "hsl(206, 100%, 50%)",
@@ -287,13 +287,14 @@ export default createController(routes.list, {
 		},
 		async show(context) {
 			const { render, i18n } = context
+			const { t } = i18n
 			const result = await loadAndMutateList(context)
 			if (result.kind === "response") return result.response
 			return render(
 				<Document
-					title={i18n.t("Shopping List")}
+					title={t("Shopping List")}
 					lang={i18n.lang}
-					manifestHref={`/${result.listId}/manifest`}
+					manifestHref={routes.list.manifest.href({ listId: result.listId })}
 				>
 					<Articles
 						listId={result.listId}
@@ -306,13 +307,14 @@ export default createController(routes.list, {
 		},
 		async plan(context) {
 			const { render, i18n } = context
+			const { t } = i18n
 			const result = await loadAndMutateList(context)
 			if (result.kind === "response") return result.response
 			return render(
 				<Document
-					title={i18n.t("Shopping List")}
+					title={t("Shopping List")}
 					lang={i18n.lang}
-					manifestHref={`/${result.listId}/manifest`}
+					manifestHref={routes.list.manifest.href({ listId: result.listId })}
 				>
 					<Plan
 						listId={result.listId}
@@ -324,13 +326,14 @@ export default createController(routes.list, {
 		},
 		async shopping(context) {
 			const { render, i18n } = context
+			const { t } = i18n
 			const result = await loadAndMutateList(context)
 			if (result.kind === "response") return result.response
 			return render(
 				<Document
-					title={i18n.t("Shopping List")}
+					title={t("Shopping List")}
 					lang={i18n.lang}
-					manifestHref={`/${result.listId}/manifest`}
+					manifestHref={routes.list.manifest.href({ listId: result.listId })}
 				>
 					<Shopping
 						listId={result.listId}

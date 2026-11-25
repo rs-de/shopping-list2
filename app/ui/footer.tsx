@@ -1,6 +1,7 @@
 import type { Handle } from "remix/component"
 
 import pkg from "../../package.json" with { type: "json" }
+import { routes } from "../routes.ts"
 import type { Translator } from "../utils/i18n.ts"
 
 export function Footer(handle: Handle<{ t: Translator }>) {
@@ -12,7 +13,7 @@ export function Footer(handle: Handle<{ t: Translator }>) {
 					&copy;{new Date().getFullYear()} Dipl.-Math. (FH) Jochen Probst
 				</div>
 				<div class="app-footer__links">
-					<a href="/about">{t("About")}</a>|
+					<a href={routes.about.href()}>{t("About")}</a>|
 					<a
 						href="https://www.rushsoft.de/privacy"
 						target="_blank"
@@ -50,7 +51,7 @@ export function Footer(handle: Handle<{ t: Translator }>) {
 							/>
 						</svg>
 					</a>
-					|<a href="/changelog">v{pkg.version}</a>
+					|<a href={routes.changelog.href()}>v{pkg.version}</a>
 				</div>
 			</footer>
 		)
