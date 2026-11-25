@@ -5,7 +5,7 @@ import { createController } from "remix/router"
 import { Articles } from "../../assets/list/articles.tsx"
 import { Plan } from "../../assets/list/plan.tsx"
 import { Shopping } from "../../assets/list/shopping.tsx"
-import { db } from "../../db.ts"
+import { db, shoppingLists } from "../../db.ts"
 import { routes } from "../../routes.ts"
 import { Document } from "../../ui/document.tsx"
 import { ErrorPage } from "../../ui/error-page.tsx"
@@ -78,10 +78,7 @@ function mutateArticles(
 }
 
 async function updateList(listId: string, articles: Article[]) {
-	const updated = await db.shoppingList.update({
-		where: { id: listId },
-		data: { articles },
-	})
+	const updated = await db.update(shoppingLists, listId, { articles })
 	return Response.json(updated)
 }
 
@@ -114,7 +111,7 @@ async function loadAndMutateList({
 	const { listId } = params
 	try {
 		if (request.method === "DELETE") {
-			await db.shoppingList.delete({ where: { id: listId } }).catch(() => {})
+			await db.delete(shoppingLists, listId)
 			return { kind: "response", response: redirect(routes.home.href()) }
 		}
 
@@ -137,7 +134,7 @@ async function loadAndMutateList({
 				),
 			}
 		}
-		const list = await db.shoppingList.findUnique({ where: { id: listId } })
+		const list = await db.find(shoppingLists, listId)
 		if (!list) {
 			return {
 				kind: "response",
@@ -171,10 +168,7 @@ async function loadAndMutateList({
 							: a,
 					),
 				)
-				await db.shoppingList.update({
-					where: { id: listId },
-					data: { articles: next },
-				})
+				await db.update(shoppingLists, listId, { articles: next })
 				return {
 					kind: "response",
 					response: redirect(new URL(request.url).pathname),
@@ -231,10 +225,7 @@ async function loadAndMutateList({
 			if (request.method === "PATCH") {
 				return { kind: "response", response: await updateList(listId, next) }
 			}
-			await db.shoppingList.update({
-				where: { id: listId },
-				data: { articles: next },
-			})
+			await db.update(shoppingLists, listId, { articles: next })
 			return {
 				kind: "response",
 				response: redirect(new URL(request.url).pathname),

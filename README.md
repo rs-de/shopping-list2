@@ -6,7 +6,7 @@ An offline-first PWA shopping list built with Remix 3. No login or account neede
 
 - **[Remix 3](https://remix.run)** (`3.3.0`) — server-first framework, not React Router and not Remix 2
 - **TypeScript 6** / **Node 24+**
-- **Prisma** + **libSQL** — SQLite locally, remote libSQL in production
+- **`remix/data-table`** — SQLite via Node's built-in `node:sqlite` (no ORM, no native deps)
 - **Biome** — linting and formatting (no semicolons)
 - **Playwright** — end-to-end tests
 - No build step — JIT transpilation via `remix/node-tsx`
@@ -18,19 +18,10 @@ An offline-first PWA shopping list built with Remix 3. No login or account neede
 
 pnpm install
 
-# Copy env and set DATABASE_URL (SQLite default works for local dev)
-cp .env.example .env       # if present, otherwise dev.db is used automatically
-
 pnpm dev                   # http://localhost:44100
 ```
 
-For local dev, the SQLite database is created automatically at `./dev.db`. No migration step needed for first run — Prisma generates the client from the schema.
-
-For a fresh machine or after schema changes:
-
-```sh
-pnpm prisma migrate dev    # apply migrations + regenerate client
-```
+The SQLite database is created automatically at `./dev.db`. Pending migrations in `app/db/migrations/` are applied on every server start — add a new `<NNNN>_<slug>/up.sql` directory for schema changes.
 
 ## Commands
 
@@ -60,13 +51,12 @@ app/
     home-menu.tsx          # Home page client component
     sw.ts                  # Service worker
   ui/                      # Server-rendered components (document shell, nav, footer)
-  db.ts                    # Prisma client singleton
+  db.ts                    # data-table schema + SQLite connection + migrate()
+  db/migrations/           # SQL migrations, applied on server start
   i18n.ts                  # Accept-Language translation loader
 public/
   styles/main.css          # Plain CSS — Radix UI color tokens, no Tailwind
   locales/                 # en/de translation JSON
-prisma/
-  schema.prisma            # ShoppingList model (id, articles JSON, timestamps)
 tests/
   e2e.spec.ts             # Playwright tests
 ```
@@ -99,5 +89,5 @@ See `.agents/skills/remix/SKILL.md` for the full Remix 3 pattern reference.
 
 | Variable | Default | Description |
 |---|---|---|
-| `DATABASE_URL` | `file:./dev.db` | libSQL connection string |
+| `DATABASE_URL` | `file:./dev.db` | SQLite file (`file:<path>`) |
 | `PORT` | `44100` | HTTP server port |

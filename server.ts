@@ -1,9 +1,10 @@
 import * as http from "node:http"
 import * as os from "node:os"
 import * as path from "node:path"
+import { lt } from "remix/data-table"
 import { createRequestListener } from "remix/node-fetch-server"
 
-import { db } from "./app/db.ts"
+import { db, migrate, shoppingLists } from "./app/db.ts"
 import { router } from "./app/router.ts"
 
 const CLEANUP_INTERVAL_MS = 24 * 60 * 60 * 1000
@@ -13,10 +14,12 @@ async function runCleanup() {
 	const cutoff = new Date(
 		Date.now() - STALE_THRESHOLD_DAYS * 24 * 60 * 60 * 1000,
 	)
-	const { count } = await db.shoppingList.deleteMany({
-		where: { updatedAt: { lt: cutoff } },
+	const { affectedRows } = await db.deleteMany(shoppingLists, {
+		where: lt("updatedAt", cutoff),
 	})
-	if (count > 0) console.log(`Cleanup: removed ${count} stale list(s)`)
+	if (affectedRows > 0) {
+		console.log(`Cleanup: removed ${affectedRows} stale list(s)`)
+	}
 }
 
 const STATIC_EXTS = new Set([
@@ -98,6 +101,10 @@ function getLanAddress(): string | undefined {
 		}
 	}
 }
+
+// Runs here rather than as a Fly release_command: release machines don't
+// mount the /data volume, so they can't reach the SQLite file.
+await migrate()
 
 server.listen(port, () => {
 	console.log(`  Local:   http://localhost:${port}`)

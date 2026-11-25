@@ -195,3 +195,6 @@ Pre-diary (retroactive): register scaffolded Remix skill for Claude Code
 
 63. Upgrade remix rc.2 → 3.3.0: remix/ui → remix/component, unsafeHTML
    `(edit imports+tsconfig+controller.tsx; pin @playwright/test 1.65.1; biome)`
+
+64. Replace Prisma+libSQL with remix/data-table on node:sqlite; migrate at boot
+   `(edit db.ts+server.ts+controllers; add app/db/migrations; rm prisma, 6 deps)`

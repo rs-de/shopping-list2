@@ -9,7 +9,7 @@ import { createController } from "remix/router"
 
 import { HomeMenu } from "../assets/home-menu.tsx"
 import { appVersion, assetServer } from "../assets.ts"
-import { db } from "../db.ts"
+import { db, shoppingLists } from "../db.ts"
 import { routes } from "../routes.ts"
 import { Document } from "../ui/document.tsx"
 import { ErrorPage } from "../ui/error-page.tsx"
@@ -87,11 +87,15 @@ export default createController(routes, {
 				const requestedId = String(form.get("id") ?? "").trim()
 				const id =
 					requestedId && VALID_ID.test(requestedId) ? requestedId : generateId()
-				await db.shoppingList.upsert({
-					where: { id },
-					create: { id, articles: [] },
-					update: {},
-				})
+				// Insert-or-keep: an existing list with this id is left untouched
+				// (touch: false), so the new row's timestamps are set explicitly.
+				const now = new Date()
+				await db
+					.query(shoppingLists)
+					.upsert(
+						{ id, articles: [], createdAt: now, updatedAt: now },
+						{ update: {}, touch: false },
+					)
 				return redirect(`/${id}`, 303)
 			}
 			const url = new URL(request.url)

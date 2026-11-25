@@ -1,13 +1,11 @@
 node_modules/
-db/
+/db/
 tmp/
 .DS_Store
 legacy-*/
 test-results/
 playwright-report/
 .claude/settings.local.json
-
-/generated/prisma
 
 .env
 *.db
