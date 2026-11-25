@@ -20,7 +20,7 @@ pnpm check          # Biome lint + format (auto-fix)
 ## Stack
 
 - Remix 3 (`remix@3.3.0`) — server framework
-- TypeScript 6, Node 24+
+- TypeScript 6, Node 26+
 - Biome — linting and formatting (see `biome.json`)
 - No build step yet — server uses JIT transpilation via `remix/node-tsx`
 

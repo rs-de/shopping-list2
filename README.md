@@ -5,7 +5,7 @@ An offline-first PWA shopping list built with Remix 3. No login or account neede
 ## Stack
 
 - **[Remix 3](https://remix.run)** (`3.3.0`) — server-first framework, not React Router and not Remix 2
-- **TypeScript 6** / **Node 24+**
+- **TypeScript 6** / **Node 26+**
 - **`remix/data-table`** — SQLite via Node's built-in `node:sqlite` (no ORM, no native deps)
 - **Biome** — linting and formatting (no semicolons)
 - **Playwright** — end-to-end tests
@@ -14,7 +14,7 @@ An offline-first PWA shopping list built with Remix 3. No login or account neede
 ## Getting Started
 
 ```sh
-# Prerequisites: Node >= 24, pnpm
+# Prerequisites: Node >= 26, pnpm
 
 pnpm install
 
