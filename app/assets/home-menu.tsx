@@ -1,4 +1,4 @@
-import { clientEntry, type Handle } from "remix/ui"
+import { clientEntry, type Handle } from "remix/component"
 import { createTranslator, type Lang } from "../utils/i18n.ts"
 import { createToast } from "../utils/toast.tsx"
 

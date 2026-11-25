@@ -19,7 +19,7 @@ pnpm check          # Biome lint + format (auto-fix)
 
 ## Stack
 
-- Remix 3 beta (`remix@3.0.0-beta.3`) — server framework
+- Remix 3 (`remix@3.3.0`) — server framework
 - TypeScript 6, Node 24+
 - Biome — linting and formatting (see `biome.json`)
 - No build step yet — server uses JIT transpilation via `remix/node-tsx`
@@ -31,7 +31,7 @@ Never apply React or Remix 2 patterns here.
 
 | React / Remix 2                       | Remix 3 (this app)                         |
 |---------------------------------------|--------------------------------------------|
-| `import from 'react' / '@remix-run/*'`| `import from 'remix/routes', 'remix/ui'`   |
+| `import from 'react' / '@remix-run/*'`| `import from 'remix/routes', 'remix/component'`|
 | `useState / useEffect / hooks`        | closure state + `handle.update()`          |
 | `export default function Page() {}`  | `export function Page(handle: Handle<P>)`  |
 | `useLoaderData() / useActionData()`   | `handle.props` (typed, server-pushed)      |

@@ -1,4 +1,4 @@
-import type { Handle } from "remix/ui"
+import type { Handle } from "remix/component"
 
 export function Navbar(_handle: Handle) {
 	return () => (

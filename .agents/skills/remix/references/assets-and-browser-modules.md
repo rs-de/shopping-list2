@@ -70,7 +70,7 @@ Use `getScriptEntry()` to resolve a client entry module: it returns `{ href, pre
 let { href, preloads, importMap } = await assetServer.getScriptEntry('app/assets/entry.ts')
 ```
 
-For the import map to actually reach the browser, render exactly one `<ImportMap value={...} nonce={...} />` (from `remix/ui/server`) inside the document `<head>` — the renderer merges each resolved client entry's import map into it during streaming. Omitting it silently drops the import map, and any bare-specifier import inside a hydrated client entry then fails at runtime with "Failed to resolve module specifier". If the app sets a `script-src` CSP without `'unsafe-inline'`, this inline `<script type="importmap">` also needs a per-request nonce reflected in both the CSP header and the `nonce` prop.
+For the import map to actually reach the browser, render exactly one `<ImportMap value={...} nonce={...} />` (from `remix/component/server`) inside the document `<head>` — the renderer merges each resolved client entry's import map into it during streaming. Omitting it silently drops the import map, and any bare-specifier import inside a hydrated client entry then fails at runtime with "Failed to resolve module specifier". If the app sets a `script-src` CSP without `'unsafe-inline'`, this inline `<script type="importmap">` also needs a per-request nonce reflected in both the CSP header and the `nonce` prop.
 
 Use this when rendering documents or layouts that boot browser behavior with a known client entry.
 

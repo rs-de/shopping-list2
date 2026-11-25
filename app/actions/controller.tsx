@@ -3,6 +3,7 @@ import * as path from "node:path"
 import * as url from "node:url"
 
 import { marked } from "marked"
+import { unsafeHTML } from "remix/component"
 import { redirect } from "remix/response/redirect"
 import { createController } from "remix/router"
 
@@ -127,7 +128,10 @@ export default createController(routes, {
 					lang={lang}
 					nonce={cspNonce}
 				>
-					<article class="content-box prose changelog-page" innerHTML={html} />
+					<article
+						class="content-box prose changelog-page"
+						innerHTML={unsafeHTML(html)}
+					/>
 				</Document>,
 			)
 		},
@@ -144,7 +148,7 @@ export default createController(routes, {
 							<h1>{t("Shopping List")}</h1>
 							<h2>{t("Simple - Secure - Free - Shareable - No login")}</h2>
 						</div>
-						<article class="prose" innerHTML={html} />
+						<article class="prose" innerHTML={unsafeHTML(html)} />
 					</div>
 				</Document>,
 			)

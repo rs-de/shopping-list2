@@ -1,4 +1,4 @@
-import { run } from "remix/ui"
+import { run } from "remix/component"
 
 declare const BUILD_STAMP: string
 
@@ -24,7 +24,7 @@ function normalizeLineBreaks(value: string): string {
 	return value.replace(/\r\n|\r|\n/g, "\r\n")
 }
 
-// Mirrors remix/ui's own default resolveFrame body-encoding (see its README):
+// Mirrors remix/component's own default resolveFrame body-encoding (see its README):
 // not exported by the package, so a custom resolver has to reimplement it to
 // keep POST/PUT/PATCH form submissions working through the frame navigator.
 function getRequestBody(

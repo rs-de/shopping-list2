@@ -1,4 +1,4 @@
-import type { Handle } from "remix/ui"
+import type { Handle } from "remix/component"
 
 import pkg from "../../package.json" with { type: "json" }
 import type { Translator } from "../utils/i18n.ts"

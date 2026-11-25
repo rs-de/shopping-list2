@@ -192,3 +192,6 @@ Pre-diary (retroactive): register scaffolded Remix skill for Claude Code
 
 62. Upgrade remix 3.0.0-beta.5 → rc.2: asset server, resolveFrame, import maps
    `(edit assets.ts+entry.ts+render.tsx+document.tsx+router.ts; add middleware/csp.ts)`
+
+63. Upgrade remix rc.2 → 3.3.0: remix/ui → remix/component, unsafeHTML
+   `(edit imports+tsconfig+controller.tsx; pin @playwright/test 1.65.1; biome)`

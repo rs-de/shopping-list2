@@ -1,6 +1,6 @@
+import type { RemixNode } from "remix/component"
 import { redirect } from "remix/response/redirect"
 import { createController } from "remix/router"
-import type { RemixNode } from "remix/ui"
 
 import { Articles } from "../../assets/list/articles.tsx"
 import { Plan } from "../../assets/list/plan.tsx"

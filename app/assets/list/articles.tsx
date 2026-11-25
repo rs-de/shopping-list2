@@ -1,4 +1,4 @@
-import { clientEntry, type Handle, on, ref } from "remix/ui"
+import { clientEntry, type Handle, on, ref } from "remix/component"
 
 import {
 	type Article,

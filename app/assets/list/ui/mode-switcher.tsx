@@ -1,4 +1,4 @@
-import { type Handle, on } from "remix/ui"
+import { type Handle, on } from "remix/component"
 
 import type { Translator } from "../../../utils/i18n.ts"
 

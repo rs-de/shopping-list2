@@ -1,4 +1,4 @@
-import { on } from "remix/ui"
+import { on } from "remix/component"
 
 type Variant = "success" | "error"
 type Action = { label: string; onClick: () => void }

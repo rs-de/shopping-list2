@@ -4,7 +4,7 @@ An offline-first PWA shopping list built with Remix 3. No login or account neede
 
 ## Stack
 
-- **[Remix 3](https://remix.run)** (`3.0.0-beta.3`) — server-first framework, not React Router and not Remix 2
+- **[Remix 3](https://remix.run)** (`3.3.0`) — server-first framework, not React Router and not Remix 2
 - **TypeScript 6** / **Node 24+**
 - **Prisma** + **libSQL** — SQLite locally, remote libSQL in production
 - **Biome** — linting and formatting (no semicolons)

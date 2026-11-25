@@ -1,4 +1,4 @@
-import { type Handle, on, ref } from "remix/ui"
+import { type Handle, on, ref } from "remix/component"
 import type { Article } from "../../../utils/articles.ts"
 import type { Translator } from "../../../utils/i18n.ts"
 
