@@ -10,11 +10,18 @@ const rootDir = process.cwd()
 
 export const appVersion = pkg.version
 
+// Git hash where available (dev); the Docker image has no .git/, so fall
+// back to the package version — deploys only run on `v<version>` tags, so it
+// changes with every release. The SW's registration URL and cache name are
+// derived from this, so it must never be a constant across deploys.
 function getBuildStamp(): string {
 	try {
-		return execSync("git rev-parse --short HEAD", { encoding: "utf-8" }).trim()
+		return execSync("git rev-parse --short HEAD", {
+			encoding: "utf-8",
+			stdio: ["ignore", "pipe", "ignore"],
+		}).trim()
 	} catch {
-		return "unknown"
+		return pkg.version
 	}
 }
 

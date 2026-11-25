@@ -70,7 +70,7 @@ export default createController(routes, {
 				new Response("Not Found", { status: 404 })
 			)
 		},
-		async home({ request, url, render, i18n }) {
+		async home({ request, url, render, i18n, formData: form }) {
 			const { lang, t } = i18n
 			if (request.method === "POST") {
 				// Global, not per-IP: a per-IP cap here would only matter if it
@@ -87,7 +87,6 @@ export default createController(routes, {
 						label: t("Retry"),
 					})
 				}
-				const form = await request.formData()
 				const requestedId = String(form.get("id") ?? "").trim()
 				const id =
 					requestedId && isValidId(requestedId) ? requestedId : generateId()

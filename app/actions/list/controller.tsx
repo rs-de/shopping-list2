@@ -92,12 +92,14 @@ async function loadAndMutateList({
 	params,
 	render,
 	i18n,
+	formData: form,
 }: {
 	request: Request
 	url: URL
 	params: { listId: string }
 	render: Render
 	i18n: I18n
+	formData: FormData
 }): Promise<ListLoadResult> {
 	const { listId } = params
 	const { t } = i18n
@@ -151,7 +153,6 @@ async function loadAndMutateList({
 							: new Response("Too Many Requests", { status: 429 }),
 				}
 			}
-			const form = await request.formData()
 
 			// POST rejig (no-JS fallback)
 			if (request.method === "POST" && form.has("partitionNumber")) {
