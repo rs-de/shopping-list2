@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.15.0 2026-11-26
+
+- App updates are now reliably picked up after each release, also on iOS
+- Sending too many changes at once now shows an error page with a retry
+  button instead of plain text or nothing happening
+- Under the hood: updated to Remix 3.3 and Node 26, a simpler database
+  layer and a smaller, more secure server image
+
 ## 1.14.0 2026-08-08
 
 - Add endpoint for quick-adding articles from external triggers
