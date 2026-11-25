@@ -31,6 +31,8 @@ function hashFile(relPath: string): string {
 
 export const cssVersion = hashFile("public/styles/main.css")
 
+const isDevelopment = process.env.NODE_ENV === "development"
+
 export const assetServer = createAssetServer({
 	basePath: "/assets",
 	rootDir,
@@ -41,8 +43,11 @@ export const assetServer = createAssetServer({
 		"app/utils/**",
 		"node_modules/**",
 	],
-	denyFiles: ["app/**/*.server.*"],
-	sourceMaps: process.env.NODE_ENV === "development" ? "external" : undefined,
+	denyFiles: ["app/**/*.server.*", "app/**/*.test.*"],
+	sourceMaps: isDevelopment ? "external" : undefined,
+	minify: !isDevelopment,
+	// Oldest browsers the PWA supports; newer syntax is lowered for them.
+	target: { safari: "16", ios: "16", chrome: "109", firefox: "115" },
 	scripts: {
 		define: {
 			"process.env.NODE_ENV": JSON.stringify(
@@ -50,5 +55,8 @@ export const assetServer = createAssetServer({
 			),
 			BUILD_STAMP: JSON.stringify(buildStamp),
 		},
+	},
+	onError(error) {
+		console.error("Asset compilation failed", error)
 	},
 })

@@ -6,23 +6,19 @@ import { Articles } from "../../assets/list/articles.tsx"
 import { Plan } from "../../assets/list/plan.tsx"
 import { Shopping } from "../../assets/list/shopping.tsx"
 import { db, shoppingLists } from "../../db.ts"
+import type { I18n } from "../../middleware/i18n.ts"
 import { routes } from "../../routes.ts"
 import { Document } from "../../ui/document.tsx"
 import { ErrorPage } from "../../ui/error-page.tsx"
 import {
 	type Article,
 	defaultSortKey,
+	MAX_ARTICLE_TEXT_LENGTH,
 	MAX_ARTICLES_PER_LIST,
 	rejigSortKey,
 	sortArticles,
 } from "../../utils/articles.ts"
-import {
-	createTranslator,
-	type Lang,
-	resolveLang,
-	type Translator,
-} from "../../utils/i18n.ts"
-import { generateId } from "../../utils/id.ts"
+import { generateId, isValidId } from "../../utils/id.ts"
 import { isRateLimited } from "../../utils/rateLimit.ts"
 
 type Render = (
@@ -42,13 +38,14 @@ function mutateArticles(
 			const text = String(form.get("new") ?? "").trim()
 			const sortKey = Number(form.get("sortKey"))
 			const createdAt = Number(form.get("createdAt")) || Date.now()
-			if (!id || !text || text.length > 256 || !sortKey) return badRequest()
+			if (!id || !text || text.length > MAX_ARTICLE_TEXT_LENGTH || !sortKey)
+				return badRequest()
 			if (articles.length >= MAX_ARTICLES_PER_LIST) return badRequest()
 			return sortArticles([...articles, { id, text, sortKey, createdAt }])
 		}
 		case "quickAdd": {
 			const text = String(form.get("text") ?? "").trim()
-			if (!text || text.length > 256) return badRequest()
+			if (!text || text.length > MAX_ARTICLE_TEXT_LENGTH) return badRequest()
 			if (articles.length >= MAX_ARTICLES_PER_LIST) return badRequest()
 			return sortArticles([
 				...articles,
@@ -63,7 +60,7 @@ function mutateArticles(
 		case "changeArticle": {
 			const id = String(form.get("id") ?? "")
 			const text = String(form.get("text") ?? "")
-			if (!id || text.length > 256) return badRequest()
+			if (!id || text.length > MAX_ARTICLE_TEXT_LENGTH) return badRequest()
 			return articles.map((a) => (a.id === id ? { ...a, text } : a))
 		}
 		case "deleteArticles": {
@@ -88,8 +85,6 @@ type ListLoadResult =
 			kind: "render"
 			listId: string
 			articles: Article[]
-			t: Translator
-			lang: Lang
 	  }
 
 // Shared by every leaf action on this route map (show/plan/shopping): reads
@@ -99,24 +94,25 @@ type ListLoadResult =
 // the "render" case, leaving the caller to pick which component to show.
 async function loadAndMutateList({
 	request,
+	url,
 	params,
 	render,
+	i18n: { lang, t },
 }: {
 	request: Request
+	url: URL
 	params: { listId: string }
 	render: Render
+	i18n: I18n
 }): Promise<ListLoadResult> {
 	const { listId } = params
 	try {
 		if (request.method === "DELETE") {
 			await db.delete(shoppingLists, listId)
-			return { kind: "response", response: redirect(routes.home.href()) }
+			return { kind: "response", response: redirect(routes.home.href(), 303) }
 		}
 
-		const VALID_ID = /^[A-Za-z0-9_-]{10}$/
-		if (!VALID_ID.test(listId)) {
-			const lang = resolveLang(request.headers.get("accept-language"))
-			const t = createTranslator(lang)
+		if (!isValidId(listId)) {
 			return {
 				kind: "response",
 				response: await render(
@@ -136,7 +132,7 @@ async function loadAndMutateList({
 		if (!list) {
 			return {
 				kind: "response",
-				response: redirect(`/?recreate=${encodeURIComponent(listId)}`),
+				response: redirect(`/?recreate=${encodeURIComponent(listId)}`, 303),
 			}
 		}
 		const articles = list.articles as Article[]
@@ -169,7 +165,7 @@ async function loadAndMutateList({
 				await db.update(shoppingLists, listId, { articles: next })
 				return {
 					kind: "response",
-					response: redirect(new URL(request.url).pathname),
+					response: redirect(url.pathname, 303),
 				}
 			}
 
@@ -203,7 +199,9 @@ async function loadAndMutateList({
 					if (
 						newArticles.length > MAX_ARTICLES_PER_LIST ||
 						newArticles.some(
-							(a) => typeof a.text !== "string" || a.text.length > 256,
+							(a) =>
+								typeof a.text !== "string" ||
+								a.text.length > MAX_ARTICLE_TEXT_LENGTH,
 						)
 					) {
 						return { kind: "response", response: badRequest() }
@@ -226,7 +224,7 @@ async function loadAndMutateList({
 			await db.update(shoppingLists, listId, { articles: next })
 			return {
 				kind: "response",
-				response: redirect(new URL(request.url).pathname),
+				response: redirect(url.pathname, 303),
 			}
 		}
 
@@ -234,9 +232,7 @@ async function loadAndMutateList({
 			return { kind: "response", response: Response.json({ articles }) }
 		}
 
-		const lang = resolveLang(request.headers.get("accept-language"))
-		const t = createTranslator(lang)
-		return { kind: "render", listId, articles, t, lang }
+		return { kind: "render", listId, articles }
 	} catch {
 		if (request.method !== "GET") {
 			return {
@@ -244,8 +240,6 @@ async function loadAndMutateList({
 				response: new Response("Internal Server Error", { status: 500 }),
 			}
 		}
-		const lang = resolveLang(request.headers.get("accept-language"))
-		const t = createTranslator(lang)
 		return {
 			kind: "response",
 			response: await render(
@@ -265,11 +259,8 @@ async function loadAndMutateList({
 
 export default createController(routes.list, {
 	actions: {
-		async manifest({ request, params }) {
+		async manifest({ params, i18n: { t } }) {
 			const { listId } = params
-			const t = createTranslator(
-				resolveLang(request.headers.get("accept-language")),
-			)
 			return Response.json({
 				name: t("Shopping List"),
 				short_name: t("Shopping List"),
@@ -294,66 +285,57 @@ export default createController(routes.list, {
 				],
 			})
 		},
-		async show({ request, params, render }) {
-			const result = await loadAndMutateList({
-				request,
-				params,
-				render,
-			})
+		async show(context) {
+			const { render, i18n } = context
+			const result = await loadAndMutateList(context)
 			if (result.kind === "response") return result.response
 			return render(
 				<Document
-					title={result.t("Shopping List")}
-					lang={result.lang}
+					title={i18n.t("Shopping List")}
+					lang={i18n.lang}
 					manifestHref={`/${result.listId}/manifest`}
 				>
 					<Articles
 						listId={result.listId}
 						articles={result.articles}
-						lang={result.lang}
+						lang={i18n.lang}
 						nextId={generateId()}
 					/>
 				</Document>,
 			)
 		},
-		async plan({ request, params, render }) {
-			const result = await loadAndMutateList({
-				request,
-				params,
-				render,
-			})
+		async plan(context) {
+			const { render, i18n } = context
+			const result = await loadAndMutateList(context)
 			if (result.kind === "response") return result.response
 			return render(
 				<Document
-					title={result.t("Shopping List")}
-					lang={result.lang}
+					title={i18n.t("Shopping List")}
+					lang={i18n.lang}
 					manifestHref={`/${result.listId}/manifest`}
 				>
 					<Plan
 						listId={result.listId}
 						articles={result.articles}
-						lang={result.lang}
+						lang={i18n.lang}
 					/>
 				</Document>,
 			)
 		},
-		async shopping({ request, params, render }) {
-			const result = await loadAndMutateList({
-				request,
-				params,
-				render,
-			})
+		async shopping(context) {
+			const { render, i18n } = context
+			const result = await loadAndMutateList(context)
 			if (result.kind === "response") return result.response
 			return render(
 				<Document
-					title={result.t("Shopping List")}
-					lang={result.lang}
+					title={i18n.t("Shopping List")}
+					lang={i18n.lang}
 					manifestHref={`/${result.listId}/manifest`}
 				>
 					<Shopping
 						listId={result.listId}
 						articles={result.articles}
-						lang={result.lang}
+						lang={i18n.lang}
 					/>
 				</Document>,
 			)

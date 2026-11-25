@@ -4,8 +4,15 @@
 const ALPHABET =
 	"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-"
 
-export const generateId = (size = 10) =>
+const ID_LENGTH = 10
+
+const VALID_ID = new RegExp(`^[A-Za-z0-9_-]{${ID_LENGTH}}$`)
+
+export const generateId = () =>
 	Array.from(
-		crypto.getRandomValues(new Uint8Array(size)),
+		crypto.getRandomValues(new Uint8Array(ID_LENGTH)),
 		(byte) => ALPHABET[byte & 63],
 	).join("")
+
+/** Whether `value` has the shape `generateId()` produces. */
+export const isValidId = (value: string) => VALID_ID.test(value)

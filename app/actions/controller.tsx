@@ -13,8 +13,7 @@ import { db, shoppingLists } from "../db.ts"
 import { routes } from "../routes.ts"
 import { Document } from "../ui/document.tsx"
 import { ErrorPage } from "../ui/error-page.tsx"
-import { createTranslator, resolveLang } from "../utils/i18n.ts"
-import { generateId } from "../utils/id.ts"
+import { generateId, isValidId } from "../utils/id.ts"
 import { isRateLimited } from "../utils/rateLimit.ts"
 
 const DIR = path.dirname(url.fileURLToPath(import.meta.url))
@@ -28,10 +27,7 @@ export default createController(routes, {
 				new Response("Not Found", { status: 404 })
 			)
 		},
-		async manifest({ request }) {
-			const t = createTranslator(
-				resolveLang(request.headers.get("accept-language")),
-			)
+		async manifest({ i18n: { t } }) {
 			return new Response(
 				JSON.stringify({
 					name: t("Shopping List"),
@@ -64,17 +60,14 @@ export default createController(routes, {
 		async version() {
 			return Response.json({ version: appVersion })
 		},
-		async sw({ request }) {
-			const url = new URL("/assets/app/assets/sw.ts", request.url)
+		async sw({ url: requestUrl }) {
+			const url = new URL("/assets/app/assets/sw.ts", requestUrl)
 			return (
 				(await assetServer.fetch(new Request(url.toString()))) ??
 				new Response("Not Found", { status: 404 })
 			)
 		},
-		async home({ request, render }) {
-			const VALID_ID = /^[A-Za-z0-9_-]{10}$/
-			const lang = resolveLang(request.headers.get("accept-language"))
-			const t = createTranslator(lang)
+		async home({ request, url, render, i18n: { lang, t } }) {
 			if (request.method === "POST") {
 				// Global, not per-IP: a per-IP cap here would only matter if it
 				// were tighter than this one, which would just make it the real
@@ -86,7 +79,7 @@ export default createController(routes, {
 				const form = await request.formData()
 				const requestedId = String(form.get("id") ?? "").trim()
 				const id =
-					requestedId && VALID_ID.test(requestedId) ? requestedId : generateId()
+					requestedId && isValidId(requestedId) ? requestedId : generateId()
 				// Insert-or-keep: an existing list with this id is left untouched
 				// (touch: false), so the new row's timestamps are set explicitly.
 				const now = new Date()
@@ -98,10 +91,9 @@ export default createController(routes, {
 					)
 				return redirect(`/${id}`, 303)
 			}
-			const url = new URL(request.url)
 			const recreateId = url.searchParams.get("recreate") ?? undefined
 			const validRecreateId =
-				recreateId && VALID_ID.test(recreateId) ? recreateId : undefined
+				recreateId && isValidId(recreateId) ? recreateId : undefined
 			return render(
 				<Document title={t("Free shopping list web app")} lang={lang}>
 					<div class="content-box home-page">
@@ -117,8 +109,7 @@ export default createController(routes, {
 				</Document>,
 			)
 		},
-		async changelog({ request, render }) {
-			const lang = resolveLang(request.headers.get("accept-language"))
+		async changelog({ render, i18n: { lang } }) {
 			const file = path.join(ROOT, "CHANGELOG.md")
 			const markdown = await fs.readFile(file, "utf-8")
 			const html = await marked(markdown)
@@ -131,9 +122,7 @@ export default createController(routes, {
 				</Document>,
 			)
 		},
-		async about({ request, render }) {
-			const lang = resolveLang(request.headers.get("accept-language"))
-			const t = createTranslator(lang)
+		async about({ render, i18n: { lang, t } }) {
 			const file = path.join(DIR, "about", `about.${lang}.md`)
 			const markdown = await fs.readFile(file, "utf-8")
 			const html = await marked(markdown)
@@ -149,9 +138,7 @@ export default createController(routes, {
 				</Document>,
 			)
 		},
-		async notFound({ request, render }) {
-			const lang = resolveLang(request.headers.get("accept-language"))
-			const t = createTranslator(lang)
+		async notFound({ render, i18n: { lang, t } }) {
 			return render(
 				<Document title="404 — Shopping List" lang={lang}>
 					<ErrorPage

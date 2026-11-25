@@ -7,6 +7,9 @@ export type Article = {
 
 export const MAX_ARTICLES_PER_LIST = 500
 
+/** Server-side cap; the edit inputs use a tighter maxLength for typing. */
+export const MAX_ARTICLE_TEXT_LENGTH = 256
+
 /**
  * Rejig bucket assignments use even sortKeys and not-yet-rejigged articles
  * default to an odd one (see defaultSortKey) so an explicit "Late" rejig
