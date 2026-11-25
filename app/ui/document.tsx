@@ -13,7 +13,6 @@ export interface DocumentProps {
 	title?: string
 	lang?: Lang
 	manifestHref?: string
-	nonce: string
 }
 
 const DEFAULT_TITLE = readAppDisplayName("Shopping%20List2")
@@ -53,7 +52,6 @@ export function Document(handle: Handle<DocumentProps>) {
 			title = DEFAULT_TITLE,
 			lang = DEFAULT_LANG,
 			manifestHref = "/manifest.webmanifest",
-			nonce,
 		} = handle.props
 		const t = createTranslator(lang)
 
@@ -79,7 +77,7 @@ export function Document(handle: Handle<DocumentProps>) {
 					))}
 					<link rel="stylesheet" href={`/styles/main.css?v=${cssVersion}`} />
 					<title>{title}</title>
-					<ImportMap value={{}} nonce={nonce} />
+					<ImportMap value={{}} />
 					{head}
 				</head>
 				<body>

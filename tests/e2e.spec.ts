@@ -609,6 +609,29 @@ test("/api/version returns version string", async ({ request }) => {
 	expect(body.version.length).toBeGreaterThan(0)
 })
 
+// The inline <script type="importmap"> only runs if its nonce matches the
+// CSP header's — a mismatch silently breaks hydration of every client entry.
+test("CSP header nonce matches the import map's, fresh per request", async ({
+	page,
+}) => {
+	const nonces: string[] = []
+	for (let i = 0; i < 2; i++) {
+		const res = await page.goto("/")
+		const header = res?.headers()["content-security-policy"] ?? ""
+		expect(header).toContain("default-src 'self'")
+		expect(header).toContain("frame-ancestors 'none'")
+		const nonce = /'nonce-([^']+)'/.exec(header)?.[1]
+		expect(nonce).toBeTruthy()
+		// The browser hides nonce attributes from getAttribute(); use .nonce.
+		const mapNonce = await page
+			.locator('script[type="importmap"]')
+			.evaluate((el) => (el as HTMLScriptElement).nonce)
+		expect(mapNonce).toBe(nonce)
+		nonces.push(nonce ?? "")
+	}
+	expect(nonces[0]).not.toBe(nonces[1])
+})
+
 // Regression test: iOS Safari has served a stale cached /sw.js for its own
 // update-comparison fetch, so a new worker was never detected (only fixed by
 // wiping site data). Registering with a per-deploy query string forces that

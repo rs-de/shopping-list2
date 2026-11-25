@@ -71,7 +71,7 @@ export default createController(routes, {
 				new Response("Not Found", { status: 404 })
 			)
 		},
-		async home({ request, render, cspNonce }) {
+		async home({ request, render }) {
 			const VALID_ID = /^[A-Za-z0-9_-]{10}$/
 			const lang = resolveLang(request.headers.get("accept-language"))
 			const t = createTranslator(lang)
@@ -103,11 +103,7 @@ export default createController(routes, {
 			const validRecreateId =
 				recreateId && VALID_ID.test(recreateId) ? recreateId : undefined
 			return render(
-				<Document
-					title={t("Free shopping list web app")}
-					lang={lang}
-					nonce={cspNonce}
-				>
+				<Document title={t("Free shopping list web app")} lang={lang}>
 					<div class="content-box home-page">
 						<div class="home-page__header">
 							<h1>{t("Shopping List")}</h1>
@@ -121,17 +117,13 @@ export default createController(routes, {
 				</Document>,
 			)
 		},
-		async changelog({ request, render, cspNonce }) {
+		async changelog({ request, render }) {
 			const lang = resolveLang(request.headers.get("accept-language"))
 			const file = path.join(ROOT, "CHANGELOG.md")
 			const markdown = await fs.readFile(file, "utf-8")
 			const html = await marked(markdown)
 			return render(
-				<Document
-					title="Changelog — Shopping List"
-					lang={lang}
-					nonce={cspNonce}
-				>
+				<Document title="Changelog — Shopping List" lang={lang}>
 					<article
 						class="content-box prose changelog-page"
 						innerHTML={unsafeHTML(html)}
@@ -139,14 +131,14 @@ export default createController(routes, {
 				</Document>,
 			)
 		},
-		async about({ request, render, cspNonce }) {
+		async about({ request, render }) {
 			const lang = resolveLang(request.headers.get("accept-language"))
 			const t = createTranslator(lang)
 			const file = path.join(DIR, "about", `about.${lang}.md`)
 			const markdown = await fs.readFile(file, "utf-8")
 			const html = await marked(markdown)
 			return render(
-				<Document title="About — Shopping List" lang={lang} nonce={cspNonce}>
+				<Document title="About — Shopping List" lang={lang}>
 					<div class="about-page">
 						<div class="about-page__header">
 							<h1>{t("Shopping List")}</h1>
@@ -157,11 +149,11 @@ export default createController(routes, {
 				</Document>,
 			)
 		},
-		async notFound({ request, render, cspNonce }) {
+		async notFound({ request, render }) {
 			const lang = resolveLang(request.headers.get("accept-language"))
 			const t = createTranslator(lang)
 			return render(
-				<Document title="404 — Shopping List" lang={lang} nonce={cspNonce}>
+				<Document title="404 — Shopping List" lang={lang}>
 					<ErrorPage
 						code={404}
 						message={t("Page not found.")}

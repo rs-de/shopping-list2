@@ -198,3 +198,6 @@ Pre-diary (retroactive): register scaffolded Remix skill for Claude Code
 
 64. Replace Prisma+libSQL with remix/data-table on node:sqlite; migrate at boot
    `(edit db.ts+server.ts+controllers; add app/db/migrations; rm prisma, 6 deps)`
+
+65. Use Remix's csp() + render({ assets }); drop own middleware and nonce props
+   `(rm middleware/csp.ts+render.tsx; edit router.ts+document.tsx+controllers)`
