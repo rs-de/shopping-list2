@@ -1,6 +1,7 @@
+import * as fs from "node:fs"
 import * as path from "node:path"
 import * as url from "node:url"
-import { column as c, table } from "remix/data-table"
+import { column as c, sql, table } from "remix/data-table"
 import { loadMigrations } from "remix/data-table/migrations/node"
 import { createSqliteDatabase } from "remix/data-table/sqlite"
 
@@ -29,8 +30,30 @@ const filename = (process.env.DATABASE_URL ?? "file:./dev.db").replace(
 	"",
 )
 
+// Checked before opening, which creates the file: a brand-new database has
+// nothing worth backing up.
+const existedAtStart = fs.existsSync(filename)
+
 export const db = createSqliteDatabase({ filename })
 
+// Snapshots the database next to itself before pending migrations run, e.g.
+// `prod.db.before-0002_add_x.bak` — one file per migration, so the set is
+// naturally bounded and each name says which change it predates. An existing
+// snapshot is kept, not overwritten: after a crashed migration and restart,
+// it still holds the state from before the first attempt.
 export async function migrate() {
-	await db.migrate(await loadMigrations(MIGRATIONS_DIR))
+	const migrations = await loadMigrations(MIGRATIONS_DIR)
+	const pending = (await db.migrationStatus(migrations)).filter(
+		(m) => m.status === "pending",
+	)
+	if (pending.length === 0) return
+	if (existedAtStart) {
+		const backup = `${filename}.before-${pending[0].id}_${pending[0].name}.bak`
+		if (!fs.existsSync(backup)) {
+			// VACUUM INTO writes a consistent copy even of an open database.
+			await db.exec(sql`VACUUM INTO ${backup}`)
+			console.log(`Backed up database to ${backup}`)
+		}
+	}
+	await db.migrate(migrations)
 }
