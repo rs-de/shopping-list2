@@ -12,8 +12,11 @@ import { type Render, renderErrorPage } from "../../ui/error-page.tsx"
 import {
 	type Article,
 	defaultSortKey,
+	isValidArticleId,
+	isValidPartition,
 	MAX_ARTICLE_TEXT_LENGTH,
 	MAX_ARTICLES_PER_LIST,
+	parseArticle,
 	rejigSortKey,
 	sortArticles,
 } from "../../utils/articles.ts"
@@ -28,14 +31,15 @@ function mutateArticles(
 ): Article[] | Response {
 	switch (form.get("_action")) {
 		case "addArticle": {
-			const id = String(form.get("id") ?? "").trim()
-			const text = String(form.get("new") ?? "").trim()
-			const sortKey = Number(form.get("sortKey"))
-			const createdAt = Number(form.get("createdAt")) || Date.now()
-			if (!id || !text || text.length > MAX_ARTICLE_TEXT_LENGTH || !sortKey)
-				return badRequest()
+			const article = parseArticle({
+				id: String(form.get("id") ?? "").trim(),
+				text: String(form.get("new") ?? "").trim(),
+				sortKey: Number(form.get("sortKey")),
+				createdAt: Number(form.get("createdAt")) || Date.now(),
+			})
+			if (!article?.text || !article.sortKey) return badRequest()
 			if (articles.length >= MAX_ARTICLES_PER_LIST) return badRequest()
-			return sortArticles([...articles, { id, text, sortKey, createdAt }])
+			return sortArticles([...articles, article])
 		}
 		case "quickAdd": {
 			const text = String(form.get("text") ?? "").trim()
@@ -52,9 +56,10 @@ function mutateArticles(
 			])
 		}
 		case "changeArticle": {
-			const id = String(form.get("id") ?? "")
+			const id = form.get("id")
 			const text = String(form.get("text") ?? "")
-			if (!id || text.length > MAX_ARTICLE_TEXT_LENGTH) return badRequest()
+			if (!isValidArticleId(id) || text.length > MAX_ARTICLE_TEXT_LENGTH)
+				return badRequest()
 			return articles.map((a) => (a.id === id ? { ...a, text } : a))
 		}
 		case "deleteArticles": {
@@ -158,7 +163,7 @@ async function loadAndMutateList({
 			if (request.method === "POST" && form.has("partitionNumber")) {
 				const partitionNumber = Number(form.get("partitionNumber"))
 				const ids = form.getAll("selected").map(String)
-				if (!ids.length || !partitionNumber) {
+				if (!ids.length || !isValidPartition(partitionNumber)) {
 					return { kind: "response", response: badRequest() }
 				}
 				const next = sortArticles(
@@ -181,7 +186,7 @@ async function loadAndMutateList({
 				if (action === "rejig") {
 					const selected = form.getAll("selected").map(String)
 					const partitionNumber = Number(form.get("partitionNumber"))
-					if (!selected.length || !partitionNumber) {
+					if (!selected.length || !isValidPartition(partitionNumber)) {
 						return { kind: "response", response: badRequest() }
 					}
 					return {
@@ -199,17 +204,18 @@ async function loadAndMutateList({
 					}
 				}
 				if (action === "replaceArticles") {
-					const newArticles = JSON.parse(
-						String(form.get("articles") ?? "[]"),
-					) as Article[]
-					if (
-						newArticles.length > MAX_ARTICLES_PER_LIST ||
-						newArticles.some(
-							(a) =>
-								typeof a.text !== "string" ||
-								a.text.length > MAX_ARTICLE_TEXT_LENGTH,
-						)
-					) {
+					let input: unknown
+					try {
+						input = JSON.parse(String(form.get("articles") ?? "[]"))
+					} catch {
+						return { kind: "response", response: badRequest() }
+					}
+					if (!Array.isArray(input) || input.length > MAX_ARTICLES_PER_LIST) {
+						return { kind: "response", response: badRequest() }
+					}
+					const parsed = input.map(parseArticle)
+					const newArticles = parsed.filter((a): a is Article => a !== null)
+					if (newArticles.length !== parsed.length) {
 						return { kind: "response", response: badRequest() }
 					}
 					return {

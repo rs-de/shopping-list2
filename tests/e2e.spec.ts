@@ -779,6 +779,77 @@ test("list stays usable offline: shows existing articles and queues new ones", a
 	await context.setOffline(false)
 })
 
+// Request-level validation of untrusted writes. Uses the shared list and
+// restores its articles afterwards; stays well under the per-list limiter.
+test("server rejects malformed or oversized list writes", async ({
+	request,
+}) => {
+	expect(listUrl).not.toBe("")
+	const json = { accept: "application/json" }
+	const before = (await (await request.get(listUrl, { headers: json })).json())
+		.articles
+	const patch = (form: Record<string, string>) =>
+		request.patch(listUrl, { multipart: form })
+
+	expect(
+		(
+			await patch({
+				_action: "addArticle",
+				id: "x".repeat(10_000),
+				new: "Milk",
+				sortKey: "5",
+			})
+		).status(),
+	).toBe(400)
+	for (const articles of ["{", "{}", '[{"id":"a","text":1}]']) {
+		const res = await patch({ _action: "replaceArticles", articles })
+		expect(res.status(), articles).toBe(400)
+	}
+	expect(
+		(
+			await patch({
+				_action: "rejig",
+				selected: "a",
+				partitionNumber: "999",
+			})
+		).status(),
+	).toBe(400)
+	// Over the 2 MB body cap: the server answers 413 and closes the connection
+	// mid-upload, which the client may see as a reset instead. Either way the
+	// write must not be accepted.
+	const oversized = await patch({
+		_action: "replaceArticles",
+		articles: "x".repeat(3 * 1024 * 1024),
+	}).then(
+		(res) => res.status(),
+		(error: Error) => error.message,
+	)
+	expect(String(oversized)).toMatch(/^413$|ECONNRESET|EPIPE|socket hang up/)
+	expect(
+		(await (await request.get(listUrl, { headers: json })).json()).articles,
+	).toEqual(before)
+
+	// Extra fields are dropped, not stored.
+	const stored = await patch({
+		_action: "replaceArticles",
+		articles: JSON.stringify([
+			{ id: "valid0001", text: "Bread", sortKey: 3, createdAt: 1, evil: "x" },
+		]),
+	})
+	expect(stored.status()).toBe(200)
+	const after = (await (await request.get(listUrl, { headers: json })).json())
+		.articles
+	expect(after).toEqual([
+		{ id: "valid0001", text: "Bread", sortKey: 3, createdAt: 1 },
+	])
+
+	const restored = await patch({
+		_action: "replaceArticles",
+		articles: JSON.stringify(before),
+	})
+	expect(restored.status()).toBe(200)
+})
+
 // Last in the file: it saturates the list's 15-writes/s limiter, so nothing
 // after it may write to listUrl within the same second. A POST without an
 // _action still counts toward the limit but changes no data (400).

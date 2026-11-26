@@ -40,7 +40,9 @@ export const router = createRouter<AppContext>({
 		staticFiles("./public", { index: false }),
 		// Missing or malformed bodies become an empty FormData, so a bad POST
 		// gets the normal 400 path instead of a thrown parse error (500).
-		formData({ suppressErrors: true }),
+		// The size cap is far above the largest legit body (a 500-article
+		// replaceArticles is < 1 MB); overruns throw and server.ts answers 413.
+		formData({ suppressErrors: true, maxTotalSize: 2 * 1024 * 1024 }),
 		i18n(),
 		render({ assets: assetServer }),
 	],

@@ -2,6 +2,13 @@ import * as http from "node:http"
 import * as os from "node:os"
 import * as path from "node:path"
 import { lt } from "remix/data-table"
+import {
+	MaxFileSizeExceededError,
+	MaxFilesExceededError,
+	MaxHeaderSizeExceededError,
+	MaxPartsExceededError,
+	MaxTotalSizeExceededError,
+} from "remix/form-data-parser"
 import { createRequestListener } from "remix/node-fetch-server"
 
 import { db, migrate, shoppingLists } from "./app/db.ts"
@@ -35,6 +42,16 @@ const STATIC_EXTS = new Set([
 	"ttf",
 	"gif",
 ])
+
+function isFormLimitError(error: unknown): boolean {
+	return (
+		error instanceof MaxTotalSizeExceededError ||
+		error instanceof MaxPartsExceededError ||
+		error instanceof MaxFilesExceededError ||
+		error instanceof MaxFileSizeExceededError ||
+		error instanceof MaxHeaderSizeExceededError
+	)
+}
 
 function withSecurityHeaders(response: Response): Response {
 	const headers = new Headers(response.headers)
@@ -86,10 +103,23 @@ const server = http.createServer(
 				withCacheHeaders(await router.fetch(request), url),
 			)
 		} catch (error) {
+			// formData()'s size limits are never suppressed; they're the client's
+			// fault, not ours, so answer 413 without logging a stack trace. The
+			// rest of the body is left unread, so the connection can't be reused.
+			if (isFormLimitError(error)) {
+				return withSecurityHeaders(
+					new Response("Payload Too Large", {
+						status: 413,
+						headers: { connection: "close" },
+					}),
+				)
+			}
 			if (!(request.signal.aborted && error === request.signal.reason)) {
 				console.error(error)
 			}
-			return new Response("Internal Server Error", { status: 500 })
+			return withSecurityHeaders(
+				new Response("Internal Server Error", { status: 500 }),
+			)
 		}
 	}),
 )
