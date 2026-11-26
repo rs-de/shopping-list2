@@ -6,9 +6,10 @@ This app was scaffolded with `remix new`. Use these conventions when continuing 
 
 ```sh
 pnpm install
-pnpm start
+pnpm dev
 pnpm test
 pnpm typecheck
+pnpm check
 ```
 
 ## Building Features
@@ -16,16 +17,20 @@ pnpm typecheck
 **Important:** This is Remix 3 — NOT React, NOT Remix 2 / React Router. See the "Framework
 Identity" section in CLAUDE.md for a contrast table before writing any new code.
 
-Refer to ./.agents/skills/remix/SKILL.md
+Refer to ./.agents/skills/remix/SKILL.md, then the docs installed with the pinned
+Remix version (`node_modules/remix/INDEX.md`, `guides/`, `src/*/README.md`).
 
 ## Starter Layout
 
 - `app/actions/controller.tsx` owns the top-level route actions
 - `app/routes.ts` defines the route contract
-- `app/router.ts` wires routes to route handlers
-- `app/middleware/render.tsx` installs the request-scoped renderer used by actions
-- `app/ui/` holds the shared document shell and home page UI
-- `app/assets.ts` owns the server-side asset pipeline used by the asset route and renderer
+- `app/router.ts` wires middleware (csp, formData, i18n, render) and controllers
+- `app/actions/list/controller.tsx` owns the list route map
+- `app/middleware/i18n.ts` exposes the request's language as `context.i18n`
+- `app/ui/` holds the shared document shell, navbar/footer and error pages
+- `app/assets.ts` owns the asset server used by the asset route and `render({ assets })`
+- `app/assets/` holds browser-reachable modules (client entries, sync, service worker)
+- `app/db.ts` + `app/db/migrations/` hold the data-table schema and SQL migrations
 - `public/` contains static files served from the app root
 
 ## Route Ownership

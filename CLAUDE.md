@@ -39,20 +39,25 @@ Never apply React or Remix 2 patterns here.
 | `action() / loader()` exports         | `createController()` with keyed actions    |
 | `<Form> / useNavigate()`              | `form()` route + controller action + render|
 
-See `.agents/skills/remix/SKILL.md` for the full Remix 3 pattern reference.
+See `.agents/skills/remix/SKILL.md` (from the Remix 3.3 starter) for the mental model. The
+canonical API docs are the ones installed with the pinned version: search
+`node_modules/remix/INDEX.md`, then `node_modules/remix/guides/` and
+`node_modules/remix/src/<subpath>/README.md`. Re-copy the skill from
+`@remix-run/cli`'s `template/.agents/skills/remix/` when upgrading Remix.
 
 ## Layout
 
 - `server.ts` — HTTP server entry point
 - `app/router.ts` — middleware wiring
 - `app/routes.ts` — route definitions
-- `app/actions/controller.tsx` — top-level route handlers
-- `app/middleware/render.tsx` — SSR renderer
-- `app/ui/document.tsx` — base HTML shell
-- `app/assets.ts` + `app/assets/entry.ts` — asset pipeline
+- `app/actions/controller.tsx` — top-level route handlers; `app/actions/list/` — list routes
+- `app/middleware/i18n.ts` — per-request `lang`/`t` on `context.i18n`
+- `app/db.ts` + `app/db/migrations/` — `remix/data-table` on `node:sqlite`; migrations run at boot
+- `app/ui/document.tsx` — base HTML shell; `app/ui/error-page.tsx` — shared error pages
+- `app/assets.ts` + `app/assets/entry.ts` — asset server and browser entry
 - `public/` — static files
 
-Refer to `.agents/skills/remix/SKILL.md` for Remix 3 patterns.
+Run `npx remix doctor` after structural or configuration changes.
 
 ## Code Principles
 

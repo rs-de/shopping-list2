@@ -37,28 +37,29 @@ The SQLite database is created automatically at `./dev.db`. Pending migrations i
 ## Project Layout
 
 ```
-server.ts                  # HTTP server entry — security + cache headers
+server.ts                  # HTTP entry — migrations, security + cache headers
 app/
   routes.ts                # Typed URL contract, href() generation
-  router.ts                # Middleware wiring
+  router.ts                # Middleware wiring (csp, formData, i18n, render)
   actions/
-    controller.tsx          # Root route handlers (home, about, assets, version)
-    list/controller.tsx     # /:listId — GET/PATCH/DELETE shopping list
-  middleware/render.tsx     # SSR renderer middleware
-  assets/
+    controller.tsx         # Root routes (home, about, changelog, assets, sw, manifest)
+    about/                 # About page markdown (en/de)
+    list/controller.tsx    # /:listId routes — list pages, writes, JSON pull
+  middleware/i18n.ts       # Request language + translator on context.i18n
+  assets/                  # Browser-reachable modules
     entry.ts               # Browser entry — boots Remix runtime, registers SW
-    shopping-list.tsx      # Interactive shopping list (clientEntry)
     home-menu.tsx          # Home page client component
+    list/                  # Articles / Plan / Shopping client entries, sync engine
     sw.ts                  # Service worker
-  ui/                      # Server-rendered components (document shell, nav, footer)
+  ui/                      # Server-rendered components (document, nav, footer, error pages)
+  utils/                   # Shared server/browser logic (ids, articles, i18n, rate limit)
+  i18n/de.ts               # German translations (pnpm i18n:sync)
   db.ts                    # data-table schema + SQLite connection + migrate()
   db/migrations/           # SQL migrations, applied on server start
-  i18n.ts                  # Accept-Language translation loader
 public/
   styles/main.css          # Plain CSS — Radix UI color tokens, no Tailwind
-  locales/                 # en/de translation JSON
 tests/
-  e2e.spec.ts             # Playwright tests
+  e2e.spec.ts              # Playwright tests
 ```
 
 ## Remix 3 — Key Differences
