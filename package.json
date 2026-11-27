@@ -33,7 +33,7 @@
 		"@playwright/test": "1.65.1",
 		"@types/node": "^26.6.10",
 		"lighthouse": "^13.6.0",
-		"typescript": "^6.0.3"
+		"typescript": "7.0.2"
 	},
 	"pnpm": {
 		"onlyBuiltDependencies": [

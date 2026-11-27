@@ -1,7 +1,6 @@
 import * as fs from "node:fs"
 import * as path from "node:path"
 import * as url from "node:url"
-import ts from "typescript"
 
 import { CONFIGURED_LANGUAGES } from "../app/utils/i18n.ts"
 
@@ -28,30 +27,29 @@ function listSourceFiles(dir: string): string[] {
 	return out
 }
 
-/** Finds every `t("...")` call with a string-literal first argument — the one hard constraint the sync script relies on for static extraction. */
+// Matches `t(` followed by a string or template literal — the one hard
+// constraint the sync script relies on: the text must always be a literal,
+// never built at runtime, or it can't be found here. A regex rather than the
+// TypeScript compiler API, which TypeScript 7 (the native port) doesn't ship.
+const T_CALL_PATTERN = /\bt\(\s*(['"`])((?:\\.|(?!\1)[\s\S])*?)\1/g
+
+/** Finds every `t("...")` call with a string-literal first argument. */
 function findTranslationCalls(file: string): string[] {
 	const source = fs.readFileSync(file, "utf-8")
-	const sourceFile = ts.createSourceFile(
-		file,
-		source,
-		ts.ScriptTarget.Latest,
-		true,
-		file.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
-	)
 	const found: string[] = []
-	function visit(node: ts.Node) {
-		if (
-			ts.isCallExpression(node) &&
-			ts.isIdentifier(node.expression) &&
-			node.expression.text === "t" &&
-			node.arguments.length > 0 &&
-			ts.isStringLiteralLike(node.arguments[0])
-		) {
-			found.push(node.arguments[0].text)
+	for (const match of source.matchAll(T_CALL_PATTERN)) {
+		const raw = match[0].slice("t(".length).trim()
+		if (raw.includes("${")) {
+			console.warn(
+				`${file}: skipping a t() call with a dynamic template literal — the text must be a plain string literal.`,
+			)
+			continue
 		}
-		ts.forEachChild(node, visit)
+		// The matched literal is valid JS source (same quoting/escaping rules
+		// as the file it came from), so evaluating it is the simplest correct
+		// unescape — this only ever runs against our own trusted repo source.
+		found.push(new Function(`return (${raw})`)() as string)
 	}
-	visit(sourceFile)
 	return found
 }
 

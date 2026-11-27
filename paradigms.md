@@ -55,9 +55,9 @@ The user's language is determined once per request, server-side, from
 called inline as `t('English source text')` — the English text is both
 the template and the dictionary key, so there's no separate key to invent
 or keep in sync. Non-default languages live in one generated file each
-under `app/i18n/<lang>.ts`; `pnpm i18n:sync` scans source (via the
-TypeScript compiler API, not regex) for `t(` calls with a string-literal
-argument and appends newly-discovered keys, and `pnpm i18n:check` (wired
+under `app/i18n/<lang>.ts`; `pnpm i18n:sync` scans source (one regex, the same as
+clockout's — TypeScript 7 ships no compiler API) for `t(` calls with a
+string-literal argument and appends newly-discovered keys, and `pnpm i18n:check` (wired
 into `pnpm check` and CI) fails the build if a string ships untranslated.
 Since this app re-renders client-side independent of the server
 (optimistic sync, toasts), `createTranslator(lang)` and the target

@@ -201,3 +201,6 @@ Pre-diary (retroactive): register scaffolded Remix skill for Claude Code
 
 65. Use Remix's csp() + render({ assets }); drop own middleware and nonce props
    `(rm middleware/csp.ts+render.tsx; edit router.ts+document.tsx+controllers)`
+
+66. TypeScript 6 → 7 (native tsc): i18n-sync finds t() calls by regex, not the compiler API
+   `(edit scripts/i18n-sync.ts+package.json; rm .vscode tsdk.path; same 44 keys as before)`
