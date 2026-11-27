@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.16.0 2026-11-27
+## 1.15.3 2026-11-27
 
 - The app now opens instantly even with poor reception (e.g. in a shop):
   it no longer waits for the network to load its own code and styles
