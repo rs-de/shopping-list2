@@ -31,8 +31,10 @@ invalidates its own cache automatically, without a manual version bump.
 The app can be added to the home screen and launches like a native app —
 manifest, icons, theme color, and the platform-specific metadata (like
 iOS's launch splash screen) that a generic manifest alone doesn't cover.
-Updates announce themselves via an in-app prompt instead of surprising the
-user mid-session.
+Updates apply invisibly: a new version is loaded by a real reload when the
+user comes back to the app, never mid-session and never while a field holds
+unsaved text — no "new version" prompt for users to puzzle over. Only a
+visible change gets a short explanation of what changed and why.
 
 ## 5. Performance and quality gated by CI, not opinion
 
