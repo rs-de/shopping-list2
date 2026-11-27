@@ -136,6 +136,14 @@ function getLanAddress(): string | undefined {
 // mount the /data volume, so they can't reach the SQLite file.
 await migrate()
 
+// No auto-kill of whatever holds the port (it may be another app's server):
+// fail loudly instead.
+server.on("error", (error: NodeJS.ErrnoException) => {
+	if (error.code !== "EADDRINUSE") throw error
+	console.error(`Port ${port} is already in use; stop that server or set PORT.`)
+	process.exit(1)
+})
+
 server.listen(port, () => {
 	console.log(`  Local:   http://localhost:${port}`)
 	const lan = getLanAddress()

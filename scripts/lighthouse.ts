@@ -2,8 +2,12 @@ import { spawn } from "node:child_process"
 import { chromium } from "@playwright/test"
 import lighthouse from "lighthouse"
 
-const PORT = 9_222
-const url = process.argv[2] ?? "http://localhost:44100"
+// Dedicated ports, never shared with `pnpm dev` (44100) or e2e (44101): with
+// no URL argument, the audit always starts its own production server rather
+// than auditing whatever happens to be listening.
+const SERVER_PORT = 44_102
+const DEBUG_PORT = 44_103
+const url = process.argv[2] ?? `http://localhost:${SERVER_PORT}`
 const CATEGORIES = [
 	"performance",
 	"accessibility",
@@ -38,26 +42,41 @@ async function waitForServer(ms = 10_000): Promise<void> {
 
 let serverProcess: ReturnType<typeof spawn> | null = null
 
-if (!(await isServerUp())) {
+if (!process.argv[2]) {
+	if (await isServerUp()) {
+		throw new Error(`Port ${SERVER_PORT} is already in use`)
+	}
 	serverProcess = spawn("node", ["--import", "remix/node-tsx", "server.ts"], {
 		stdio: "ignore",
-		env: { ...process.env, NODE_ENV: "production" },
+		env: {
+			...process.env,
+			NODE_ENV: "production",
+			PORT: String(SERVER_PORT),
+			DATABASE_URL: "file:./test.db",
+		},
 	})
-	await waitForServer()
 }
 
-const browser = await chromium.launch({
-	args: [`--remote-debugging-port=${PORT}`, "--headless=new"],
-})
-
-const result = await lighthouse(url, {
-	port: PORT,
-	output: "json",
-	logLevel: "error",
-	onlyCategories: [...CATEGORIES],
-}).finally(() => browser.close())
-
-serverProcess?.kill()
+const result = await (async () => {
+	try {
+		if (serverProcess) await waitForServer()
+		const browser = await chromium.launch({
+			args: [`--remote-debugging-port=${DEBUG_PORT}`, "--headless=new"],
+		})
+		try {
+			return await lighthouse(url, {
+				port: DEBUG_PORT,
+				output: "json",
+				logLevel: "error",
+				onlyCategories: [...CATEGORIES],
+			})
+		} finally {
+			await browser.close()
+		}
+	} finally {
+		serverProcess?.kill()
+	}
+})()
 
 if (!result) throw new Error("Lighthouse returned no result")
 

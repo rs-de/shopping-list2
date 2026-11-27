@@ -29,10 +29,10 @@ The SQLite database is created automatically at `./dev.db`. Pending migrations i
 |---|---|
 | `pnpm dev` | Dev server with `--watch` on port 44100 |
 | `pnpm start` | Production server |
-| `pnpm test:e2e` | Playwright end-to-end tests |
+| `pnpm test:e2e` | Playwright end-to-end tests (own server on port 44101, `./test.db`) |
 | `pnpm typecheck` | TypeScript type check (`tsc --noEmit`) |
 | `pnpm check` | Biome lint + format with auto-fix |
-| `pnpm lighthouse` | Lighthouse audit via Playwright Chromium |
+| `pnpm test:quality` | Lighthouse audit (own production server on port 44102; pass a URL to audit that instead) |
 
 ## Project Layout
 

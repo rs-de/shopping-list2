@@ -17,6 +17,10 @@ pnpm typecheck      # tsc --noEmit
 pnpm check          # Biome lint + format (auto-fix)
 ```
 
+## Ports
+
+Each rushsoft app owns a block of ports so dev servers, tests and agents running in parallel never hit another app's server: shopping-list2 uses 44100 (dev), 44101 (e2e), 44102 (Lighthouse server), 44103 (Lighthouse Chrome debugging); clockout uses 442xx. Tests always start their own server (`reuseExistingServer: false`). When an ad-hoc server is needed, pick a free port outside these blocks and stop only processes you started — never `kill` whatever listens on a port.
+
 ## Stack
 
 - Remix 3 (`remix@3.3.0`) — server framework

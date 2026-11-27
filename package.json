@@ -4,7 +4,6 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
-		"predev": "lsof -ti:44100 | xargs kill -9 2>/dev/null; true",
 		"dev": "NODE_ENV=development node --watch --import remix/node-tsx server.ts",
 		"start": "NODE_ENV=production node --import remix/node-tsx server.ts",
 		"test": "pnpm test:unit && pnpm test:e2e && pnpm test:quality",

@@ -1,14 +1,20 @@
 import { defineConfig } from "@playwright/test"
 
+// Own port and database, never shared with `pnpm dev` (44100): a reused or
+// foreign server on the same port would make the suite test the wrong app.
+const PORT = 44101
+const URL = `http://localhost:${PORT}`
+
 export default defineConfig({
 	testDir: "./tests",
 	use: {
-		baseURL: "http://localhost:44100",
+		baseURL: URL,
 	},
 	webServer: {
 		command: "node --import remix/node-tsx server.ts",
-		url: "http://localhost:44100",
-		reuseExistingServer: !process.env.CI,
+		url: URL,
+		env: { PORT: String(PORT), DATABASE_URL: "file:./test.db" },
+		reuseExistingServer: false,
 		timeout: 30_000,
 	},
 })
