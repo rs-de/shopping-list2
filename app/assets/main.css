@@ -122,7 +122,6 @@ a {
 	padding: 0.5rem;
 	background: hsl(var(--primary-2) / 0.8);
 	backdrop-filter: blur(12px);
-	-webkit-backdrop-filter: blur(12px);
 }
 
 /* text-slate-11 */

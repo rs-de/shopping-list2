@@ -1,7 +1,5 @@
 import { execSync } from "node:child_process"
-import { createHash } from "node:crypto"
-import { readFileSync } from "node:fs"
-import path from "node:path"
+import { globSync } from "node:fs"
 
 import { createAssetServer } from "remix/assets"
 import pkg from "../package.json" with { type: "json" }
@@ -27,17 +25,6 @@ function getBuildStamp(): string {
 
 export const buildStamp = getBuildStamp()
 
-// Content hash, not buildStamp: a Docker rebuild or uncommitted local edit
-// both need to bust the cache the moment the bytes actually change, in dev
-// and prod alike, independent of git commits or file mtimes (which Docker's
-// `COPY . .` resets on every build regardless of real content changes).
-function hashFile(relPath: string): string {
-	const bytes = readFileSync(path.join(rootDir, relPath))
-	return createHash("sha1").update(bytes).digest("hex").slice(0, 8)
-}
-
-export const cssVersion = hashFile("public/styles/main.css")
-
 const isDevelopment = process.env.NODE_ENV === "development"
 
 export const assetServer = createAssetServer({
@@ -54,12 +41,20 @@ export const assetServer = createAssetServer({
 	denyFiles: ["app/**/*.server.*", "app/**/*.test.*"],
 	sourceMaps: isDevelopment ? "external" : undefined,
 	minify: !isDevelopment,
+	// Production URLs carry a content hash (`entry.@w37eLV.ts`) and are served
+	// `immutable`, which is what lets the service worker serve them cache-first
+	// (sw.ts). Fingerprinting needs files that don't change on disk, so it's
+	// off while watching in development, where URLs stay stable.
+	watch: isDevelopment,
+	fingerprint: !isDevelopment,
 	// Oldest browsers the PWA supports; newer syntax is lowered for them.
 	target: { safari: "16", ios: "16", chrome: "109", firefox: "115" },
 	scripts: {
 		define: {
+			// Same flag as the server side: an unset NODE_ENV (e2e) is production
+			// here too, so tests run the production service worker.
 			"process.env.NODE_ENV": JSON.stringify(
-				process.env.NODE_ENV ?? "development",
+				isDevelopment ? "development" : "production",
 			),
 			BUILD_STAMP: JSON.stringify(buildStamp),
 		},
@@ -68,3 +63,24 @@ export const assetServer = createAssetServer({
 		console.error("Asset compilation failed", error)
 	},
 })
+
+// Import map, module preloads and URL for the browser entry, rendered by
+// <Document>. Bare and stable specifiers in served modules resolve through
+// this import map (to fingerprinted URLs in production).
+export const scriptEntry = await assetServer.getScriptEntry(
+	"app/assets/entry.ts",
+)
+
+export const stylesheetHref = await assetServer.getHref("app/assets/main.css")
+
+export const serviceWorkerHref = await assetServer.getHref("app/assets/sw.ts")
+
+// Every module and stylesheet the browser can load (the entry, each client
+// entry and all their imports), for the service worker to cache on install —
+// so a page from this release never has to fetch one of its files from a
+// server that may already run the next release (whose URLs differ).
+export const precacheAssets = await assetServer.getPreloads(
+	globSync("app/assets/**/*.{ts,tsx,css}", { cwd: rootDir }).filter(
+		(file) => !file.endsWith("sw.ts"),
+	),
+)

@@ -670,7 +670,10 @@ test("precached pages make soft navigation instant even on a slow network", asyn
 					if (keys.length === 0) return []
 					const cache = await caches.open(keys[0])
 					const reqs = await cache.keys()
-					return reqs.map((r) => new URL(r.url).pathname).sort()
+					return reqs
+						.map((r) => new URL(r.url).pathname)
+						.filter((pathname) => !pathname.startsWith("/assets/"))
+						.sort()
 				}),
 			{ timeout: 5000 },
 		)
@@ -848,6 +851,73 @@ test("server rejects malformed or oversized list writes", async ({
 		articles: JSON.stringify(before),
 	})
 	expect(restored.status()).toBe(200)
+})
+
+// Production asset URLs carry a content hash and are immutable; the service
+// worker precaches every one of them on install (GET /api/precache).
+test("scripts and styles are fingerprinted, immutable and precached", async ({
+	page,
+	request,
+}) => {
+	const response = await page.goto("/")
+	const html = (await response?.text()) ?? ""
+	const assetUrls = [...html.matchAll(/(?:href|src)="(\/assets\/[^"]+)"/g)].map(
+		(m) => m[1],
+	)
+	expect(assetUrls.length).toBeGreaterThan(2)
+	for (const url of assetUrls) expect(url).toMatch(/\.@[\w-]+\.\w+$/)
+
+	const css = await request.get(assetUrls.find((u) => u.endsWith(".css")) ?? "")
+	expect(css.headers()["cache-control"]).toContain("immutable")
+	const sw = await request.get("/sw.js")
+	expect(sw.headers()["cache-control"]).toBe("no-cache")
+
+	const { assets } = (await (await request.get("/api/precache")).json()) as {
+		assets: string[]
+	}
+	for (const url of assetUrls) expect(assets).toContain(url)
+	await page.waitForFunction(async () => {
+		const reg = await navigator.serviceWorker.getRegistration()
+		return reg?.active?.state === "activated"
+	})
+	await expect
+		.poll(async () =>
+			page.evaluate(async (expected) => {
+				const cache = await caches.open((await caches.keys())[0])
+				const cached = new Set(
+					(await cache.keys()).map((r) => new URL(r.url).pathname),
+				)
+				return expected.filter((url) => !cached.has(url))
+			}, assets),
+		)
+		.toEqual([])
+})
+
+// A weak connection in a shop: requests hang instead of failing. Scripts and
+// styles must come from the cache without waiting, so the list stays usable.
+test("a cached list opens instantly even when the network hangs", async ({
+	page,
+	context,
+}) => {
+	expect(listUrl).not.toBe("")
+	await page.goto(listUrl, { waitUntil: "networkidle" })
+	await page.waitForFunction(async () => {
+		const reg = await navigator.serviceWorker.getRegistration()
+		return reg?.active?.state === "activated"
+	})
+	await page.reload({ waitUntil: "networkidle" })
+
+	// Every script/stylesheet request — from the page or the service worker —
+	// stalls far longer than the test allows.
+	await context.route("**/assets/**", async (route) => {
+		await new Promise((r) => setTimeout(r, 20_000))
+		await route.continue().catch(() => {})
+	})
+	const started = Date.now()
+	await page.reload({ waitUntil: "load", timeout: 5000 })
+	expect(Date.now() - started).toBeLessThan(2000)
+	await expect(page.locator("input.sl-add-input")).toBeVisible()
+	await context.unrouteAll({ behavior: "ignoreErrors" })
 })
 
 // Simulates what a deploy looks like from an open tab: the new service

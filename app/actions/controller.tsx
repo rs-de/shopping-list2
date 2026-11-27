@@ -8,7 +8,12 @@ import { redirect } from "remix/response/redirect"
 import { createController } from "remix/router"
 
 import { HomeMenu } from "../assets/home-menu.tsx"
-import { appVersion, assetServer } from "../assets.ts"
+import {
+	appVersion,
+	assetServer,
+	precacheAssets,
+	serviceWorkerHref,
+} from "../assets.ts"
 import { db, shoppingLists } from "../db.ts"
 import { routes } from "../routes.ts"
 import { Document } from "../ui/document.tsx"
@@ -60,15 +65,20 @@ export default createController(routes, {
 		async version() {
 			return Response.json({ version: appVersion })
 		},
+		async precache() {
+			return Response.json({ assets: precacheAssets })
+		},
 		async sw({ url: requestUrl }) {
-			const url = new URL(
-				routes.assets.href({ path: "app/assets/sw.ts" }),
-				requestUrl,
+			const response = await assetServer.fetch(
+				new Request(new URL(serviceWorkerHref, requestUrl)),
 			)
-			return (
-				(await assetServer.fetch(new Request(url.toString()))) ??
-				new Response("Not Found", { status: 404 })
-			)
+			if (!response) return new Response("Not Found", { status: 404 })
+			// Served under its stable /sw.js name, so the asset server's
+			// `immutable` header for the fingerprinted URL must not carry over:
+			// the browser's update check has to see each new release.
+			const headers = new Headers(response.headers)
+			headers.set("Cache-Control", "no-cache")
+			return new Response(response.body, { status: response.status, headers })
 		},
 		async home({ request, url, render, i18n, formData: form }) {
 			const { lang, t } = i18n

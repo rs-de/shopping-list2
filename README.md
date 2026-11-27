@@ -49,6 +49,7 @@ app/
   assets/                  # Browser-reachable modules
     entry.ts               # Browser entry — boots Remix runtime, registers SW
     home-menu.tsx          # Home page client component
+    main.css               # Plain CSS — Radix UI color tokens, no Tailwind
     list/                  # Articles / Plan / Shopping client entries, sync engine
     sw.ts                  # Service worker
   ui/                      # Server-rendered components (document, nav, footer, error pages)
@@ -56,8 +57,7 @@ app/
   i18n/de.ts               # German translations (pnpm i18n:sync)
   db.ts                    # data-table schema + SQLite connection + migrate()
   db/migrations/           # SQL migrations, applied on server start
-public/
-  styles/main.css          # Plain CSS — Radix UI color tokens, no Tailwind
+public/                    # Static files (icons, images, robots.txt)
 tests/
   e2e.spec.ts              # Playwright tests
 ```

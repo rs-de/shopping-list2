@@ -69,7 +69,8 @@ Run `npx remix doctor` after structural or configuration changes.
 
 ## Design Decisions
 
-- **CSS** — plain `public/styles/main.css`; Radix UI blue/slate colors as CSS custom properties; no Tailwind, no CSS-in-JS
+- **CSS** — plain `app/assets/main.css`, served by the asset server (minified, prefixed for the browser target — write unprefixed properties only); Radix UI blue/slate colors as CSS custom properties; no Tailwind, no CSS-in-JS
+- **Assets** — production script/style URLs are content-fingerprinted and `immutable`; reference them only through `assets.ts` (`scriptEntry`, `stylesheetHref`, `getHref`), never as hand-written `/assets/...` paths
 - **No extra UI deps** — no component libraries; web standards only
 - **Live reference** — `https://shopping-list-eta.vercel.app` is the legacy Remix 2 app; use it as the visual reference during migration
 

@@ -1,7 +1,7 @@
 import type { Handle, RemixNode } from "remix/component"
 import { ImportMap } from "remix/component/server"
 
-import { cssVersion } from "../assets.ts"
+import { scriptEntry, stylesheetHref } from "../assets.ts"
 import { routes } from "../routes.ts"
 import { createTranslator, DEFAULT_LANG, type Lang } from "../utils/i18n.ts"
 import { Footer } from "./footer.tsx"
@@ -75,9 +75,14 @@ export function Document(handle: Handle<DocumentProps>) {
 					{APPLE_SPLASH_SCREENS.map(({ href, media }) => (
 						<link rel="apple-touch-startup-image" href={href} media={media} />
 					))}
-					<link rel="stylesheet" href={`/styles/main.css?v=${cssVersion}`} />
+					<link rel="stylesheet" href={stylesheetHref} />
 					<title>{title}</title>
-					<ImportMap value={{}} />
+					{/* Client entries rendered into the page merge their own mappings
+					into this one map (render({ assets }) in router.ts). */}
+					<ImportMap value={scriptEntry.importMap} />
+					{scriptEntry.preloads.map((href) => (
+						<link rel="modulepreload" href={href} />
+					))}
 					{head}
 				</head>
 				<body>
@@ -89,10 +94,7 @@ export function Document(handle: Handle<DocumentProps>) {
 					<div id="sl-nav-overlay" class="sl-nav-overlay" aria-hidden="true">
 						<div class="spinner" />
 					</div>
-					<script
-						type="module"
-						src={routes.assets.href({ path: "app/assets/entry.ts" })}
-					></script>
+					<script type="module" src={scriptEntry.href}></script>
 				</body>
 			</html>
 		)

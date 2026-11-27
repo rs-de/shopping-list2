@@ -19,18 +19,35 @@ const forceFreshUrls = new Set<string>()
 
 self.addEventListener("install", (event) => {
 	self.skipWaiting()
-	// Best-effort warm-up so the first soft-navigation to a static page feels
-	// instant. Each URL is caught individually — unlike cache.addAll(), one
-	// slow/failed fetch (e.g. a cold origin) can't fail the whole install,
-	// which is what previously caused a black screen on iOS cold-start.
+	// Best-effort warm-up: the static pages, so the first soft navigation to
+	// one feels instant, and every script/stylesheet of this release, so a
+	// page never has to fetch one of its files on a bad connection (or from a
+	// server that already runs the next release, whose URLs differ). Each URL
+	// is caught individually — unlike cache.addAll(), one slow/failed fetch
+	// (e.g. a cold origin) can't fail the whole install, which is what
+	// previously caused a black screen on iOS cold-start.
 	event.waitUntil(
-		caches
-			.open(CACHE)
-			.then((cache) =>
-				Promise.all(PRECACHE_URLS.map((url) => cache.add(url).catch(() => {}))),
-			),
+		caches.open(CACHE).then(async (cache) => {
+			const assets = IS_DEV ? [] : await fetchPrecacheList()
+			await Promise.all(
+				[...PRECACHE_URLS, ...assets].map((url) =>
+					cache.add(url).catch(() => {}),
+				),
+			)
+		}),
 	)
 })
+
+async function fetchPrecacheList(): Promise<string[]> {
+	try {
+		const response = await fetch("/api/precache")
+		if (!response.ok) return []
+		const { assets } = (await response.json()) as { assets: string[] }
+		return assets
+	} catch {
+		return []
+	}
+}
 
 self.addEventListener("activate", (event) => {
 	event.waitUntil(
@@ -58,8 +75,16 @@ self.addEventListener("fetch", (event) => {
 
 	const url = new URL(request.url)
 
+	// Scripts and stylesheets: fingerprinted in production (a URL never
+	// changes its content) and precached on install, so they never wait for
+	// the network — on a weak connection in a shop, network-first stalled
+	// every module request for as long as the connection hung.
+	const isAppAsset =
+		url.pathname.startsWith("/assets/") &&
+		!(request.headers.get("accept")?.includes("application/json") ?? false)
+
 	const isStaticAsset =
-		url.pathname.startsWith("/styles/") ||
+		isAppAsset ||
 		url.pathname.startsWith("/icons/") ||
 		url.pathname === "/logo.svg" ||
 		url.pathname === "/favicon.ico" ||
@@ -100,13 +125,13 @@ async function staleWhileRevalidate(request: Request): Promise<Response> {
 }
 
 async function cacheFirst(request: Request): Promise<Response> {
-	const cached = await caches.match(request)
+	// This release's cache only: an old one may still exist until activation
+	// deletes it, and must never answer for the new release.
+	const cache = await caches.open(CACHE)
+	const cached = await cache.match(request)
 	if (cached) return cached
 	const response = await fetch(request)
-	if (response.ok) {
-		const cache = await caches.open(CACHE)
-		cache.put(request, response.clone())
-	}
+	if (response.ok) cache.put(request, response.clone())
 	return response
 }
 
@@ -116,10 +141,8 @@ async function networkFirst(request: Request): Promise<Response> {
 		const response = await fetch(request)
 		// pullFromServer()'s JSON GET shares its URL with the HTML page at the
 		// same path — caching it here would clobber that page's cached HTML
-		// with JSON on next load. Static assets (JS/CSS modules under
-		// /assets/) never share a URL with an HTML page, so they're safe and
-		// need to be cached here too — this is what keeps the app usable
-		// offline at all, since the JS that hydrates it lives under /assets/.
+		// with JSON on next load. In development, scripts and styles come
+		// through here too (cached so offline testing still works).
 		const wantsJson = request.headers
 			.get("accept")
 			?.includes("application/json")

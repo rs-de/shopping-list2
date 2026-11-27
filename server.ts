@@ -30,8 +30,6 @@ async function runCleanup() {
 }
 
 const STATIC_EXTS = new Set([
-	"css",
-	"js",
 	"webp",
 	"png",
 	"jpg",
@@ -69,23 +67,15 @@ function withSecurityHeaders(response: Response): Response {
 	})
 }
 
+// Files from public/: the service worker owns their caching (sw.ts), so the
+// browser revalidates instead of storing them forever. Scripts and styles come
+// from the asset server, which sets its own headers (fingerprinted URLs are
+// `immutable` in production).
 function withCacheHeaders(response: Response, url: URL): Response {
 	const ext = path.extname(url.pathname).slice(1).toLowerCase()
 	if (!response.ok || !STATIC_EXTS.has(ext)) return response
 	const headers = new Headers(response.headers)
-	// main.css is content-hash-versioned (cssVersion in assets.ts): the same
-	// URL can never later resolve to different bytes, so it's safe to cache
-	// forever and skip revalidation. sw.js also carries a ?v= query, but its
-	// registration/update-check path has a fragile iOS history (see
-	// c01dc35) — left on no-cache deliberately rather than folded into this
-	// same rule. Everything else still defers to the SW, which owns the
-	// cache and revalidates instead of storing forever.
-	const isVersionedCss =
-		url.pathname === "/styles/main.css" && url.searchParams.has("v")
-	headers.set(
-		"Cache-Control",
-		isVersionedCss ? "public, max-age=31536000, immutable" : "no-cache",
-	)
+	headers.set("Cache-Control", "no-cache")
 	return new Response(response.body, {
 		status: response.status,
 		statusText: response.statusText,

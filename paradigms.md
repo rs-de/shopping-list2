@@ -22,9 +22,12 @@ delete bar) is driven by native CSS selectors instead of requiring script.
 ## 3. Resource-aware offline caching
 
 The service worker applies a different caching strategy per resource type:
-instant-with-background-refresh for pages, cache-first for immutable static
-assets, network-first for anything that must never go stale. Each deploy
-invalidates its own cache automatically, without a manual version bump.
+instant-with-background-refresh for pages, cache-first for scripts, styles and
+static files, network-first only for list data, which must never go stale.
+Script and style URLs carry a content hash, and the service worker precaches
+all of them on install, so a weak connection in a shop never holds up the app
+itself — only the data check waits for the network. Each deploy invalidates
+its own cache automatically, without a manual version bump.
 
 ## 4. Installable, platform-correct PWA
 

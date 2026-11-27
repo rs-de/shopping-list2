@@ -5,6 +5,7 @@ export const routes = route({
 	sw: get("/sw.js"),
 	manifest: get("/manifest.webmanifest"),
 	version: get("/api/version"),
+	precache: get("/api/precache"),
 	home: "/",
 	about: get("/about"),
 	changelog: get("/changelog"),

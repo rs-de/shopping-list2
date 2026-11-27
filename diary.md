@@ -207,3 +207,6 @@ Pre-diary (retroactive): register scaffolded Remix skill for Claude Code
 
 67. Silent update reloads for real (Remix intercepted location.reload()); wait while unsaved text
    `(add utils/document-reload.ts; edit entry.ts: navigation.reload with info marker, registration.update on return)`
+
+68. Fingerprinted assets, precached and cache-first in the SW; CSS via the asset server
+   `(mv public/styles/main.css → app/assets/; edit assets.ts+document+sw.ts+server.ts; add /api/precache; e2e Lie-Fi)`
