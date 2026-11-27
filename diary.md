@@ -204,3 +204,6 @@ Pre-diary (retroactive): register scaffolded Remix skill for Claude Code
 
 66. TypeScript 6 → 7 (native tsc): i18n-sync finds t() calls by regex, not the compiler API
    `(edit scripts/i18n-sync.ts+package.json; rm .vscode tsdk.path; same 44 keys as before)`
+
+67. Silent update reloads for real (Remix intercepted location.reload()); wait while unsaved text
+   `(add utils/document-reload.ts; edit entry.ts: navigation.reload with info marker, registration.update on return)`

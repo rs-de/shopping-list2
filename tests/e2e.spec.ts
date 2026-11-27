@@ -850,6 +850,72 @@ test("server rejects malformed or oversized list writes", async ({
 	expect(restored.status()).toBe(200)
 })
 
+// Simulates what a deploy looks like from an open tab: the new service
+// worker posts SW_UPDATED, later the user switches away and comes back.
+async function announceUpdate(page: Page) {
+	await page.evaluate(() =>
+		navigator.serviceWorker.dispatchEvent(
+			new MessageEvent("message", { data: { type: "SW_UPDATED" } }),
+		),
+	)
+}
+
+async function returnToTab(page: Page) {
+	await page.evaluate(() => {
+		Object.defineProperty(document, "visibilityState", {
+			configurable: true,
+			get: () => "visible",
+		})
+		document.dispatchEvent(new Event("visibilitychange"))
+	})
+}
+
+async function markPage(page: Page) {
+	await page.evaluate(() => {
+		;(window as { unreloaded?: boolean }).unreloaded = true
+	})
+}
+
+const isUnreloaded = (page: Page) =>
+	page.evaluate(() => (window as { unreloaded?: boolean }).unreloaded === true)
+
+// Remix intercepts location.reload() as an in-place frame reload that keeps
+// the old code running; the update must be a real document load.
+test("a new version applies as a real reload when the user comes back", async ({
+	page,
+}) => {
+	await page.goto("/about")
+	await markPage(page)
+	await announceUpdate(page)
+	expect(await isUnreloaded(page)).toBe(true)
+
+	const reloaded = page.waitForEvent("load")
+	await returnToTab(page)
+	await reloaded
+	expect(await isUnreloaded(page)).toBe(false)
+})
+
+test("a pending update waits while the add field holds unsaved text", async ({
+	page,
+}) => {
+	expect(listUrl).not.toBe("")
+	await page.goto(listUrl, { waitUntil: "networkidle" })
+	await markPage(page)
+	await announceUpdate(page)
+	await page.fill("input.sl-add-input", "Bread")
+	await returnToTab(page)
+	await page.waitForTimeout(300)
+	expect(await isUnreloaded(page)).toBe(true)
+	await expect(page.locator("input.sl-add-input")).toHaveValue("Bread")
+
+	// Focused but empty: nothing to lose, so the update applies.
+	await page.fill("input.sl-add-input", "")
+	const reloaded = page.waitForEvent("load")
+	await returnToTab(page)
+	await reloaded
+	expect(await isUnreloaded(page)).toBe(false)
+})
+
 // Last in the file: it saturates the list's 15-writes/s limiter, so nothing
 // after it may write to listUrl within the same second. A POST without an
 // _action still counts toward the limit but changes no data (400).

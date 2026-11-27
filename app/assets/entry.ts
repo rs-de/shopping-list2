@@ -1,6 +1,11 @@
 import { defaultResolveFrame, run } from "remix/component"
 
 import { routes } from "../routes.ts"
+import {
+	hasUnsavedInput,
+	keepDocumentReloads,
+	reloadDocument,
+} from "../utils/document-reload.ts"
 
 declare const BUILD_STAMP: string
 
@@ -21,6 +26,10 @@ function hideNavOverlay(): void {
 		.getElementById("sl-nav-overlay")
 		?.classList.remove("sl-nav-overlay--visible")
 }
+
+// Before run(): Remix's navigate listener must not see the reload that
+// applies a new version (see utils/document-reload.ts).
+keepDocumentReloads()
 
 run({
 	async loadModule(moduleUrl, exportName) {
@@ -72,14 +81,28 @@ if ("serviceWorker" in navigator) {
 }
 
 // Apply a pending update only once the user comes back to the app — never
-// mid-session, so it never interrupts an active edit or navigation. Users
-// are wary of an explicit "Refresh" prompt; this makes the update invisible.
+// mid-session, and never while a field holds unsaved text (it stays pending
+// until the next return). Users are wary of an explicit "Refresh" prompt;
+// this makes the update invisible.
 document.addEventListener("visibilitychange", () => {
-	if (document.visibilityState !== "visible" || !updatePending) return
-	updatePending = false
-	navigator.serviceWorker?.controller?.postMessage({
-		type: "SL_FORCE_FRESH",
-		url: window.location.href,
-	})
-	window.location.reload()
+	if (document.visibilityState !== "visible") return
+	if (updatePending && !hasUnsavedInput()) {
+		updatePending = false
+		navigator.serviceWorker?.controller?.postMessage({
+			type: "SL_FORCE_FRESH",
+			url: window.location.href,
+		})
+		reloadDocument()
+		return
+	}
+	// An installed app can stay open for days without a navigation, which
+	// is when browsers check for a new service worker on their own. Ask on
+	// every return instead; a new one activates and posts SW_UPDATED, which
+	// is applied on the next return.
+	void navigator.serviceWorker
+		?.getRegistration()
+		.then((registration) => registration?.update())
+		.catch(() => {
+			// Offline — the next return tries again.
+		})
 })

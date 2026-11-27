@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.15.2 2026-11-27
+
+- App updates now really take effect when you come back to the app; before,
+  the previous version could keep running until the app was fully closed
+- An update never interrupts while you're typing a new article
+
 ## 1.15.0 2026-11-26
 
 - App updates are now reliably picked up after each release, also on iOS
