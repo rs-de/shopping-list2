@@ -36,5 +36,6 @@
 
 	// Disable Prettier & eslint extension if installed
 	"prettier.enable": false,
-	"eslint.enable": false
+	"eslint.enable": false,
+	"js/ts.tsdk.path": "node_modules/typescript"
 }
